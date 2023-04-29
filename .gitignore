@@ -89,5 +89,5 @@ fabric.properties
 logs/
 *.log
 *.gz
-**/resources
+resources/
 
