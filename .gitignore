@@ -94,5 +94,5 @@ resources/
 
 /mvnw
 /mvnw.cmd
-/.mvn/
-/.idea/
+.mvn/
+.idea/
