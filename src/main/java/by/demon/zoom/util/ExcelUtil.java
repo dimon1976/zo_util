@@ -1,5 +1,6 @@
 package by.demon.zoom.util;
 
+import by.demon.zoom.domain.VlookBar;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
@@ -22,6 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @param <T>
@@ -364,9 +366,7 @@ public class ExcelUtil<T> {
                     cell.setCellStyle(cellStyle);
                     Field field = fields[i];
                     String fieldName = field.getName();
-                    String getMethodName = "get"
-                            + fieldName.substring(0, 1).toUpperCase()
-                            + fieldName.substring(1);
+                    String getMethodName = "get" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
                     try {
                         Class<?> tCls = t.getClass();
                         Method getMethod = tCls.getMethod(getMethodName);
@@ -479,4 +479,5 @@ public class ExcelUtil<T> {
             e.printStackTrace();
         }
     }
+
 }

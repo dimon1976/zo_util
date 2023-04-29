@@ -2,6 +2,7 @@ package by.demon.zoom.controller;
 
 
 import by.demon.zoom.service.DetmirService;
+import by.demon.zoom.service.VlookService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,8 +26,15 @@ public class ExcelController {
     @Value("${temp.path}")
     private String TEMP_PATH;
 
-    @Autowired
-    private DetmirService detmirService;
+    public ExcelController(DetmirService detmirService, VlookService vlookService) {
+        this.detmirService = detmirService;
+        this.vlookService = vlookService;
+    }
+
+//    @Autowired
+    private final DetmirService detmirService;
+//    @Autowired
+    private final VlookService vlookService;
 
     @PostMapping("/stat/detmirStats")
     public String detmirStats(@RequestParam("file") MultipartFile multipartFile, HttpServletResponse response) throws IOException {
@@ -38,6 +46,24 @@ public class ExcelController {
             try {
                 multipartFile.transferTo(transferTo);
                 return detmirService.getListWb(filePath, transferTo, response);
+            } catch (IllegalStateException | IOException e) {
+                e.printStackTrace();
+                return "File uploaded failed: " + orgName;
+            }
+        }
+        return "index";
+    }
+
+    @PostMapping("/vlook")
+    public String excelVlook(@RequestParam("file") MultipartFile multipartFile, HttpServletResponse response) throws IOException {
+        if (multipartFile != null && !Objects.requireNonNull(multipartFile.getOriginalFilename()).isEmpty()) {
+            String orgName = multipartFile.getOriginalFilename();
+            String extension = orgName.lastIndexOf(".") == -1 ? "" : orgName.substring(orgName.lastIndexOf(".") + 1);
+            String filePath = TEMP_PATH + "/" + orgName.replace("." + extension, "-" + getDateTimeNow()) + "." + extension;
+            File transferTo = new File(filePath);
+            try {
+                multipartFile.transferTo(transferTo);
+                return vlookService.vlookBar(filePath, transferTo, response);
             } catch (IllegalStateException | IOException e) {
                 e.printStackTrace();
                 return "File uploaded failed: " + orgName;
