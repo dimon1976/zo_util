@@ -1,11 +1,10 @@
-.idea/
-.mvn/
+/zoom.iml
 /logs/
 resources/
+resources/temp
 /HELP.md
 /mvnw
-resources/temp
 /mvnw.cmd
+.idea/
+.mvn/
 .mvn/wrapper
-
-/zoom.iml

@@ -15,5 +15,6 @@ public class VlookBar {
 
     private String id;
     private String bar;
+    private String uri;
     private Set<String> url;
 }
