@@ -62,6 +62,7 @@ public class VlookService {
                     vlookBar.setUrl(setUrl);
                     result.add(vlookBar);
                 }
+                System.out.println();
             }
         }
         long timeWorkCode = System.currentTimeMillis() - start;
