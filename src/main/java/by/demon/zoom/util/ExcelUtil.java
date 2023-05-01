@@ -23,7 +23,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * @param <T>
@@ -281,7 +280,6 @@ public class ExcelUtil<T> {
      * @param pattern Паттерн для замены
      */
     public void exportExcel(String title, String[] headers, Collection<T> dataset, OutputStream out, String pattern, short skip) {
-
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             XSSFSheet sheet = workbook.createSheet(title);
             sheet.setDefaultColumnWidth((short) 15);
@@ -317,16 +315,67 @@ public class ExcelUtil<T> {
                     cell.setCellValue(text);
                 }
             }
-            Iterator<T> iterator = dataset.iterator();
-            Class<?> dataClazz = iterator.next().getClass();
-            String simpleName = dataClazz.getSimpleName();
-            switch (simpleName) {
-                case "VlookBar":
-                    exportVlookBarWorkbook((List<VlookBar>) dataset, sheet);
-                    break;
-                default:
-                    exportDefaultWB(dataset, pattern, skip, workbook, sheet, cellStyle);
-                    break;
+            Iterator<T> it = dataset.iterator();
+            int index = 0;
+            short marker = 0;
+            while (it.hasNext()) {
+                if (marker < skip) {
+                    it.next();
+                    marker++;
+                    continue;
+                }
+                index++;
+                row = sheet.createRow(index);
+                T t = it.next();
+                Field[] fields = t.getClass().getDeclaredFields();
+                for (short i = 0; i < fields.length; i++) {
+                    XSSFCell cell = row.createCell(i);
+                    cell.setCellStyle(cellStyle);
+                    Field field = fields[i];
+                    String fieldName = field.getName();
+                    String getMethodName = "get" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
+                    try {
+                        Class<?> tCls = t.getClass();
+                        Method getMethod = tCls.getMethod(getMethodName);
+                        Object value = getMethod.invoke(t);
+                        String textValue = null;
+                        if (null == value) {
+                            value = "";
+                        }
+                        if (value instanceof Boolean) {
+                            boolean bValue = (Boolean) value;
+                            textValue = "true";
+                            if (!bValue) {
+                                textValue = "false";
+                            }
+                        } else if (value instanceof Date) {
+                            Date date = (Date) value;
+                            SimpleDateFormat sdf = new SimpleDateFormat(pattern);
+                            textValue = sdf.format(date);
+                        } else if (value instanceof byte[]) {
+                            row.setHeightInPoints(60);
+                            sheet.setColumnWidth(i, (short) (35.7 * 80));
+                            byte[] bsValue = (byte[]) value;
+                        } else {
+                            textValue = value.toString();
+                        }
+                        if (textValue != null) {
+                            Pattern p = Pattern.compile("^//d+(//.//d+)?$");
+                            Matcher matcher = p.matcher(textValue);
+                            if (matcher.matches()) {
+                                cell.setCellValue(Double.parseDouble(textValue));
+                            } else {
+                                XSSFRichTextString richString = new XSSFRichTextString(textValue);
+                                XSSFFont font3 = workbook.createFont();
+                                richString.applyFont(font3);
+                                cell.setCellValue(richString);
+                            }
+                        }
+                    } catch (SecurityException | InvocationTargetException | IllegalAccessException |
+                             IllegalArgumentException | NoSuchMethodException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
             try {
                 workbook.write(out);
@@ -339,71 +388,10 @@ public class ExcelUtil<T> {
         }
     }
 
-    private void exportDefaultWB(Collection<T> dataset, String pattern, short skip, XSSFWorkbook workbook, XSSFSheet sheet, XSSFCellStyle cellStyle) {
-        XSSFRow row;
-        Iterator<T> it = dataset.iterator();
-        int index = 0;
-        short marker = 0;
-        while (it.hasNext()) {
-            if (marker < skip) {
-                it.next();
-                marker++;
-                continue;
-            }
-            index++;
-            row = sheet.createRow(index);
-            T t = it.next();
-
-            Field[] fields = t.getClass().getDeclaredFields();
-            for (short i = 0; i < fields.length; i++) {
-                XSSFCell cell = row.createCell(i);
-                cell.setCellStyle(cellStyle);
-                Field field = fields[i];
-                String fieldName = field.getName();
-                String getMethodName = "get" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
-                try {
-                    Class<?> tCls = t.getClass();
-                    Method getMethod = tCls.getMethod(getMethodName);
-                    Object value = getMethod.invoke(t);
-                    String textValue = null;
-                    if (null == value) {
-                        value = "";
-                    }
-                    if (value instanceof Boolean) {
-                        boolean bValue = (Boolean) value;
-                        textValue = "true";
-                        if (!bValue) {
-                            textValue = "false";
-                        }
-                    } else if (value instanceof Date) {
-                        Date date = (Date) value;
-                        SimpleDateFormat sdf = new SimpleDateFormat(pattern);
-                        textValue = sdf.format(date);
-                    } else if (value instanceof byte[]) {
-                        row.setHeightInPoints(60);
-                        sheet.setColumnWidth(i, (short) (35.7 * 80));
-                        byte[] bsValue = (byte[]) value;
-                    } else {
-                        textValue = value.toString();
-                    }
-                    if (textValue != null) {
-                        Pattern p = Pattern.compile("^//d+(//.//d+)?$");
-                        Matcher matcher = p.matcher(textValue);
-                        if (matcher.matches()) {
-                            cell.setCellValue(Double.parseDouble(textValue));
-                        } else {
-                            XSSFRichTextString richString = new XSSFRichTextString(textValue);
-                            XSSFFont font3 = workbook.createFont();
-                            richString.applyFont(font3);
-                            cell.setCellValue(richString);
-                        }
-                    }
-                } catch (SecurityException | InvocationTargetException | IllegalAccessException |
-                         IllegalArgumentException | NoSuchMethodException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+    private String getClassSimpleName(Collection<T> dataset) {
+        Iterator<T> iterator = dataset.iterator();
+        Class<?> dataClazz = iterator.next().getClass();
+        return dataClazz.getSimpleName();
     }
 
     private void exportVlookBarWorkbook(List<VlookBar> dataset, XSSFSheet sheet) {

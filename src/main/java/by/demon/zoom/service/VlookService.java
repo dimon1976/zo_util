@@ -1,6 +1,8 @@
 package by.demon.zoom.service;
 
 import by.demon.zoom.domain.VlookBar;
+import by.demon.zoom.dto.VlookBarDTO;
+import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.util.ExcelUtil;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,6 +16,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.ExcelUtil.readExcel;
 import static by.demon.zoom.util.Globals.VLOOK_RESULT;
@@ -30,8 +33,11 @@ public class VlookService {
     private final String[] header = {"ID", "BAR", "URL"};
 
     private VlookBar vlookBar;
+
     @Autowired
-    private ExcelUtil<VlookBar> excelUtil;
+    private MappingUtils mappingUtils;
+    @Autowired
+    private ExcelUtil<VlookBarDTO> excelUtil;
 
 
     public String vlookBar(String filePath, File file, HttpServletResponse response) throws IOException {
@@ -65,10 +71,15 @@ public class VlookService {
                 System.out.println();
             }
         }
-        long timeWorkCode = System.currentTimeMillis() - start;
-        System.out.println("Скорость выполнения программы: " + timeWorkCode + " миллисекунд");
+        // **https://stackoverflow.com/a/25147125/21789158 - ответ по соединению List<List<>> в один List
+        Collection<VlookBarDTO> vlookBarDTOS = result.stream()
+                .map(vlookBar -> mappingUtils.mapToVlookBarDto(vlookBar))
+                .collect(Collectors.toList())
+                .stream()
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
         try (FileOutputStream outputStream = new FileOutputStream(file)) {
-            excelUtil.exportExcel(header, result, outputStream, skip);
+            excelUtil.exportExcel(header, vlookBarDTOS, outputStream, skip);
             excelUtil.download(VLOOK_RESULT, filePath, response);
         } catch (IOException e) {
             e.printStackTrace();

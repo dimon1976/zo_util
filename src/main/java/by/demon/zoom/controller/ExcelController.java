@@ -2,6 +2,7 @@ package by.demon.zoom.controller;
 
 
 import by.demon.zoom.service.DetmirService;
+import by.demon.zoom.service.MegatopService;
 import by.demon.zoom.service.VlookService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,15 +28,18 @@ public class ExcelController {
     @Value("${temp.path}")
     private String TEMP_PATH;
 
-    public ExcelController(DetmirService detmirService, VlookService vlookService) {
+    public ExcelController(DetmirService detmirService, VlookService vlookService, MegatopService megatopService) {
         this.detmirService = detmirService;
         this.vlookService = vlookService;
+        this.megatopService = megatopService;
     }
 
-//    @Autowired
+
     private final DetmirService detmirService;
-//    @Autowired
+
     private final VlookService vlookService;
+
+    private final MegatopService megatopService;
 
     @PostMapping("/stat/detmirStats")
     public String detmirStats(@RequestParam("file") MultipartFile multipartFile, HttpServletResponse response) throws IOException {
@@ -65,6 +69,25 @@ public class ExcelController {
             try {
                 multipartFile.transferTo(transferTo);
                 return vlookService.vlookBar(filePath, transferTo, response);
+            } catch (IllegalStateException | IOException e) {
+                e.printStackTrace();
+                return "File uploaded failed: " + orgName;
+            }
+        }
+        return "index";
+    }
+
+
+    @PostMapping("/megatop")
+    public String excelMegatop(@RequestParam("file") MultipartFile multipartFile, HttpServletResponse response) throws IOException {
+        if (multipartFile != null && !Objects.requireNonNull(multipartFile.getOriginalFilename()).isEmpty()) {
+            String orgName = getOrgName(multipartFile);
+            String extension = orgName.lastIndexOf(".") == -1 ? "" : orgName.substring(orgName.lastIndexOf(".") + 1);
+            String filePath = TEMP_PATH + "/" + orgName.replace("." + extension, "-" + getDateTimeNow()) + "." + extension;
+            File transferTo = new File(filePath);
+            try {
+                multipartFile.transferTo(transferTo);
+                return megatopService.getList(filePath, transferTo, response);
             } catch (IllegalStateException | IOException e) {
                 e.printStackTrace();
                 return "File uploaded failed: " + orgName;

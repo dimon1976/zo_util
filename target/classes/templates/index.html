@@ -22,10 +22,21 @@
                     </form>
                     <form th:action="@{/excel/vlook}" th:method="post" enctype="multipart/form-data">
                         <div class="">
+                            <br>
                             <input type="file" class="form-control" name="file">
                             <br>
                             <button class="btn btn-primary">
                                 Vlook
+                            </button>
+                        </div>
+                    </form>
+                    <form th:action="@{/excel/megatop}" th:method="post" enctype="multipart/form-data">
+                        <div class="">
+                            <br>
+                            <input type="file" class="form-control" name="file">
+                            <br>
+                            <button class="btn btn-primary">
+                                Megatop
                             </button>
                         </div>
                     </form>
