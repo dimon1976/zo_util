@@ -4,6 +4,7 @@ package by.demon.zoom.controller;
 import by.demon.zoom.service.DetmirService;
 import by.demon.zoom.service.VlookService;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,7 +40,7 @@ public class ExcelController {
     @PostMapping("/stat/detmirStats")
     public String detmirStats(@RequestParam("file") MultipartFile multipartFile, HttpServletResponse response) throws IOException {
         if (multipartFile != null && !Objects.requireNonNull(multipartFile.getOriginalFilename()).isEmpty()) {
-            String orgName = multipartFile.getOriginalFilename();
+            String orgName = getOrgName(multipartFile);
             String extension = orgName.lastIndexOf(".") == -1 ? "" : orgName.substring(orgName.lastIndexOf(".") + 1);
             String filePath = TEMP_PATH + "/" + orgName.replace("." + extension, "-" + getDateTimeNow()) + "." + extension;
             File transferTo = new File(filePath);
@@ -57,7 +58,7 @@ public class ExcelController {
     @PostMapping("/vlook")
     public String excelVlook(@RequestParam("file") MultipartFile multipartFile, HttpServletResponse response) throws IOException {
         if (multipartFile != null && !Objects.requireNonNull(multipartFile.getOriginalFilename()).isEmpty()) {
-            String orgName = multipartFile.getOriginalFilename();
+            String orgName = getOrgName(multipartFile);
             String extension = orgName.lastIndexOf(".") == -1 ? "" : orgName.substring(orgName.lastIndexOf(".") + 1);
             String filePath = TEMP_PATH + "/" + orgName.replace("." + extension, "-" + getDateTimeNow()) + "." + extension;
             File transferTo = new File(filePath);
@@ -70,6 +71,11 @@ public class ExcelController {
             }
         }
         return "index";
+    }
+
+    @Nullable
+    private String getOrgName(MultipartFile multipartFile) {
+        return multipartFile.getOriginalFilename();
     }
 
     @NotNull
