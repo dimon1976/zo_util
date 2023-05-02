@@ -70,6 +70,8 @@ public class MegatopService {
                 System.out.println("Время работы - download - " + (System.currentTimeMillis() - start4) / 1000);
             }
         } else {
+
+
             List<MegatopDTO> collect = megatopArrayList.stream()
                     .filter(l -> !l.getUrl().contains("/ru/") && !l.getUrl().contains("/kz/"))
                     .map(MappingUtils::mapToMegatopDTO)
