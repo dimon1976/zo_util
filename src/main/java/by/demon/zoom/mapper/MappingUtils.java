@@ -14,7 +14,6 @@ public final class MappingUtils {
 
 
     public static List<VlookBarDTO> mapToVlookBarDto(VlookBar entity) {
-
         List<VlookBarDTO> list = new ArrayList<>();
         for (String url : entity.getUrl()) {
             VlookBarDTO dto = new VlookBarDTO();

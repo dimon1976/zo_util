@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
  */
 @Service
 public class ExcelUtil<T> {
-
+    public static long start = System.currentTimeMillis();
     private static final DecimalFormat df = new DecimalFormat("0");
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private static final DecimalFormat nf = new DecimalFormat("0.00");
@@ -150,6 +150,8 @@ public class ExcelUtil<T> {
     private static List<List<Object>> readExcel2007(InputStream is) throws IOException {
         List<List<Object>> list = new LinkedList<>();
         XSSFWorkbook xwb = new XSSFWorkbook(is);
+        System.out.println("Время работы - создание WB - " + (System.currentTimeMillis() - start) / 1000);
+        long start2 = System.currentTimeMillis();
         XSSFSheet sheet = xwb.getSheetAt(0);
         Object value;
         XSSFRow row;
@@ -180,6 +182,7 @@ public class ExcelUtil<T> {
             list.add(linked);
         }
         is.close();
+        System.out.println("Время работы - от WB до return list - " + (System.currentTimeMillis() - start2) / 1000);
         return list;
     }
 
@@ -366,8 +369,8 @@ public class ExcelUtil<T> {
                                 cell.setCellValue(Double.parseDouble(textValue));
                             } else {
                                 XSSFRichTextString richString = new XSSFRichTextString(textValue);
-                                XSSFFont font3 = workbook.createFont();
-                                richString.applyFont(font3);
+                                richString.applyFont(cellFont);
+                                cell.setCellStyle(cellStyle);
                                 cell.setCellValue(richString);
                             }
                         }
