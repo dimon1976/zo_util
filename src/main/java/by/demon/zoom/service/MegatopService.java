@@ -56,6 +56,8 @@ public class MegatopService {
                     .filter(l -> !l.getUrl().contains("/ru/") && !l.getUrl().contains("/kz/") && !l.getDate().toLocalDate().isBefore(beforeDate))
                     .map(MappingUtils::mapToMegatopDTO)
                     .collect(Collectors.toList());
+
+
             System.out.println("Время работы - лист MegatopDTO - " + (System.currentTimeMillis() - start2) / 1000);
             try (OutputStream out = Files.newOutputStream(of)) {
 
