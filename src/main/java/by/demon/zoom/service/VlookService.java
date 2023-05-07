@@ -31,7 +31,6 @@ public class VlookService {
 
     private long start = System.currentTimeMillis();
     private final String[] header = {"ID", "BAR", "URL"};
-
     private VlookBar vlookBar;
 
     @Autowired
@@ -40,7 +39,7 @@ public class VlookService {
     private ExcelUtil<VlookBarDTO> excelUtil;
 
 
-    public String vlookBar(String filePath, File file, HttpServletResponse response) throws IOException {
+    public String export(String filePath, File file, HttpServletResponse response) throws IOException {
         List<List<Object>> list = readExcel(file);
         short skip = 0;
 
@@ -73,7 +72,7 @@ public class VlookService {
         }
         // **https://stackoverflow.com/a/25147125/21789158 - ответ по соединению List<List<>> в один List
         Collection<VlookBarDTO> vlookBarDTOS = result.stream()
-                .map(vlookBar -> mappingUtils.mapToVlookBarDto(vlookBar))
+                .map(MappingUtils::mapToVlookBarDto)
                 .collect(Collectors.toList())
                 .stream()
                 .flatMap(List::stream)

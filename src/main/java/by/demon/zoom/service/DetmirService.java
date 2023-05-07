@@ -2,8 +2,6 @@ package by.demon.zoom.service;
 
 import by.demon.zoom.domain.DetmirStats;
 import by.demon.zoom.util.ExcelUtil;
-import by.demon.zoom.util.Globals;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
@@ -16,24 +14,32 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static by.demon.zoom.util.ExcelUtil.readExcel;
-
 @Service
 public class DetmirService {
+    private final String[] header = {"Клиент", "ID связи", "ID клиента", "Верхняя категория клиента", "Категория клиента", "Бренд клиента",
+            "Модель клиента", "Код производителя клиента", "Штрих-код клиента", "Статус клиента", "Цена конкурента",
+            "Модель конкурента", "Код производителя конкурента", "ID конкурента", "Конкурент", "Конкурент вкл."};
+    private final short skip = 1;
+    private final ExcelUtil<DetmirStats> excelUtil;
 
-    @Autowired
-    private ExcelUtil<DetmirStats> excelUtil;
+    public DetmirService(ExcelUtil<DetmirStats> excelUtil) {
+        this.excelUtil = excelUtil;
+    }
 
 
-    public String getListWb(String filePath, File file, HttpServletResponse response) throws IOException {
-        List<List<Object>> originalWb = readExcel(file);
-        Collection<DetmirStats> result = new ArrayList<>();
-        short skip = 1;
-        String[] header = {"Клиент", "ID связи", "ID клиента", "Верхняя категория клиента", "Категория клиента", "Бренд клиента",
-                "Модель клиента", "Код производителя клиента", "Штрих-код клиента", "Статус клиента", "Цена конкурента",
-                "Модель конкурента", "Код производителя конкурента", "ID конкурента", "Конкурент", "Конкурент вкл."};
+    public String export(String filePath, File file, HttpServletResponse response) throws IOException {
+        List<List<Object>> originalWb = ExcelUtil.readExcel(file);
+        Collection<DetmirStats> result = getResultList(originalWb);
+        try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
+            excelUtil.exportExcel(header, result, out, skip);
+            excelUtil.download(file.getName(), filePath, response);
+        }
+        return filePath;
+    }
 
-        for (List<Object> str : originalWb) {
+    private Collection<DetmirStats> getResultList(List<List<Object>> list) {
+        ArrayList<DetmirStats> resultList = new ArrayList<>();
+        for (List<Object> str : list) {
             DetmirStats detmirStat = new DetmirStats();
             detmirStat.setClient(String.valueOf(str.get(0)));
             detmirStat.setId(String.valueOf(str.get(1)));
@@ -51,13 +57,10 @@ public class DetmirService {
             detmirStat.setCompetitorId(String.valueOf(str.get(22)));
             detmirStat.setCompetitor(String.valueOf(str.get(23)));
             detmirStat.setOn(String.valueOf(str.get(24)));
-            result.add(detmirStat);
+            resultList.add(detmirStat);
         }
-        try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
-            excelUtil.exportExcel(header, result, out, skip);
-            excelUtil.download(file.getName(), filePath, response);
-        }
-        return filePath;
+        return resultList;
     }
+
 }
 

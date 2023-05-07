@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
  */
 @Service
 public class ExcelUtil<T> {
-    public static long start = System.currentTimeMillis();
+
     private static final DecimalFormat df = new DecimalFormat("0");
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private static final DecimalFormat nf = new DecimalFormat("0.00");
@@ -62,7 +62,7 @@ public class ExcelUtil<T> {
     public void download(String filename, InputStream is, HttpServletResponse response) throws IOException {
         InputStream fis = new BufferedInputStream(is);
         byte[] buffer = new byte[fis.available()];
-        fis.read(buffer);
+        int read = fis.read(buffer);
         fis.close();
         response.reset();
         response.addHeader("Content-Disposition", "attachment;filename=" + new String(filename.getBytes(), StandardCharsets.ISO_8859_1));
@@ -77,15 +77,6 @@ public class ExcelUtil<T> {
 
     public void download(String filename, String path, HttpServletResponse response) throws IOException {
         download(filename, new FileInputStream(path), response);
-    }
-
-
-    public static String export2003(String fileName, HttpServletResponse response) throws IOException {
-        return null;
-    }
-
-    public static String export2007(String fileName, HttpServletResponse response) throws IOException {
-        return null;
     }
 
     private static List<List<Object>> readExcel2003(InputStream is) throws IOException {
@@ -150,8 +141,6 @@ public class ExcelUtil<T> {
     private static List<List<Object>> readExcel2007(InputStream is) throws IOException {
         List<List<Object>> list = new LinkedList<>();
         XSSFWorkbook xwb = new XSSFWorkbook(is);
-        System.out.println("Время работы - создание WB - " + (System.currentTimeMillis() - start) / 1000);
-        long start2 = System.currentTimeMillis();
         XSSFSheet sheet = xwb.getSheetAt(0);
         Object value;
         XSSFRow row;
@@ -182,7 +171,6 @@ public class ExcelUtil<T> {
             list.add(linked);
         }
         is.close();
-        System.out.println("Время работы - от WB до return list - " + (System.currentTimeMillis() - start2) / 1000);
         return list;
     }
 
@@ -395,87 +383,6 @@ public class ExcelUtil<T> {
         Iterator<T> iterator = dataset.iterator();
         Class<?> dataClazz = iterator.next().getClass();
         return dataClazz.getSimpleName();
-    }
-
-    private void exportVlookBarWorkbook(List<VlookBar> dataset, XSSFSheet sheet) {
-        String url;
-        int rowIdx = 1;
-        for (VlookBar data : dataset) {
-            short cellIdx = 0;
-            if (data.getUrl().size() >= 1) {
-                for (String str : data.getUrl()) {
-                    XSSFRow row = sheet.createRow(rowIdx++);
-                    XSSFCell cell = row.createCell(cellIdx++);
-                    String value = data.getId();
-                    cell.setCellValue(value);
-                    XSSFCell cell2 = row.createCell(cellIdx++);
-                    String value2 = data.getBar();
-                    cell2.setCellValue(value2);
-                    XSSFCell cell3 = row.createCell(cellIdx);
-                    cell3.setCellValue(str);
-                    cellIdx = 0;
-                }
-            }
-        }
-    }
-
-    public static void export2003(String imagesPath, String docsPath) {
-//        ExcelExportUtil<Student> ex = new ExcelExportUtil<Student>();
-//        String[] headers = {"学号", "姓名", "年龄", "性别", "出生日期"};
-//        List<Student> dataset = new ArrayList<Student>();
-//        dataset.add(new Student(10000001L, "张三", 20, true, new Date()));
-//        dataset.add(new Student(20000002L, "李四", 24, false, new Date()));
-//        dataset.add(new Student(30000003L, "王五", 22, true, new Date()));
-//        ExcelExportUtil<Book> exBook = new ExcelExportUtil<Book>();
-//        String[] headersBook = {"图书编号", "图书名称", "图书作者", "图书价格", "图书ISBN", "图书出版社", "封面图片"};
-//        List<Book> datasetBook = new ArrayList<Book>();
-//        try {
-//            Resource resource = new ClassPathResource(imagesPath);
-//            InputStream is = resource.getInputStream();
-//            BufferedInputStream bis = new BufferedInputStream(is);
-//            byte[] buf = new byte[bis.available()];
-//            while ((bis.read(buf)) != -1) {
-//                //
-//            }
-//            datasetBook.add(new Book(1, "jsp", "leno", 300.33f, "1234567",
-//                    "清华出版社", buf));
-//            datasetBook.add(new Book(2, "java编程思想", "brucl", 300.33f, "1234567",
-//                    "阳光出版社", buf));
-//            datasetBook.add(new Book(3, "DOM艺术", "lenotang", 300.33f, "1234567",
-//                    "清华出版社", buf));
-//            datasetBook.add(new Book(4, "c++经典", "leno", 400.33f, "1234567",
-//                    "清华出版社", buf));
-//            datasetBook.add(new Book(5, "c#入门", "leno", 300.33f, "1234567",
-//                    "汤春秀出版社", buf));
-//            OutputStream out = new FileOutputStream(
-//                    docsPath + File.separator + Globals.EXPORT_STUDENT);
-//            OutputStream outBook = new FileOutputStream(
-//                    docsPath + File.separator + Globals.EXPORT_BOOK);
-//            ex.exportExcel(headers, dataset, out);
-//            exBook.exportExcel(headersBook, datasetBook, outBook);
-//            out.close();
-//            outBook.close();
-
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-    }
-
-    public static void export2007(String filePath) {
-        try {
-            OutputStream os = Files.newOutputStream(Paths.get(filePath));
-            XSSFWorkbook wb = new XSSFWorkbook();
-            XSSFSheet sheet = wb.createSheet(Globals.SHEETNAME);
-            for (int i = 0; i < 1000; i++) {
-                XSSFRow row = sheet.createRow(i);
-                row.createCell(0).setCellValue("column" + i);
-                row.createCell(1).setCellValue("column" + i);
-            }
-            wb.write(os);
-            os.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
 }
