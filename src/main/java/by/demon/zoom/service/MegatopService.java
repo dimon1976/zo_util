@@ -1,5 +1,6 @@
 package by.demon.zoom.service;
 
+import by.demon.zoom.dao.MegatopCsvRBeanRepository;
 import by.demon.zoom.domain.Megatop;
 import by.demon.zoom.dto.MegatopDTO;
 import by.demon.zoom.mapper.MappingUtils;
@@ -13,6 +14,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashSet;
@@ -23,22 +26,26 @@ import static by.demon.zoom.util.ExcelUtil.readExcel;
 @Service
 public class MegatopService {
 
+    private String fileName = "";
     private final String[] header = {"Категория 1", "Категория", "Высота каблука", "Коллекция", "Конструкция верх", "Материал верха", "Материал подкладки",
             "Ростовка дети", "Цвета", "Сезон", "Конкурент", "ID", "Категория", "Бренд", "Модель", "Артикул", "Цена", "Старая цена", "Ссылка на модель", "Статус"};
     private final LocalDate beforeDate = LocalDate.of(2020, 8, 1);
-
+    private final MegatopCsvRBeanRepository megatopCsvRBeanRepository;
     private final ExcelUtil<MegatopDTO> excelUtil;
 
-    public MegatopService(ExcelUtil<MegatopDTO> excelUtil) {
+    public MegatopService(MegatopCsvRBeanRepository megatopCsvRBeanRepository, ExcelUtil<MegatopDTO> excelUtil) {
+        this.megatopCsvRBeanRepository = megatopCsvRBeanRepository;
         this.excelUtil = excelUtil;
     }
 
 
     public String export(String filePath, File file, HttpServletResponse response) throws IOException {
+        fileName = file.getName();
         Path of = Path.of(filePath);
         List<List<Object>> lists = readExcel(file);
         Collection<Megatop> megatopArrayList = getMegatopList(lists);
         HashSet<MegatopDTO> collect = getMegatopDTOList(megatopArrayList);
+        megatopCsvRBeanRepository.saveAll(megatopArrayList);
         try (OutputStream out = Files.newOutputStream(of)) {
             short skipLines = 1;
             excelUtil.exportExcel(header, collect, out, skipLines);
@@ -61,13 +68,10 @@ public class MegatopService {
             }
         }
         return megatopDTOS;
-//        return megatopList.stream()
-//                .filter(l -> !l.getUrl().contains("/ru/") && !l.getUrl().contains("/kz/") && !l.getDate().toLocalDate().isBefore(beforeDate))
-//                .map(MappingUtils::mapToMegatopDTO)
-//                .collect(Collectors.toList());
     }
 
     private Collection<Megatop> getMegatopList(List<List<Object>> lists) {
+        Timestamp instant= Timestamp.from(Instant.now());
         HashSet<Megatop> arrayList = new HashSet<>();
         for (List<Object> str : lists) {
             if (String.valueOf(str.get(0)).equals("Категория 1")) {
@@ -85,7 +89,7 @@ public class MegatopService {
             megatop.setColors(String.valueOf(str.get(8)));
             megatop.setSeason(String.valueOf(str.get(9)));
             megatop.setCompetitor(String.valueOf(str.get(10)));
-            megatop.setId(String.valueOf(str.get(11)));
+            megatop.setMegatopId(String.valueOf(str.get(11)));
             megatop.setCategory2(String.valueOf(str.get(12)));
             megatop.setBrand(String.valueOf(str.get(13)));
             megatop.setModel(String.valueOf(str.get(14)));
@@ -98,6 +102,8 @@ public class MegatopService {
                 megatop.setDate(DateUtils.getDateTime(String.valueOf(str.get(20))));
             }
             megatop.setConcatUrlRostovChildren((str.get(18)) + String.valueOf(str.get(7)));
+            megatop.setFileName(fileName);
+            megatop.setDateTime(instant);
             arrayList.add(megatop);
         }
         return arrayList;

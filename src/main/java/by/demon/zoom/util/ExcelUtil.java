@@ -235,15 +235,15 @@ public class ExcelUtil<T> {
     }
 
     public void exportExcel(Collection<T> dataset, OutputStream out, short skip) {
-        exportExcel(Globals.SHEETNAME, null, dataset, out, "yyyy-MM-dd", skip);
+        exportExcel(Globals.SHEET_NAME, null, dataset, out, "yyyy-MM-dd", skip);
     }
 
     public void exportExcel(String[] headers, Collection<T> dataset, OutputStream out, short skip) {
-        exportExcel(Globals.SHEETNAME, headers, dataset, out, "yyyy-MM-dd", skip);
+        exportExcel(Globals.SHEET_NAME, headers, dataset, out, "yyyy-MM-dd", skip);
     }
 
     public void exportExcel(String[] headers, Collection<T> dataset, OutputStream out, String pattern, short skip) {
-        exportExcel(Globals.SHEETNAME, headers, dataset, out, pattern, skip);
+        exportExcel(Globals.SHEET_NAME, headers, dataset, out, pattern, skip);
     }
 
     /**

@@ -40,7 +40,7 @@ public final class MappingUtils {
         megatopDTO.setColors(entity.getColors());
         megatopDTO.setSeason(entity.getSeason());
         megatopDTO.setCompetitor(entity.getCompetitor());
-        megatopDTO.setId(entity.getId());
+        megatopDTO.setId(entity.getMegatopId());
         megatopDTO.setCategory2(entity.getCategory2());
         megatopDTO.setBrand(entity.getBrand());
         megatopDTO.setModel(entity.getModel());

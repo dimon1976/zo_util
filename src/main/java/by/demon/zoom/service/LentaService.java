@@ -118,7 +118,6 @@ public class LentaService {
             if (countSheet == 0) {
                 lenta.setId(row.get(0).toString());
                 lenta.setModel(row.get(1).toString());
-//                lenta.setWeight(row.get(2).toString());
                 lenta.setPrice(row.get(2).toString());
                 lenta.setMoscow(row.get(3).toString());
                 lenta.setRostovNaDonu(row.get(4).toString());
