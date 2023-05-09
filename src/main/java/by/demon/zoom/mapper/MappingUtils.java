@@ -1,7 +1,9 @@
 package by.demon.zoom.mapper;
 
+import by.demon.zoom.domain.Lenta;
 import by.demon.zoom.domain.Megatop;
 import by.demon.zoom.domain.VlookBar;
+import by.demon.zoom.dto.LentaDTO;
 import by.demon.zoom.dto.MegatopDTO;
 import by.demon.zoom.dto.VlookBarDTO;
 import org.springframework.stereotype.Service;
@@ -48,5 +50,22 @@ public final class MappingUtils {
         megatopDTO.setUrl(entity.getUrl());
         megatopDTO.setStatus(entity.getStatus());
         return megatopDTO;
+    }
+
+    public static LentaDTO mapToLentaDTO(Lenta entity) {
+        LentaDTO lentaDTO = new LentaDTO();
+        String joinEan = String.join(",", entity.getEan());
+        lentaDTO.setId(entity.getId());
+        lentaDTO.setModel(entity.getModel());
+        lentaDTO.setWeight(entity.getWeight());
+        lentaDTO.setPrice(entity.getPrice());
+        lentaDTO.setMoscow(entity.getMoscow());
+        lentaDTO.setRostovNaDonu(entity.getRostovNaDonu());
+        lentaDTO.setSpb(entity.getSpb());
+        lentaDTO.setNovosibirsk(entity.getNovosibirsk());
+        lentaDTO.setYekaterinburg(entity.getYekaterinburg());
+        lentaDTO.setSaratov(entity.getSaratov());
+        lentaDTO.setEan(joinEan);
+        return lentaDTO;
     }
 }

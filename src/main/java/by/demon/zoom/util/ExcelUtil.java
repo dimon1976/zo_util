@@ -1,6 +1,6 @@
 package by.demon.zoom.util;
 
-import by.demon.zoom.domain.VlookBar;
+import by.demon.zoom.service.LentaService;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
@@ -16,8 +16,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -62,7 +60,7 @@ public class ExcelUtil<T> {
     public void download(String filename, InputStream is, HttpServletResponse response) throws IOException {
         InputStream fis = new BufferedInputStream(is);
         byte[] buffer = new byte[fis.available()];
-        int read = fis.read(buffer);
+        fis.read(buffer);
         fis.close();
         response.reset();
         response.addHeader("Content-Disposition", "attachment;filename=" + new String(filename.getBytes(), StandardCharsets.ISO_8859_1));
@@ -142,9 +140,7 @@ public class ExcelUtil<T> {
         List<List<Object>> list = new LinkedList<>();
         XSSFWorkbook xwb = new XSSFWorkbook(is);
         XSSFSheet sheet = xwb.getSheetAt(0);
-        Object value;
         XSSFRow row;
-        XSSFCell cell;
         int counter = 0;
         for (int i = sheet.getFirstRowNum(); counter < sheet.getPhysicalNumberOfRows(); i++) {
             row = sheet.getRow(i);
@@ -154,27 +150,14 @@ public class ExcelUtil<T> {
                 counter++;
             }
             List<Object> linked = new LinkedList<>();
-            for (int j = 0; j <= row.getLastCellNum(); j++) {
-                cell = row.getCell(j);
-                if (cell == null) {
-                    linked.add("");
-                    continue;
-                }
-                if (cell.getCellType() == CellType.FORMULA) {
-                    value = getValueFormula(cell);
-                    linked.add(value);
-                } else {
-                    value = getValue(cell);
-                    linked.add(value);
-                }
-            }
+            LentaService.getRowList(row, linked);
             list.add(linked);
         }
         is.close();
         return list;
     }
 
-    private static Object getValueFormula(XSSFCell cell) {
+    public static Object getValueFormula(Cell cell) {
         Object value;
         switch (cell.getCachedFormulaResultType()) {
             case STRING:
@@ -202,7 +185,7 @@ public class ExcelUtil<T> {
         return value;
     }
 
-    private static Object getValue(XSSFCell cell) {
+    public static Object getValue(Cell cell) {
         Object value;
         switch (cell.getCellType()) {
             case STRING:
@@ -384,5 +367,4 @@ public class ExcelUtil<T> {
         Class<?> dataClazz = iterator.next().getClass();
         return dataClazz.getSimpleName();
     }
-
 }

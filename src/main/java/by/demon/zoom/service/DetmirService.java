@@ -19,7 +19,6 @@ public class DetmirService {
     private final String[] header = {"Клиент", "ID связи", "ID клиента", "Верхняя категория клиента", "Категория клиента", "Бренд клиента",
             "Модель клиента", "Код производителя клиента", "Штрих-код клиента", "Статус клиента", "Цена конкурента",
             "Модель конкурента", "Код производителя конкурента", "ID конкурента", "Конкурент", "Конкурент вкл."};
-    private final short skip = 1;
     private final ExcelUtil<DetmirStats> excelUtil;
 
     public DetmirService(ExcelUtil<DetmirStats> excelUtil) {
@@ -31,6 +30,7 @@ public class DetmirService {
         List<List<Object>> originalWb = ExcelUtil.readExcel(file);
         Collection<DetmirStats> result = getResultList(originalWb);
         try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
+            short skip = 1;
             excelUtil.exportExcel(header, result, out, skip);
             excelUtil.download(file.getName(), filePath, response);
         }
