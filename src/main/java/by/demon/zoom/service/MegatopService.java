@@ -14,10 +14,9 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.ExcelUtil.readExcel;
 
@@ -39,7 +38,7 @@ public class MegatopService {
         Path of = Path.of(filePath);
         List<List<Object>> lists = readExcel(file);
         Collection<Megatop> megatopArrayList = getMegatopList(lists);
-        List<MegatopDTO> collect = getMegatopDTOList(megatopArrayList);
+        HashSet<MegatopDTO> collect = getMegatopDTOList(megatopArrayList);
         try (OutputStream out = Files.newOutputStream(of)) {
             short skipLines = 1;
             excelUtil.exportExcel(header, collect, out, skipLines);
@@ -48,15 +47,28 @@ public class MegatopService {
         return filePath;
     }
 
-    private List<MegatopDTO> getMegatopDTOList(Collection<Megatop> megatopList){
-        return megatopList.stream()
-                .filter(l -> !l.getUrl().contains("/ru/") && !l.getUrl().contains("/kz/") && !l.getDate().toLocalDate().isBefore(beforeDate))
-                .map(MappingUtils::mapToMegatopDTO)
-                .collect(Collectors.toList());
+    private HashSet<MegatopDTO> getMegatopDTOList(Collection<Megatop> megatopList) {
+        HashSet<MegatopDTO> megatopDTOS = new HashSet<>();
+        for (Megatop megatop : megatopList) {
+            if (megatop.getCompetitor().equals("belwest.by")) {
+                MegatopDTO megatopDTO = MappingUtils.mapToMegatopDTO(megatop);
+                megatopDTOS.add(megatopDTO);
+            } else {
+                if (!megatop.getUrl().contains("/ru/") && !megatop.getUrl().contains("/kz/") && !megatop.getDate().toLocalDate().isBefore(beforeDate)) {
+                    MegatopDTO megatopDTO = MappingUtils.mapToMegatopDTO(megatop);
+                    megatopDTOS.add(megatopDTO);
+                }
+            }
+        }
+        return megatopDTOS;
+//        return megatopList.stream()
+//                .filter(l -> !l.getUrl().contains("/ru/") && !l.getUrl().contains("/kz/") && !l.getDate().toLocalDate().isBefore(beforeDate))
+//                .map(MappingUtils::mapToMegatopDTO)
+//                .collect(Collectors.toList());
     }
 
     private Collection<Megatop> getMegatopList(List<List<Object>> lists) {
-        Collection<Megatop> arrayList = new ArrayList<>();
+        HashSet<Megatop> arrayList = new HashSet<>();
         for (List<Object> str : lists) {
             if (String.valueOf(str.get(0)).equals("Категория 1")) {
                 continue;
