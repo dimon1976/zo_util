@@ -24,9 +24,14 @@ import static by.demon.zoom.util.DateUtils.getDateTimeNow;
 @RestController
 @RequestMapping("/excel")
 public class ExcelController {
+    private final DetmirService detmirService;
+    private final VlookService vlookService;
+    private final MegatopService megatopService;
 
     @Value("${temp.path}")
     private String TEMP_PATH;
+    @Autowired
+    private HttpServletResponse response;
 
     public ExcelController(DetmirService detmirService, VlookService vlookService, MegatopService megatopService) {
         this.detmirService = detmirService;
@@ -35,43 +40,33 @@ public class ExcelController {
     }
 
 
-    private final DetmirService detmirService;
-
-    private final VlookService vlookService;
-
-    private final MegatopService megatopService;
-
     @PostMapping("/stat/detmirStats")
-    public String detmirStats(@RequestParam("file") MultipartFile multipartFile, HttpServletResponse response) throws IOException {
-        if (multipartFile != null && !Objects.requireNonNull(multipartFile.getOriginalFilename()).isEmpty()) {
-            String orgName = getOrgName(multipartFile);
-            String extension = orgName.lastIndexOf(".") == -1 ? "" : orgName.substring(orgName.lastIndexOf(".") + 1);
-            String filePath = TEMP_PATH + "/" + orgName.replace("." + extension, "-" + getDateTimeNow()) + "." + extension;
+    public String detmirStats(@RequestParam("file") MultipartFile multipartFile){
+        if (ifExist(multipartFile)) {
+            String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);
             try {
                 multipartFile.transferTo(transferTo);
-                return detmirService.getListWb(filePath, transferTo, response);
+                return detmirService.export(filePath, transferTo, response);
             } catch (IllegalStateException | IOException e) {
                 e.printStackTrace();
-                return "File uploaded failed: " + orgName;
+                return "File uploaded failed: " + getOrgName(multipartFile);
             }
         }
         return "index";
     }
 
     @PostMapping("/vlook")
-    public String excelVlook(@RequestParam("file") MultipartFile multipartFile, HttpServletResponse response) throws IOException {
-        if (multipartFile != null && !Objects.requireNonNull(multipartFile.getOriginalFilename()).isEmpty()) {
-            String orgName = getOrgName(multipartFile);
-            String extension = orgName.lastIndexOf(".") == -1 ? "" : orgName.substring(orgName.lastIndexOf(".") + 1);
-            String filePath = TEMP_PATH + "/" + orgName.replace("." + extension, "-" + getDateTimeNow()) + "." + extension;
+    public String excelVlook(@RequestParam("file") MultipartFile multipartFile){
+        if (ifExist(multipartFile)) {
+            String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);
             try {
                 multipartFile.transferTo(transferTo);
-                return vlookService.vlookBar(filePath, transferTo, response);
+                return vlookService.export(filePath, transferTo, response);
             } catch (IllegalStateException | IOException e) {
                 e.printStackTrace();
-                return "File uploaded failed: " + orgName;
+                return "File uploaded failed: " + getOrgName(multipartFile);
             }
         }
         return "index";
@@ -79,21 +74,35 @@ public class ExcelController {
 
 
     @PostMapping("/megatop")
-    public String excelMegatop(@RequestParam("file") MultipartFile multipartFile, HttpServletResponse response) throws IOException {
-        if (multipartFile != null && !Objects.requireNonNull(multipartFile.getOriginalFilename()).isEmpty()) {
-            String orgName = getOrgName(multipartFile);
-            String extension = orgName.lastIndexOf(".") == -1 ? "" : orgName.substring(orgName.lastIndexOf(".") + 1);
-            String filePath = TEMP_PATH + "/" + orgName.replace("." + extension, "-" + getDateTimeNow()) + "." + extension;
+    public String excelMegatop(@RequestParam("file") MultipartFile multipartFile) {
+        if (ifExist(multipartFile)) {
+            String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);
             try {
                 multipartFile.transferTo(transferTo);
-                return megatopService.getList(filePath, transferTo, response);
+                return megatopService.export(filePath, transferTo, response);
             } catch (IllegalStateException | IOException e) {
                 e.printStackTrace();
-                return "File uploaded failed: " + orgName;
+                return "File uploaded failed: " + getOrgName(multipartFile);
             }
         }
         return "index";
+    }
+
+    private boolean ifExist(@RequestParam("file") MultipartFile multipartFile) {
+        return multipartFile != null && !Objects.requireNonNull(multipartFile.getOriginalFilename()).isEmpty();
+    }
+    @NotNull
+    private String getFilePath(MultipartFile multipartFile) {
+        String orgName = getOrgName(multipartFile);
+        assert orgName != null;
+        String extension = getExtension(orgName);
+        return TEMP_PATH + "/" + orgName.replace("." + extension, "-" + getDateTimeNow()) + "." + extension;
+    }
+
+    @NotNull
+    private String getExtension(String orgName) {
+        return orgName.lastIndexOf(".") == -1 ? "" : orgName.substring(orgName.lastIndexOf(".") + 1);
     }
 
     @Nullable

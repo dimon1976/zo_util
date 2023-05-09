@@ -5,7 +5,6 @@ import by.demon.zoom.dto.MegatopDTO;
 import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.util.DateUtils;
 import by.demon.zoom.util.ExcelUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
@@ -28,69 +27,35 @@ public class MegatopService {
     private final String[] header = {"Категория 1", "Категория", "Высота каблука", "Коллекция", "Конструкция верх", "Материал верха", "Материал подкладки",
             "Ростовка дети", "Цвета", "Сезон", "Конкурент", "ID", "Категория", "Бренд", "Модель", "Артикул", "Цена", "Старая цена", "Ссылка на модель", "Статус"};
     private final LocalDate beforeDate = LocalDate.of(2020, 8, 1);
-    private final Collection<Megatop> megatopArrayList = new ArrayList<>();
+    private final ExcelUtil<MegatopDTO> excelUtil;
 
-    @Autowired
-    private ExcelUtil<MegatopDTO> excelUtil;
+    public MegatopService(ExcelUtil<MegatopDTO> excelUtil) {
+        this.excelUtil = excelUtil;
+    }
 
 
-    public String getList(String filePath, File file, HttpServletResponse response) throws IOException {
+    public String export(String filePath, File file, HttpServletResponse response) throws IOException {
         Path of = Path.of(filePath);
         List<List<Object>> lists = readExcel(file);
-
-        long start = System.currentTimeMillis();
-
-        getMegatopList(lists);
-        System.out.println("Время работы - лист Megatop - " + (System.currentTimeMillis() - start) / 1000);
-
-        long start2 = System.currentTimeMillis();
-
-        short skipLines = 1;
-        getMegatopDTOList(filePath, file, response, of, lists, skipLines, start2);
+        Collection<Megatop> megatopArrayList = getMegatopList(lists);
+        List<MegatopDTO> collect = getMegatopDTOList(megatopArrayList);
+        try (OutputStream out = Files.newOutputStream(of)) {
+            short skipLines = 1;
+            excelUtil.exportExcel(header, collect, out, skipLines);
+            excelUtil.download(file.getName(), filePath, response);
+        }
         return filePath;
     }
 
-    private void getMegatopDTOList(String filePath, File file, HttpServletResponse response, Path of, List<List<Object>> lists, short skip, long start2) throws IOException {
-        if (lists.size() == 22) {
-            List<MegatopDTO> collect = megatopArrayList.stream()
-                    .filter(l -> !l.getUrl().contains("/ru/") && !l.getUrl().contains("/kz/") && !l.getDate().toLocalDate().isBefore(beforeDate))
-                    .map(MappingUtils::mapToMegatopDTO)
-                    .collect(Collectors.toList());
-
-
-            System.out.println("Время работы - лист MegatopDTO - " + (System.currentTimeMillis() - start2) / 1000);
-            try (OutputStream out = Files.newOutputStream(of)) {
-
-                long start3 = System.currentTimeMillis();
-                excelUtil.exportExcel(header, collect, out, skip);
-                System.out.println("Время работы - export - " + (System.currentTimeMillis() - start3) / 1000);
-
-                long start4 = System.currentTimeMillis();
-                excelUtil.download(file.getName(), filePath, response);
-                System.out.println("Время работы - download - " + (System.currentTimeMillis() - start4) / 1000);
-            }
-        } else {
-
-
-            List<MegatopDTO> collect = megatopArrayList.stream()
-                    .filter(l -> !l.getUrl().contains("/ru/") && !l.getUrl().contains("/kz/"))
-                    .map(MappingUtils::mapToMegatopDTO)
-                    .collect(Collectors.toList());
-            System.out.println("Время работы - лист MegatopDTO - " + (System.currentTimeMillis() - start2) / 1000);
-            try (OutputStream out = Files.newOutputStream(of)) {
-
-                long start3 = System.currentTimeMillis();
-                excelUtil.exportExcel(header, collect, out, skip);
-                System.out.println("Время работы - export - " + (System.currentTimeMillis() - start3) / 1000);
-
-                long start4 = System.currentTimeMillis();
-                excelUtil.download(file.getName(), filePath, response);
-                System.out.println("Время работы - download - " + (System.currentTimeMillis() - start4) / 1000);
-            }
-        }
+    private List<MegatopDTO> getMegatopDTOList(Collection<Megatop> megatopList){
+        return megatopList.stream()
+                .filter(l -> !l.getUrl().contains("/ru/") && !l.getUrl().contains("/kz/") && !l.getDate().toLocalDate().isBefore(beforeDate))
+                .map(MappingUtils::mapToMegatopDTO)
+                .collect(Collectors.toList());
     }
 
-    private void getMegatopList(List<List<Object>> lists) {
+    private Collection<Megatop> getMegatopList(List<List<Object>> lists) {
+        Collection<Megatop> arrayList = new ArrayList<>();
         for (List<Object> str : lists) {
             if (String.valueOf(str.get(0)).equals("Категория 1")) {
                 continue;
@@ -116,15 +81,12 @@ public class MegatopService {
             megatop.setOldPrice(String.valueOf(str.get(17)));
             megatop.setUrl(String.valueOf(str.get(18)));
             megatop.setStatus(String.valueOf(str.get(19)));
-            megatop.setVendorCode(String.valueOf(str.get(20)));
-            if (str.size() == 22) {
-                if (!String.valueOf(str.get(20)).equals("")) {
-                    megatop.setDate(DateUtils.getDateTime(String.valueOf(str.get(20))));
-                }
+            if (!String.valueOf(str.get(20)).equals("")) {
+                megatop.setDate(DateUtils.getDateTime(String.valueOf(str.get(20))));
             }
             megatop.setConcatUrlRostovChildren((str.get(18)) + String.valueOf(str.get(7)));
-            megatopArrayList.add(megatop);
+            arrayList.add(megatop);
         }
+        return arrayList;
     }
-
 }
