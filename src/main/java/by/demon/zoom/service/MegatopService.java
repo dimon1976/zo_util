@@ -27,6 +27,7 @@ public class MegatopService {
     private final String[] header = {"Категория 1", "Категория", "Высота каблука", "Коллекция", "Конструкция верх", "Материал верха", "Материал подкладки",
             "Ростовка дети", "Цвета", "Сезон", "Конкурент", "ID", "Категория", "Бренд", "Модель", "Артикул", "Цена", "Старая цена", "Ссылка на модель", "Статус"};
     private final LocalDate beforeDate = LocalDate.of(2020, 8, 1);
+
     private final ExcelUtil<MegatopDTO> excelUtil;
 
     public MegatopService(ExcelUtil<MegatopDTO> excelUtil) {
