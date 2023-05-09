@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -26,6 +27,7 @@ import static by.demon.zoom.util.ExcelUtil.readExcel;
 @Service
 public class MegatopService {
 
+    private static final DateTimeFormatter MEGATOP_PATTERN = DateTimeFormatter.ofPattern("dd.MM.yyyy H:m");
     private String fileName = "";
     private final String[] header = {"Категория 1", "Категория", "Высота каблука", "Коллекция", "Конструкция верх", "Материал верха", "Материал подкладки",
             "Ростовка дети", "Цвета", "Сезон", "Конкурент", "ID", "Категория", "Бренд", "Модель", "Артикул", "Цена", "Старая цена", "Ссылка на модель", "Статус"};
@@ -71,7 +73,7 @@ public class MegatopService {
     }
 
     private Collection<Megatop> getMegatopList(List<List<Object>> lists) {
-        Timestamp instant= Timestamp.from(Instant.now());
+        Timestamp instant = Timestamp.from(Instant.now());
         HashSet<Megatop> arrayList = new HashSet<>();
         for (List<Object> str : lists) {
             if (String.valueOf(str.get(0)).equals("Категория 1")) {
@@ -99,7 +101,7 @@ public class MegatopService {
             megatop.setUrl(String.valueOf(str.get(18)));
             megatop.setStatus(String.valueOf(str.get(19)));
             if (!String.valueOf(str.get(20)).equals("")) {
-                megatop.setDate(DateUtils.getDateTime(String.valueOf(str.get(20))));
+                megatop.setDate(DateUtils.getDateTime(String.valueOf(str.get(20)),MEGATOP_PATTERN));
             }
             megatop.setConcatUrlRostovChildren((str.get(18)) + String.valueOf(str.get(7)));
             megatop.setFileName(fileName);
