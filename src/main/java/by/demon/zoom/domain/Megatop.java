@@ -5,6 +5,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -12,8 +17,12 @@ import java.util.Objects;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
 public class Megatop {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
     private String category1;
     private String category;
     private String heelHeight;
@@ -25,7 +34,7 @@ public class Megatop {
     private String colors;
     private String season;
     private String competitor;
-    private String id;
+    private String megatopId;
     private String category2;
     private String brand;
     private String model;
@@ -36,6 +45,8 @@ public class Megatop {
     private String status;
     private LocalDateTime date;
     private String concatUrlRostovChildren;
+    private String fileName;
+    private Timestamp dateTime;
 
     @Override
     public boolean equals(Object o) {

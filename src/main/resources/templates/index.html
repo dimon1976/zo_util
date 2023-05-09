@@ -50,6 +50,16 @@
                             </button>
                         </div>
                     </form>
+                    <form th:action="@{/excel/lentaReport}" th:method="post" enctype="multipart/form-data">
+                        <div class="">
+                            <br>
+                            <input type="file" class="form-control" name="file">
+                            <br>
+                            <button class="btn btn-primary">
+                                Lenta report
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

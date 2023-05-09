@@ -1,4 +1,4 @@
-package by.demon.zoom.dto;
+package by.demon.zoom.dto.lenta;
 
 
 import lombok.AllArgsConstructor;

@@ -2,8 +2,10 @@ package by.demon.zoom.service;
 
 
 import by.demon.zoom.domain.Lenta;
-import by.demon.zoom.dto.LentaDTO;
+import by.demon.zoom.dto.lenta.LentaDTO;
+import by.demon.zoom.dto.lenta.LentaReportDTO;
 import by.demon.zoom.mapper.MappingUtils;
+import by.demon.zoom.util.DateUtils;
 import by.demon.zoom.util.ExcelUtil;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
@@ -13,26 +15,90 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-import static by.demon.zoom.util.ExcelUtil.getValue;
-import static by.demon.zoom.util.ExcelUtil.getValueFormula;
+import static by.demon.zoom.util.ExcelUtil.*;
 
 @Service
 public class LentaService {
 
-    private final ExcelUtil<LentaDTO> excelUtil;
     private HashMap<String, Lenta> data = new HashMap<>();
+    private static final DateTimeFormatter LENTA_PATTERN = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private final LocalDate beforeDate = LocalDate.of(2023, 4, 1);
     @Value("${out.path}")
     private String outPath;
     private int countSheet = 0;
-    private final String[] header = {"Id", "Наименование товара", "Вес", "Цена", "Москва, Нижний новгород", "Ростов-на-Дону", "Санкт-Петербург, Петрозаводск", "Новосибирск, Иркутск, Красноярск", "Екатеринбург", "Саратов, Уфа, Ульяновск", "Штрихкод"};
+    private final String[] headerLentaTask = {"Id", "Наименование товара", "Вес", "Цена", "Москва, Нижний новгород", "Ростов-на-Дону", "Санкт-Петербург, Петрозаводск", "Новосибирск, Иркутск, Красноярск", "Екатеринбург", "Саратов, Уфа, Ульяновск", "Штрихкод"};
+    private final String[] headerLentaReport = {"Город", "Товар", "Наименование товара", "Цена", "Сеть", "Акц. Цена 1", "Дата начала промо", "Дата окончания промо", "% скидки", "Механика акции", "Фото (ссылка)", "Доп.цена", "Модель", "Вес Едадил", "Вес Едадил, кг", "Вес Ленты", "Вес Ленты, кг", "Цена Едадил за КГ", "Пересчет к весу Ленты"};
 
+
+    public String exportReport(String filePath, File file, HttpServletResponse response) throws IOException {
+        List<List<Object>> list = readExcel(file);
+        Collection<Lenta> lentaList = getResultList(list, 1);
+        Collection<LentaReportDTO> lentaReportDTO = getLentaReportDTOList(lentaList);
+        try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
+            ExcelUtil<LentaReportDTO> excelUtil = new ExcelUtil<>();
+            short skip = 1;
+            excelUtil.exportExcel(headerLentaReport, lentaReportDTO, out, skip);
+            excelUtil.download(file.getName(), filePath, response);
+        }
+        return filePath;
+    }
+
+    private Collection<Lenta> getResultList(List<List<Object>> list, Integer skipLines) {
+        ArrayList<Lenta> resultList = new ArrayList<>();
+        int count = 0;
+        for (List<Object> str : list) {
+            if (count < skipLines) {
+                count++;
+                continue;
+            }
+            Lenta lenta = new Lenta();
+            lenta.setCity(String.valueOf(str.get(0)));
+            lenta.setProduct(String.valueOf(str.get(1)));
+            lenta.setProductName(String.valueOf(str.get(2)));
+            lenta.setPrice(String.valueOf(str.get(3)));
+            lenta.setNetwork(String.valueOf(str.get(4)));
+            lenta.setActionPrice1(String.valueOf(str.get(5)));
+            if (!String.valueOf(str.get(6)).equals("")){
+                lenta.setDateFromPromo(DateUtils.getDate(String.valueOf(str.get(6)), LENTA_PATTERN));
+            }
+            if (!String.valueOf(str.get(7)).equals("")){
+                lenta.setDateToPromo(DateUtils.getDate(String.valueOf(str.get(7)), LENTA_PATTERN));
+            }
+            lenta.setDiscountPercentage(String.valueOf(str.get(8)));
+            lenta.setMechanicsOfTheAction(String.valueOf(str.get(9)));
+            lenta.setUrl(String.valueOf(str.get(10)));
+            lenta.setAdditionalPrice(String.valueOf(str.get(11)));
+            lenta.setModel(String.valueOf(str.get(12)));
+            lenta.setWeightEdeadeal(String.valueOf(str.get(13)));
+            lenta.setWeightEdeadealKg(String.valueOf(str.get(14)));
+            lenta.setWeightLenta(String.valueOf(str.get(15)));
+            lenta.setWeightLentaKg(String.valueOf(str.get(16)));
+            lenta.setWeightEdeadealKg(String.valueOf(str.get(17)));
+            lenta.setConversionToLentaWeight(String.valueOf(str.get(18)));
+            resultList.add(lenta);
+            count++;
+        }
+        return resultList;
+    }
+
+    private HashSet<LentaReportDTO> getLentaReportDTOList(Collection<Lenta> lentaList) {
+        HashSet<LentaReportDTO> lentaReportDTOs = new HashSet<>();
+        for (Lenta lenta : lentaList) {
+            if (lenta.getDateToPromo().isBefore(beforeDate)) {
+                LentaReportDTO lentaReportDTO = MappingUtils.mapToLentaReportDTO(lenta);
+                lentaReportDTOs.add(lentaReportDTO);
+            }
+        }
+        return lentaReportDTOs;
+    }
 
 
     public String export(String filePath, File filename, HttpServletResponse response) throws IOException {
@@ -118,7 +184,6 @@ public class LentaService {
             if (countSheet == 0) {
                 lenta.setId(row.get(0).toString());
                 lenta.setModel(row.get(1).toString());
-//                lenta.setWeight(row.get(2).toString());
                 lenta.setPrice(row.get(2).toString());
                 lenta.setMoscow(row.get(3).toString());
                 lenta.setRostovNaDonu(row.get(4).toString());
@@ -141,9 +206,10 @@ public class LentaService {
 
     private void write(String filePath, File fileName, HttpServletResponse response) throws IOException {
         File file = Path.of(outPath, fileName.getName().toLowerCase(Locale.ROOT).replace("." + getExtension(fileName), ".xlsx")).toFile();
-        Collection<LentaDTO> megatopArrayList = getLentaDTOList();
+        Collection<LentaDTO> lentaDTOs = getLentaDTOList();
         try (FileOutputStream fileOutputStream = new FileOutputStream(fileName)) {
-            excelUtil.exportExcel(header, megatopArrayList, fileOutputStream, (short) 1);
+            ExcelUtil<LentaDTO> excelUtil = new ExcelUtil<>();
+            excelUtil.exportExcel(headerLentaTask, lentaDTOs, fileOutputStream, (short) 1);
             excelUtil.download(file.getName(), filePath, response);
         }
         data = new HashMap<>();
@@ -157,9 +223,5 @@ public class LentaService {
             lentaDTOS.add(lentaDTO);
         }
         return lentaDTOS;
-    }
-
-    public LentaService(ExcelUtil<LentaDTO> excelUtil) {
-        this.excelUtil = excelUtil;
     }
 }

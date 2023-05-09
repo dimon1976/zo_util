@@ -107,6 +107,22 @@ public class ExcelController {
         return "index";
     }
 
+    @PostMapping("/lentaReport")
+    public String excelLentaReport(@RequestParam("file") MultipartFile multipartFile) {
+        if (ifExist(multipartFile)) {
+            String filePath = getFilePath(multipartFile);
+            File transferTo = new File(filePath);
+            try {
+                multipartFile.transferTo(transferTo);
+                return lentaService.exportReport(filePath, transferTo, response);
+            } catch (IllegalStateException | IOException e) {
+                e.printStackTrace();
+                return "File uploaded failed: " + getOrgName(multipartFile);
+            }
+        }
+        return "index";
+    }
+
     private boolean ifExist(@RequestParam("file") MultipartFile multipartFile) {
         return multipartFile != null && !Objects.requireNonNull(multipartFile.getOriginalFilename()).isEmpty();
     }
