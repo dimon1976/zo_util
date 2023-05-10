@@ -80,11 +80,11 @@ public class ExcelUtil<T> {
     }
 
 
-    public static String export2003(String fileName, HttpServletResponse response) throws IOException {
+    public static String export2003(String fileName, HttpServletResponse response) {
         return null;
     }
 
-    public static String export2007(String fileName, HttpServletResponse response) throws IOException {
+    public static String export2007(String fileName, HttpServletResponse response) {
         return null;
     }
 
@@ -150,12 +150,8 @@ public class ExcelUtil<T> {
     private static List<List<Object>> readExcel2007(InputStream is) throws IOException {
         List<List<Object>> list = new LinkedList<>();
         XSSFWorkbook xwb = new XSSFWorkbook(is);
-        System.out.println("Время работы - создание WB - " + (System.currentTimeMillis() - start) / 1000);
-        long start2 = System.currentTimeMillis();
         XSSFSheet sheet = xwb.getSheetAt(0);
-        Object value;
         XSSFRow row;
-        XSSFCell cell;
         int counter = 0;
         for (int i = sheet.getFirstRowNum(); counter < sheet.getPhysicalNumberOfRows(); i++) {
             row = sheet.getRow(i);
@@ -165,25 +161,30 @@ public class ExcelUtil<T> {
                 counter++;
             }
             List<Object> linked = new LinkedList<>();
-            for (int j = 0; j <= row.getLastCellNum(); j++) {
-                cell = row.getCell(j);
-                if (cell == null) {
-                    linked.add("");
-                    continue;
-                }
-                if (cell.getCellType() == CellType.FORMULA) {
-                    value = getValueFormula(cell);
-                    linked.add(value);
-                } else {
-                    value = getValue(cell);
-                    linked.add(value);
-                }
-            }
+            getRowList(row, linked);
             list.add(linked);
         }
         is.close();
-        System.out.println("Время работы - от WB до return list - " + (System.currentTimeMillis() - start2) / 1000);
         return list;
+    }
+
+    public static void getRowList(Row row, List<Object> linked) {
+        Cell cell;
+        Object value;
+        for (int j = 0; j <= row.getLastCellNum(); j++) {
+            cell = row.getCell(j);
+            if (cell == null) {
+                linked.add("");
+                continue;
+            }
+            if (cell.getCellType() == CellType.FORMULA) {
+                value = getValueFormula(cell);
+                linked.add(value);
+            } else {
+                value = getValue(cell);
+                linked.add(value);
+            }
+        }
     }
 
     public static Object getValueFormula(Cell cell) {
@@ -398,7 +399,6 @@ public class ExcelUtil<T> {
     }
 
     private void exportVlookBarWorkbook(List<VlookBar> dataset, XSSFSheet sheet) {
-        String url;
         int rowIdx = 1;
         for (VlookBar data : dataset) {
             short cellIdx = 0;

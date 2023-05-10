@@ -34,8 +34,8 @@ public class Lenta {
     private String productName;
     private String network;
     private String actionPrice1;
-    private LocalDate dateFromPromo;
-    private LocalDate dateToPromo;
+    private String dateFromPromo;
+    private String dateToPromo;
     private String discountPercentage;
     private String mechanicsOfTheAction;
     private String url;

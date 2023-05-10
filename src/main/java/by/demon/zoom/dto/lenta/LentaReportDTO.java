@@ -18,8 +18,8 @@ public class LentaReportDTO {
     private String price;
     private String network;
     private String actionPrice1;
-    private LocalDate dateFromPromo;
-    private LocalDate dateToPromo;
+    private String dateFromPromo;
+    private String dateToPromo;
     private String discountPercentage;
     private String mechanicsOfTheAction;
     private String url;

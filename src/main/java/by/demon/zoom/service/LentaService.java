@@ -30,7 +30,7 @@ public class LentaService {
 
     private HashMap<String, Lenta> data = new HashMap<>();
     private static final DateTimeFormatter LENTA_PATTERN = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    private final LocalDate beforeDate = LocalDate.of(2023, 4, 1);
+    private final LocalDate afterDate = LocalDate.of(2023, 4, 1);
     @Value("${out.path}")
     private String outPath;
     private int countSheet = 0;
@@ -40,7 +40,7 @@ public class LentaService {
 
     public String exportReport(String filePath, File file, HttpServletResponse response) throws IOException {
         List<List<Object>> list = readExcel(file);
-        Collection<Lenta> lentaList = getResultList(list, 1);
+        Collection<Lenta> lentaList = getResultList(list);
         Collection<LentaReportDTO> lentaReportDTO = getLentaReportDTOList(lentaList);
         try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
             ExcelUtil<LentaReportDTO> excelUtil = new ExcelUtil<>();
@@ -51,11 +51,11 @@ public class LentaService {
         return filePath;
     }
 
-    private Collection<Lenta> getResultList(List<List<Object>> list, Integer skipLines) {
+    private Collection<Lenta> getResultList(List<List<Object>> list) {
         ArrayList<Lenta> resultList = new ArrayList<>();
         int count = 0;
         for (List<Object> str : list) {
-            if (count < skipLines) {
+            if (count < 1) {
                 count++;
                 continue;
             }
@@ -66,12 +66,8 @@ public class LentaService {
             lenta.setPrice(String.valueOf(str.get(3)));
             lenta.setNetwork(String.valueOf(str.get(4)));
             lenta.setActionPrice1(String.valueOf(str.get(5)));
-            if (!String.valueOf(str.get(6)).equals("")){
-                lenta.setDateFromPromo(DateUtils.getDate(String.valueOf(str.get(6)), LENTA_PATTERN));
-            }
-            if (!String.valueOf(str.get(7)).equals("")){
-                lenta.setDateToPromo(DateUtils.getDate(String.valueOf(str.get(7)), LENTA_PATTERN));
-            }
+            lenta.setDateFromPromo(String.valueOf(str.get(6)));
+            lenta.setDateToPromo(String.valueOf(str.get(7)));
             lenta.setDiscountPercentage(String.valueOf(str.get(8)));
             lenta.setMechanicsOfTheAction(String.valueOf(str.get(9)));
             lenta.setUrl(String.valueOf(str.get(10)));
@@ -92,9 +88,11 @@ public class LentaService {
     private HashSet<LentaReportDTO> getLentaReportDTOList(Collection<Lenta> lentaList) {
         HashSet<LentaReportDTO> lentaReportDTOs = new HashSet<>();
         for (Lenta lenta : lentaList) {
-            if (lenta.getDateToPromo().isBefore(beforeDate)) {
-                LentaReportDTO lentaReportDTO = MappingUtils.mapToLentaReportDTO(lenta);
-                lentaReportDTOs.add(lentaReportDTO);
+            if (!lenta.getDateToPromo().equals("")) {
+                if (DateUtils.getDate(lenta.getDateToPromo(),LENTA_PATTERN).isAfter(afterDate)) {
+                    LentaReportDTO lentaReportDTO = MappingUtils.mapToLentaReportDTO(lenta);
+                    lentaReportDTOs.add(lentaReportDTO);
+                }
             }
         }
         return lentaReportDTOs;
@@ -150,30 +148,11 @@ public class LentaService {
                 counter++;
             }
             List<Object> linked = new LinkedList<>();
-            getRowList(row, linked);
+            ExcelUtil.getRowList(row, linked);
             if (countSheet == 0) {
                 data.put(linked.get(0).toString(), new Lenta());
             }
             addLenta(linked, data.get(linked.get(0).toString()));
-        }
-    }
-
-    public static void getRowList(Row row, List<Object> linked) {
-        Cell cell;
-        Object value;
-        for (int j = 0; j <= row.getLastCellNum(); j++) {
-            cell = row.getCell(j);
-            if (cell == null) {
-                linked.add("");
-                continue;
-            }
-            if (cell.getCellType() == CellType.FORMULA) {
-                value = getValueFormula(cell);
-                linked.add(value);
-            } else {
-                value = getValue(cell);
-                linked.add(value);
-            }
         }
     }
 
