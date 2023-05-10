@@ -86,7 +86,7 @@ public final class MappingUtils {
         lentaReportDTO.setAdditionalPrice(entity.getAdditionalPrice());
         lentaReportDTO.setModel(entity.getModel());
         lentaReportDTO.setWeightEdeadeal(entity.getWeightEdeadeal());
-        lentaReportDTO.setPriceEdeadealKg(entity.getPriceEdeadealKg());
+        lentaReportDTO.setWeightEdeadealKg(entity.getPriceEdeadealKg());
         lentaReportDTO.setWeightLenta(entity.getWeightLenta());
         lentaReportDTO.setWeightLentaKg(entity.getWeightLentaKg());
         lentaReportDTO.setPriceEdeadealKg(entity.getPriceEdeadealKg());

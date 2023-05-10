@@ -28,9 +28,6 @@ import static by.demon.zoom.util.Globals.VLOOK_RESULT;
 public class VlookService {
 
     private final String[] header = {"ID", "BAR", "URL"};
-    private VlookBar vlookBar;
-
-
     private MappingUtils mappingUtils;
     private ExcelUtil<VlookBarDTO> excelUtil;
 

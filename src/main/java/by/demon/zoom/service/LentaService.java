@@ -19,6 +19,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -30,7 +31,7 @@ public class LentaService {
 
     private HashMap<String, Lenta> data = new HashMap<>();
     private static final DateTimeFormatter LENTA_PATTERN = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    private final LocalDate afterDate = LocalDate.of(2023, 4, 1);
+    private final LocalDate afterDate = LocalDate.of(2023, 3, 30);
     @Value("${out.path}")
     private String outPath;
     private int countSheet = 0;
@@ -52,6 +53,7 @@ public class LentaService {
     }
 
     private Collection<Lenta> getResultList(List<List<Object>> list) {
+        DecimalFormat nf = new DecimalFormat("0.00");
         ArrayList<Lenta> resultList = new ArrayList<>();
         int count = 0;
         for (List<Object> str : list) {
@@ -77,19 +79,27 @@ public class LentaService {
             lenta.setWeightEdeadealKg(String.valueOf(str.get(14)));
             lenta.setWeightLenta(String.valueOf(str.get(15)));
             lenta.setWeightLentaKg(String.valueOf(str.get(16)));
-            lenta.setWeightEdeadealKg(String.valueOf(str.get(17)));
-            lenta.setConversionToLentaWeight(String.valueOf(str.get(18)));
+            lenta.setPriceEdeadealKg(getFormattedString(String.valueOf(str.get(17)), nf));
+            lenta.setConversionToLentaWeight(getFormattedString(String.valueOf(str.get(18)), nf));
             resultList.add(lenta);
             count++;
         }
         return resultList;
     }
 
+    private String getFormattedString(String value, DecimalFormat pattern) {
+        if (value.equals("")) {
+            return value;
+        }
+        Float i = Float.parseFloat(value);
+        return pattern.format(i);
+    }
+
     private HashSet<LentaReportDTO> getLentaReportDTOList(Collection<Lenta> lentaList) {
         HashSet<LentaReportDTO> lentaReportDTOs = new HashSet<>();
         for (Lenta lenta : lentaList) {
             if (!lenta.getDateToPromo().equals("")) {
-                if (DateUtils.getDate(lenta.getDateToPromo(),LENTA_PATTERN).isAfter(afterDate)) {
+                if (DateUtils.getDate(lenta.getDateToPromo(), LENTA_PATTERN).isAfter(afterDate)) {
                     LentaReportDTO lentaReportDTO = MappingUtils.mapToLentaReportDTO(lenta);
                     lentaReportDTOs.add(lentaReportDTO);
                 }

@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
  */
 @Service
 public class ExcelUtil<T> {
-    public static long start = System.currentTimeMillis();
+
     private static final DecimalFormat df = new DecimalFormat("0");
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private static final DecimalFormat nf = new DecimalFormat("0.00");
