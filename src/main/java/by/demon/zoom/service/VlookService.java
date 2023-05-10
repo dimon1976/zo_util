@@ -63,7 +63,6 @@ public class VlookService {
                     vlookBar.setUrl(setUrl);
                     result.add(vlookBar);
                 }
-                System.out.println();
             }
         }
         // **https://stackoverflow.com/a/25147125/21789158 - ответ по соединению List<List<>> в один List
