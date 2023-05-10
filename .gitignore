@@ -8,3 +8,5 @@ resources/temp
 .idea/
 .mvn/
 .mvn/wrapper
+target/
+zoom.rar
