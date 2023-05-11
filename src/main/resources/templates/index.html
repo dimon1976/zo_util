@@ -60,6 +60,16 @@
                             </button>
                         </div>
                     </form>
+                    <form th:action="@{/excel/simpleReport}" th:method="post" enctype="multipart/form-data">
+                        <div class="">
+                            <br>
+                            <input type="file" class="form-control" name="file">
+                            <br>
+                            <button class="btn btn-primary">
+                                Simple report
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

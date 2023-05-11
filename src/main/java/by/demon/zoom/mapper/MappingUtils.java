@@ -1,9 +1,6 @@
 package by.demon.zoom.mapper;
 
-import by.demon.zoom.domain.Lenta;
-import by.demon.zoom.domain.Megatop;
-import by.demon.zoom.domain.Simple;
-import by.demon.zoom.domain.VlookBar;
+import by.demon.zoom.domain.*;
 import by.demon.zoom.dto.SimpleDTO;
 import by.demon.zoom.dto.lenta.LentaDTO;
 import by.demon.zoom.dto.MegatopDTO;
@@ -12,11 +9,13 @@ import by.demon.zoom.dto.lenta.LentaReportDTO;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
 public final class MappingUtils {
 
+    private static final List<String> listCompetitors = Arrays.asList("auchan.ru", "lenta.com", "metro-cc.ru", "myspar.ru", "okeydostavka.ru", "perekrestok.ru", "winelab.ru");
 
     public static List<VlookBarDTO> mapToVlookBarDto(VlookBar entity) {
         List<VlookBarDTO> list = new ArrayList<>();
@@ -96,7 +95,7 @@ public final class MappingUtils {
         return lentaReportDTO;
     }
 
-    public static SimpleDTO mapToSimpleDTO(Simple entity) {
+    public static SimpleDTO mapToSimpleDTO(Product entity) {
         SimpleDTO simpleDTO = new SimpleDTO();
         simpleDTO.setId(entity.getId());
         simpleDTO.setCategory1(entity.getCategory1());
@@ -104,25 +103,32 @@ public final class MappingUtils {
         simpleDTO.setCategory3(entity.getCategory3());
         simpleDTO.setBrand(entity.getBrand());
         simpleDTO.setModel(entity.getModel());
-        simpleDTO.setPriceSimple(entity.getPriceSimple());
+        simpleDTO.setPrice(entity.getPrice());
         simpleDTO.setCity(entity.getCity());
         simpleDTO.setCompetitor(entity.getCompetitor());
         simpleDTO.setTime(entity.getTime());
         simpleDTO.setDate(entity.getDate());
-        simpleDTO.setPriceCompetitor(entity.getPriceCompetitor());
-        simpleDTO.setPriceCompetitorOld(entity.getPriceCompetitorOld());
-        simpleDTO.setPriceCompetitorAction(entity.getPriceCompetitorAction());
+        simpleDTO.setCompetitorPrice(entity.getCompetitorPrice());
+        simpleDTO.setCompetitorOldPrice(entity.getCompetitorOldPrice());
+        simpleDTO.setCompetitorActionPrice(entity.getCompetitorActionPrice());
         simpleDTO.setComment(entity.getComment());
         simpleDTO.setNameProductCompetitor(entity.getNameProductCompetitor());
-        simpleDTO.setYearCompetitor(entity.getYearCompetitor());
+        simpleDTO.setCompetitorYear(entity.getYearCompetitor());
         simpleDTO.setAnalogue(entity.getAnalogue());
         simpleDTO.setAddressOfTheCompetitor(entity.getAddressOfTheCompetitor());
         simpleDTO.setStatus(entity.getStatus());
         simpleDTO.setPromo(entity.getPromo());
-        simpleDTO.setUrlCompetitor(entity.getUrlCompetitor());
-        simpleDTO.setUrlClient(entity.getUrlClient());
-        simpleDTO.setUrlWebCache(entity.getUrlWebCache());
+        simpleDTO.setCompetitorUrl(entity.getCompetitorUrl());
+        simpleDTO.setClientUrl(entity.getClientUrl());
+        if (!ifExistCompetitor(entity.getCompetitor())){
+            simpleDTO.setUrlWebCache(entity.getWebCacheUrl());
+        }
+        simpleDTO.setUrlWebCache("");
         return simpleDTO;
+    }
+
+    public static Boolean ifExistCompetitor(String str) {
+        return listCompetitors.equals(str);
     }
 
 }

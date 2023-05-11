@@ -1,10 +1,7 @@
 package by.demon.zoom.controller;
 
 
-import by.demon.zoom.service.DetmirService;
-import by.demon.zoom.service.LentaService;
-import by.demon.zoom.service.MegatopService;
-import by.demon.zoom.service.VlookService;
+import by.demon.zoom.service.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,17 +25,19 @@ public class ExcelController {
     private final VlookService vlookService;
     private final MegatopService megatopService;
     private final LentaService lentaService;
+    private final SimpleService simpleService;
 
     @Value("${temp.path}")
     private String TEMP_PATH;
     @Autowired
     private HttpServletResponse response;
 
-    public ExcelController(DetmirService detmirService, VlookService vlookService, MegatopService megatopService, LentaService lentaService) {
+    public ExcelController(DetmirService detmirService, VlookService vlookService, MegatopService megatopService, LentaService lentaService, SimpleService simpleService) {
         this.detmirService = detmirService;
         this.vlookService = vlookService;
         this.megatopService = megatopService;
         this.lentaService = lentaService;
+        this.simpleService = simpleService;
     }
 
     @PostMapping("/stat/detmirStats")
@@ -115,6 +114,22 @@ public class ExcelController {
             try {
                 multipartFile.transferTo(transferTo);
                 return lentaService.exportReport(filePath, transferTo, response);
+            } catch (IllegalStateException | IOException e) {
+                e.printStackTrace();
+                return "File uploaded failed: " + getOrgName(multipartFile);
+            }
+        }
+        return "index";
+    }
+
+    @PostMapping("/simpleReport")
+    public String excelSimpleReport(@RequestParam("file") MultipartFile multipartFile) {
+        if (ifExist(multipartFile)) {
+            String filePath = getFilePath(multipartFile);
+            File transferTo = new File(filePath);
+            try {
+                multipartFile.transferTo(transferTo);
+                return simpleService.export(filePath, transferTo, response);
             } catch (IllegalStateException | IOException e) {
                 e.printStackTrace();
                 return "File uploaded failed: " + getOrgName(multipartFile);
