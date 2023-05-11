@@ -2,7 +2,9 @@ package by.demon.zoom.mapper;
 
 import by.demon.zoom.domain.Lenta;
 import by.demon.zoom.domain.Megatop;
+import by.demon.zoom.domain.Simple;
 import by.demon.zoom.domain.VlookBar;
+import by.demon.zoom.dto.SimpleDTO;
 import by.demon.zoom.dto.lenta.LentaDTO;
 import by.demon.zoom.dto.MegatopDTO;
 import by.demon.zoom.dto.VlookBarDTO;
@@ -93,4 +95,34 @@ public final class MappingUtils {
         lentaReportDTO.setConversionToLentaWeight(entity.getConversionToLentaWeight());
         return lentaReportDTO;
     }
+
+    public static SimpleDTO mapToSimpleDTO(Simple entity) {
+        SimpleDTO simpleDTO = new SimpleDTO();
+        simpleDTO.setId(entity.getId());
+        simpleDTO.setCategory1(entity.getCategory1());
+        simpleDTO.setCategory2(entity.getCategory2());
+        simpleDTO.setCategory3(entity.getCategory3());
+        simpleDTO.setBrand(entity.getBrand());
+        simpleDTO.setModel(entity.getModel());
+        simpleDTO.setPriceSimple(entity.getPriceSimple());
+        simpleDTO.setCity(entity.getCity());
+        simpleDTO.setCompetitor(entity.getCompetitor());
+        simpleDTO.setTime(entity.getTime());
+        simpleDTO.setDate(entity.getDate());
+        simpleDTO.setPriceCompetitor(entity.getPriceCompetitor());
+        simpleDTO.setPriceCompetitorOld(entity.getPriceCompetitorOld());
+        simpleDTO.setPriceCompetitorAction(entity.getPriceCompetitorAction());
+        simpleDTO.setComment(entity.getComment());
+        simpleDTO.setNameProductCompetitor(entity.getNameProductCompetitor());
+        simpleDTO.setYearCompetitor(entity.getYearCompetitor());
+        simpleDTO.setAnalogue(entity.getAnalogue());
+        simpleDTO.setAddressOfTheCompetitor(entity.getAddressOfTheCompetitor());
+        simpleDTO.setStatus(entity.getStatus());
+        simpleDTO.setPromo(entity.getPromo());
+        simpleDTO.setUrlCompetitor(entity.getUrlCompetitor());
+        simpleDTO.setUrlClient(entity.getUrlClient());
+        simpleDTO.setUrlWebCache(entity.getUrlWebCache());
+        return simpleDTO;
+    }
+
 }
