@@ -4,7 +4,6 @@ package by.demon.zoom.controller;
 import by.demon.zoom.service.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,15 +28,16 @@ public class ExcelController {
 
     @Value("${temp.path}")
     private String TEMP_PATH;
-    @Autowired
-    private HttpServletResponse response;
 
-    public ExcelController(DetmirService detmirService, VlookService vlookService, MegatopService megatopService, LentaService lentaService, SimpleService simpleService) {
+    private final HttpServletResponse response;
+
+    public ExcelController(DetmirService detmirService, VlookService vlookService, MegatopService megatopService, LentaService lentaService, SimpleService simpleService, HttpServletResponse response) {
         this.detmirService = detmirService;
         this.vlookService = vlookService;
         this.megatopService = megatopService;
         this.lentaService = lentaService;
         this.simpleService = simpleService;
+        this.response = response;
     }
 
     @PostMapping("/stat/detmirStats")

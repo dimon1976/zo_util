@@ -4,11 +4,9 @@ import by.demon.zoom.domain.VlookBar;
 import by.demon.zoom.dto.VlookBarDTO;
 import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.util.ExcelUtil;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
@@ -24,15 +22,18 @@ import static by.demon.zoom.util.Globals.VLOOK_RESULT;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 @Service
 public class VlookService {
 
     private final String[] header = {"ID", "BAR", "URL"};
-    @Autowired
     private MappingUtils mappingUtils;
-    @Autowired
+
     private ExcelUtil<VlookBarDTO> excelUtil;
+
+    public VlookService(MappingUtils mappingUtils, ExcelUtil<VlookBarDTO> excelUtil) {
+        this.mappingUtils = mappingUtils;
+        this.excelUtil = excelUtil;
+    }
 
 
     public String export(String filePath, File file, HttpServletResponse response) throws IOException {
@@ -65,7 +66,7 @@ public class VlookService {
                 }
             }
         }
-        // **https://stackoverflow.com/a/25147125/21789158 - ответ по соединению List<List<>> в один List
+        // **https://stackoverflow.com/a/25147125/21789158 - ответ по соединению List<List<>> в один List в стриме
         Collection<VlookBarDTO> vlookBarDTOS = result.stream()
                 .map(MappingUtils::mapToVlookBarDto)
                 .collect(Collectors.toList())
