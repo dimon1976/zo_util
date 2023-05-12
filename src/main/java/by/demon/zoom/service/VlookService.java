@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
@@ -28,7 +29,9 @@ import static by.demon.zoom.util.Globals.VLOOK_RESULT;
 public class VlookService {
 
     private final String[] header = {"ID", "BAR", "URL"};
+    @Autowired
     private MappingUtils mappingUtils;
+    @Autowired
     private ExcelUtil<VlookBarDTO> excelUtil;
 
 
