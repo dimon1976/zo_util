@@ -18,12 +18,12 @@ public final class MappingUtils {
 
     private static final List<String> listCompetitors = Arrays.asList("auchan.ru", "lenta.com", "metro-cc.ru", "myspar.ru", "okeydostavka.ru", "perekrestok.ru", "winelab.ru");
 
-    public static List<VlookBarDTO> mapToVlookBarDto(VlookBar entity) {
+    public static List<VlookBarDTO> mapToVlookBarDto(Product product) {
         List<VlookBarDTO> list = new ArrayList<>();
-        for (String url : entity.getUrl()) {
+        for (String url : product.getCollectionUrl()) {
             VlookBarDTO dto = new VlookBarDTO();
-            dto.setId(entity.getId());
-            dto.setBar(entity.getBar());
+            dto.setId(product.getId());
+            dto.setBar(product.getBar());
             dto.setUrl(url);
             list.add(dto);
         }

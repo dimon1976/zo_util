@@ -1,12 +1,14 @@
 package by.demon.zoom.service;
 
-import by.demon.zoom.domain.VlookBar;
+import by.demon.zoom.domain.Product;
 import by.demon.zoom.dto.VlookBarDTO;
 import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.util.ExcelUtil;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
@@ -19,22 +21,15 @@ import java.util.stream.Collectors;
 import static by.demon.zoom.util.ExcelUtil.readExcel;
 import static by.demon.zoom.util.Globals.VLOOK_RESULT;
 
-@Getter
-@Setter
-@NoArgsConstructor
 @Service
 public class VlookService {
 
     private final String[] header = {"ID", "BAR", "URL"};
-    private MappingUtils mappingUtils;
+    private final ExcelUtil<VlookBarDTO> excelUtil;
 
-    private ExcelUtil<VlookBarDTO> excelUtil;
-
-    public VlookService(MappingUtils mappingUtils, ExcelUtil<VlookBarDTO> excelUtil) {
-        this.mappingUtils = mappingUtils;
+    public VlookService(ExcelUtil<VlookBarDTO> excelUtil) {
         this.excelUtil = excelUtil;
     }
-
 
     public String export(String filePath, File file, HttpServletResponse response) throws IOException {
         List<List<Object>> list = readExcel(file);
@@ -45,7 +40,7 @@ public class VlookService {
         // key = BAR value = set[url]
         HashMap<String, HashSet<String>> mapTwo = new HashMap<>();
 
-        List<VlookBar> result = new ArrayList<>();
+        List<Product> result = new ArrayList<>();
 
         for (List<Object> objects : list) {
             addMapOne(objects, mapOne);
@@ -58,11 +53,11 @@ public class VlookService {
                 String bar = data.getKey();
                 HashSet<String> setUrl = data.getValue();
                 for (String id : setId) {
-                    VlookBar vlookBar = new VlookBar();
-                    vlookBar.setId(id);
-                    vlookBar.setBar(bar);
-                    vlookBar.setUrl(setUrl);
-                    result.add(vlookBar);
+                    Product product = new Product();
+                    product.setId(id);
+                    product.setBar(bar);
+                    product.setCollectionUrl(setUrl);
+                    result.add(product);
                 }
             }
         }

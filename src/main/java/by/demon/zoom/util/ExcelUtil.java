@@ -1,6 +1,6 @@
 package by.demon.zoom.util;
 
-import by.demon.zoom.domain.VlookBar;
+import by.demon.zoom.domain.Product;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
@@ -398,12 +398,12 @@ public class ExcelUtil<T> {
         return dataClazz.getSimpleName();
     }
 
-    private void exportVlookBarWorkbook(List<VlookBar> dataset, XSSFSheet sheet) {
+    private void exportVlookBarWorkbook(List<Product> dataset, XSSFSheet sheet) {
         int rowIdx = 1;
-        for (VlookBar data : dataset) {
+        for (Product data : dataset) {
             short cellIdx = 0;
-            if (data.getUrl().size() >= 1) {
-                for (String str : data.getUrl()) {
+            if (data.getCollectionUrl().size() >= 1) {
+                for (String str : data.getCollectionUrl()) {
                     XSSFRow row = sheet.createRow(rowIdx++);
                     XSSFCell cell = row.createCell(cellIdx++);
                     String value = data.getId();
