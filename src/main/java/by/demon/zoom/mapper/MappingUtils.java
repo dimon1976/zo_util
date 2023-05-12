@@ -112,7 +112,7 @@ public final class MappingUtils {
         simpleDTO.setCompetitorOldPrice(entity.getCompetitorOldPrice());
         simpleDTO.setCompetitorActionPrice(entity.getCompetitorActionPrice());
         simpleDTO.setComment(entity.getComment());
-        simpleDTO.setNameProductCompetitor(entity.getNameProductCompetitor());
+        simpleDTO.setCompetitorModel(entity.getCompetitorModel());
         simpleDTO.setCompetitorYear(entity.getYearCompetitor());
         simpleDTO.setAnalogue(entity.getAnalogue());
         simpleDTO.setAddressOfTheCompetitor(entity.getAddressOfTheCompetitor());
@@ -122,13 +122,14 @@ public final class MappingUtils {
         simpleDTO.setClientUrl(entity.getClientUrl());
         if (!ifExistCompetitor(entity.getCompetitor())){
             simpleDTO.setUrlWebCache(entity.getWebCacheUrl());
+        } else {
+            simpleDTO.setUrlWebCache("");
         }
-        simpleDTO.setUrlWebCache("");
         return simpleDTO;
     }
 
     public static Boolean ifExistCompetitor(String str) {
-        return listCompetitors.equals(str);
+        return listCompetitors.stream()
+                .anyMatch(i -> i.equals(str));
     }
-
 }

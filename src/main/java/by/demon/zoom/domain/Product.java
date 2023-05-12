@@ -81,7 +81,6 @@ public class Product {
     private String competitorActionPrice;
     private String additionalPrice;
     private String comment;
-    private String nameProductCompetitor;
     private String yearCompetitor;
     private String analogue;
     private String addressOfTheCompetitor;

@@ -64,7 +64,7 @@ public class SimpleService {
             product.setCategory3(String.valueOf(str.get(3)));
             product.setBrand(String.valueOf(str.get(4)));
             product.setModel(String.valueOf(str.get(5)));
-            product.setProduct(String.valueOf(str.get(6)));//
+            product.setPrice(String.valueOf(str.get(6)));
             product.setCity(String.valueOf(str.get(7)));
             product.setCompetitor(String.valueOf(str.get(8)));
             product.setTime(String.valueOf(str.get(9)));
@@ -79,8 +79,8 @@ public class SimpleService {
             product.setAddressOfTheCompetitor(String.valueOf(str.get(18)));
             product.setStatus(String.valueOf(str.get(19)));
             product.setPromo(String.valueOf(str.get(20)));
-            product.setUrl(String.valueOf(str.get(21)));
-            product.setCompetitorUrl(String.valueOf(str.get(22)));
+            product.setCompetitorUrl(String.valueOf(str.get(21)));
+            product.setClientUrl(String.valueOf(str.get(22)));
             product.setWebCacheUrl(String.valueOf(str.get(23)));
             list.add(product);
         }

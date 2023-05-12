@@ -23,7 +23,7 @@ public class SimpleDTO {
     private String competitorOldPrice;
     private String competitorActionPrice;
     private String comment;
-    private String nameProductCompetitor;
+    private String competitorModel;
     private String competitorYear;
     private String analogue;
     private String addressOfTheCompetitor;
