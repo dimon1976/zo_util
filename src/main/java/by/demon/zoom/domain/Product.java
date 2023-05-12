@@ -18,14 +18,14 @@ public class Product {
 
     private String client;
     private String id;
-    private String clientId;
+    private String idLink;
+    private String zmsId;
     private String parentCategory;
     private String category;
     private String vendor;
     private String model;
     private String productCode;
     private String bar;
-    private String clientStatus;
     private String CompetitorModel;
     private String competitorProductCode;
     private String competitorId;
@@ -88,9 +88,6 @@ public class Product {
     private String competitorUrl;
     private String clientUrl;
     private String webCacheUrl;
-
-    /*vlook*/
-    private String uri;
 //    private Set<String> url;
 
 
