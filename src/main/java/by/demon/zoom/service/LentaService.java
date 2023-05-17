@@ -192,6 +192,13 @@ public class LentaService {
         }
     }
 
+    private String isNull(Cell cell) {
+        if (cell == null) {
+            return "";
+        } else {
+            return cell.toString();
+        }
+    }
 
     private void write(String filePath, File fileName, HttpServletResponse response) throws IOException {
         File file = Path.of(outPath, fileName.getName().toLowerCase(Locale.ROOT).replace("." + getExtension(fileName), ".xlsx")).toFile();
