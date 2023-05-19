@@ -171,8 +171,7 @@ public class ExcelUtil<T> {
     public static void getRowList(Row row, List<Object> linked) {
         Cell cell;
         Object value;
-//        for (int j = 0; j <= row.getLastCellNum(); j++) {
-        for (int j = 0; j <= 65; j++) {
+        for (int j = 0; j <= row.getLastCellNum(); j++) {
             cell = row.getCell(j);
             if (cell == null) {
                 linked.add("");
@@ -302,10 +301,10 @@ public class ExcelUtil<T> {
             headerFont.setBold(true);
             headerStyle.setFont(headerFont);
             XSSFCellStyle cellStyle = workbook.createCellStyle();
-            cellStyle.setBorderBottom(BorderStyle.THIN);
-            cellStyle.setBorderLeft(BorderStyle.THIN);
-            cellStyle.setBorderRight(BorderStyle.THIN);
-            cellStyle.setBorderTop(BorderStyle.THIN);
+//            cellStyle.setBorderBottom(BorderStyle.THIN);
+//            cellStyle.setBorderLeft(BorderStyle.THIN);
+//            cellStyle.setBorderRight(BorderStyle.THIN);
+//            cellStyle.setBorderTop(BorderStyle.THIN);
             cellStyle.setAlignment(HorizontalAlignment.LEFT);
             cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             XSSFFont cellFont = workbook.createFont();
