@@ -1,18 +1,16 @@
-package by.demon.zoom.domain;
+package by.demon.zoom.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DetmirStats {
+public class DetmirDTO {
 
     private String client;
-    private String id;
+    private String idLink;
     private String clientId;
     private String parentCategory;
     private String category;
@@ -20,11 +18,11 @@ public class DetmirStats {
     private String model;
     private String productCode;
     private String bar;
-    private String clientStatus;
+    private String status;
     private String competitorPrice;
-    private String CompetitorModel;
+    private String competitorModel;
     private String competitorProductCode;
     private String competitorId;
-    private String Competitor;
+    private String competitor;
     private String on;
 }

@@ -31,7 +31,7 @@ public class LentaService {
 
     private HashMap<String, Lenta> data = new HashMap<>();
     private static final DateTimeFormatter LENTA_PATTERN = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    private final LocalDate afterDate = LocalDate.of(2023, 3, 30);
+    private final LocalDate afterDate = LocalDate.of(2023, 4, 22);
     @Value("${out.path}")
     private String outPath;
     private int countSheet = 0;
@@ -192,6 +192,13 @@ public class LentaService {
         }
     }
 
+    private String isNull(Cell cell) {
+        if (cell == null) {
+            return "";
+        } else {
+            return cell.toString();
+        }
+    }
 
     private void write(String filePath, File fileName, HttpServletResponse response) throws IOException {
         File file = Path.of(outPath, fileName.getName().toLowerCase(Locale.ROOT).replace("." + getExtension(fileName), ".xlsx")).toFile();

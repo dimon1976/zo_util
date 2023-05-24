@@ -1,31 +1,28 @@
 package by.demon.zoom.domain;
 
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Product {
 
     private String client;
     private String id;
-    private String clientId;
+    private String idLink;
+    private String zmsId;
     private String parentCategory;
     private String category;
     private String vendor;
     private String model;
     private String productCode;
     private String bar;
-    private String clientStatus;
     private String CompetitorModel;
     private String competitorProductCode;
     private String competitorId;
@@ -88,10 +85,7 @@ public class Product {
     private String competitorUrl;
     private String clientUrl;
     private String webCacheUrl;
-
-    /*vlook*/
-    private String uri;
-//    private Set<String> url;
+    private Set<String> collectionUrl;/* for vlookBarService */
 
 
     @Override
