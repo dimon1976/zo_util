@@ -5,10 +5,10 @@ import by.demon.zoom.service.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
@@ -16,7 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 
-@RestController
+@Controller
 @RequestMapping("/excel")
 public class ExcelController {
 
@@ -89,7 +89,6 @@ public class ExcelController {
         return "index";
     }
 
-
     @PostMapping("/lenta")
     public String excelLenta(@RequestParam("file") MultipartFile multipartFile) {
         if (ifExist(multipartFile)) {
@@ -103,7 +102,7 @@ public class ExcelController {
                 return "File uploaded failed: " + getOrgName(multipartFile);
             }
         }
-        return "index";
+        return "/clients/lenta";
     }
 
     @PostMapping("/lentaReport")
@@ -121,6 +120,7 @@ public class ExcelController {
         }
         return "index";
     }
+
 
     @PostMapping("/simpleReport")
     public String excelSimpleReport(@RequestParam("file") MultipartFile multipartFile) {
