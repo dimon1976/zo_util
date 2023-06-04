@@ -1,6 +1,6 @@
 /zoom.iml
 /logs/
-resources/
+!resources/
 resources/temp
 /HELP.md
 /mvnw
@@ -10,6 +10,3 @@ resources/temp
 .mvn/wrapper
 target/
 zoom.rar
-!/src/main/resources/static/css/
-!/src/main/resources/templates/clients/
-!/src/main/resources/templates/include/
