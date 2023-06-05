@@ -14,12 +14,13 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.Objects;
 
 @Controller
 @RequestMapping("/excel")
 public class ExcelController {
-
+    private Date before;
     private final DetmirService detmirService;
     private final VlookService vlookService;
     private final MegatopService megatopService;
@@ -106,7 +107,7 @@ public class ExcelController {
     }
 
     @PostMapping("/lentaReport")
-    public String excelLentaReport(@RequestParam("file") MultipartFile multipartFile) {
+    public String excelLentaReport(@RequestParam("file") MultipartFile multipartFile,@RequestParam ("Date") Date date) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);

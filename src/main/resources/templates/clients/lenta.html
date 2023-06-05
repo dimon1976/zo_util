@@ -28,12 +28,13 @@
                         </div>
                     </form>
                 </div>
-                    <div class="col-6 col-sm-6">
+                <div class="col-6 col-sm-6">
                     <form th:action="@{/excel/lentaReport}" th:method="post" enctype="multipart/form-data">
                         <div class="">
-                            <label for="created">Установить дату устаревших акций</label>
-                            <input type="datetime-local" id="created"/>
-                            <br>
+                            <div>
+                                <label for="end-of-action">Date end action:</label>
+                                <input type="date" th:field="${Date}" id="end-of-action"/>
+                            </div>
                             <input type="file" class="form-control" name="file">
                             <br>
                             <button class="btn btn-primary">
@@ -41,11 +42,11 @@
                             </button>
                         </div>
                     </form>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 </div>
 </body>
 </html>
