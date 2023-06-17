@@ -8,7 +8,10 @@ import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.util.DateUtils;
 import by.demon.zoom.util.ExcelUtil;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,14 +27,15 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-import static by.demon.zoom.util.ExcelUtil.*;
+import static by.demon.zoom.util.DateUtils.convertToLocalDateViaInstant;
+import static by.demon.zoom.util.ExcelUtil.readExcel;
 
 @Service
 public class LentaService {
 
     private HashMap<String, Lenta> data = new HashMap<>();
     private static final DateTimeFormatter LENTA_PATTERN = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    private final LocalDate afterDate = LocalDate.of(2023, 4, 22);
+    //    private final LocalDate afterDate = LocalDate.of(2023, 4, 22);
     @Value("${out.path}")
     private String outPath;
     private int countSheet = 0;
@@ -39,10 +43,11 @@ public class LentaService {
     private final String[] headerLentaReport = {"Город", "Товар", "Наименование товара", "Цена", "Сеть", "Акц. Цена 1", "Дата начала промо", "Дата окончания промо", "% скидки", "Механика акции", "Фото (ссылка)", "Доп.цена", "Модель", "Вес Едадил", "Вес Едадил, кг", "Вес Ленты", "Вес Ленты, кг", "Цена Едадил за КГ", "Пересчет к весу Ленты"};
 
 
-    public String exportReport(String filePath, File file, HttpServletResponse response) throws IOException {
+    public String exportReport(String filePath, File file, HttpServletResponse response, Date date) throws IOException {
         List<List<Object>> list = readExcel(file);
         Collection<Lenta> lentaList = getResultList(list);
-        Collection<LentaReportDTO> lentaReportDTO = getLentaReportDTOList(lentaList);
+        LocalDate afterDate = convertToLocalDateViaInstant(date);
+        Collection<LentaReportDTO> lentaReportDTO = getLentaReportDTOList(lentaList, afterDate);
         try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
             ExcelUtil<LentaReportDTO> excelUtil = new ExcelUtil<>();
             short skip = 1;
@@ -95,7 +100,7 @@ public class LentaService {
         return pattern.format(i);
     }
 
-    private HashSet<LentaReportDTO> getLentaReportDTOList(Collection<Lenta> lentaList) {
+    private HashSet<LentaReportDTO> getLentaReportDTOList(Collection<Lenta> lentaList, LocalDate afterDate) {
         HashSet<LentaReportDTO> lentaReportDTOs = new HashSet<>();
         for (Lenta lenta : lentaList) {
             if (!lenta.getDateToPromo().equals("")) {

@@ -1,11 +1,13 @@
 package by.demon.zoom.controller;
 
 
+import by.demon.zoom.domain.Lenta;
 import by.demon.zoom.service.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -107,19 +109,20 @@ public class ExcelController {
     }
 
     @PostMapping("/lentaReport")
-    public String excelLentaReport(@RequestParam("file") MultipartFile multipartFile,@RequestParam ("Date") Date date) {
+    public String excelLentaReport(@ModelAttribute("lenta") Lenta lenta
+            , @RequestParam("file") MultipartFile multipartFile) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);
             try {
                 multipartFile.transferTo(transferTo);
-                return lentaService.exportReport(filePath, transferTo, response);
+                return lentaService.exportReport(filePath, transferTo, response, lenta.getAfterDate());
             } catch (IllegalStateException | IOException e) {
                 e.printStackTrace();
                 return "File uploaded failed: " + getOrgName(multipartFile);
             }
         }
-        return "index";
+        return "/clients/lenta";
     }
 
 
@@ -136,7 +139,7 @@ public class ExcelController {
                 return "File uploaded failed: " + getOrgName(multipartFile);
             }
         }
-        return "index";
+        return "/clients/simple";
     }
 
     private boolean ifExist(@RequestParam("file") MultipartFile multipartFile) {

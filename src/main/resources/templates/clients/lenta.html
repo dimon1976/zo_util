@@ -28,16 +28,25 @@
                         </div>
                     </form>
                 </div>
+
+                <!--                <h1>Format ISO</h1>-->
+                <!--                <p th:text="${#dates.formatISO(standardDate)}"></p>-->
+                <!--                <p th:text="${#temporals.formatISO(localDateTime)}"></p>-->
+                <!--                <p th:text="${#temporals.formatISO(localDate)}"></p>-->
+                <!--                <p th:text="${#temporals.formatISO(timestamp)}"></p>-->
+
                 <div class="col-6 col-sm-6">
-                    <form th:action="@{/excel/lentaReport}" th:method="post" enctype="multipart/form-data">
+                    <form th:action="@{/excel/lentaReport}" th:method="post" th:object="${lenta}"
+                          enctype="multipart/form-data">
                         <div class="">
                             <div>
                                 <label for="end-of-action">Date end action:</label>
-                                <input type="date" th:field="${Date}" id="end-of-action"/>
+                                <input type="date" th:field="${lenta.afterDate}" id="end-of-action"/>
                             </div>
+                            <br>
                             <input type="file" class="form-control" name="file">
                             <br>
-                            <button class="btn btn-primary">
+                            <button type="submit" class="btn btn-primary">
                                 Обработка отчета перед отправкой
                             </button>
                         </div>
