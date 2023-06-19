@@ -1,6 +1,6 @@
 /zoom.iml
 /logs/
-resources/
+!resources/
 resources/temp
 /HELP.md
 /mvnw

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Lenta</title>
+</head>
+<body>
+<div th:replace="/include/_header :: content"></div>
+<div class="container">
+    <div class="row">
+        <div class="col-sm-3">
+            <div th:replace="/include/sidebar :: sidebar"></div>
+        </div>
+        <div class="col-sm-9">
+            <div class="row">
+                <blockquote class="blockquote">
+                    <p>Simple.ru</p>
+                </blockquote>
+                <div class="col-12 col-sm-6">
+                    <fieldset>
+                    <form th:action="@{/excel/simpleReport}" th:method="post" enctype="multipart/form-data">
+                        <legend>Простая обработка отчета клиента simple.ru</legend>
+                        <div class="">
+                            <br>
+                            <input type="file" class="form-control" name="file">
+                            <br>
+                            <button class="btn btn-primary">
+                                Simple report
+                            </button>
+                        </div>
+                    </form>
+                    </fieldset>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>

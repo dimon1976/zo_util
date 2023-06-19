@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Lenta</title>
+</head>
+<body>
+<div th:replace="/include/_header :: content"></div>
+<div class="container">
+    <div class="row">
+        <div class="col-sm-3">
+            <div th:replace="/include/sidebar :: sidebar"></div>
+        </div>
+        <div class="col-sm-9">
+            <div class="row">
+                <blockquote class="blockquote">
+                    <p>Lenta</p>
+                </blockquote>
+                <div class="col-6 col-sm-4">
+                    <form th:action="@{/excel/lenta}" th:method="post" enctype="multipart/form-data">
+                        <div class="row">
+                            <br>
+                            <input type="file" class="form-control" name="file">
+                        </div>
+                        <br>
+                        <div class="row">
+                            <div class="col-6 col-sm-8">
+                                <button class="btn btn-primary">
+                                    Обработка задания.
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="col-6 col-sm-8">
+                    <form th:action="@{/excel/lentaReport}" th:method="post" th:object="${lenta}" enctype="multipart/form-data">
+                        <div class="row align-items-center">
+                            <div class="col-sm-6">
+                                <input type="file" class="form-control" name="file">
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="row align-items-center">
+                                    <div class="col-8 col-sm-3">
+                                        <label for="date">Date</label>
+                                    </div>
+                                    <div class="col-4 col-sm-9">
+                                        <input type="date" th:field="${lenta.afterDate}" id="date"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <br>
+                        <div class="row">
+                            <div class="col-6 col-sm-8">
+                                <button type="submit" class="btn btn-primary">
+                                    Обработка отчета.
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

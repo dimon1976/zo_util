@@ -1,25 +1,28 @@
 package by.demon.zoom.controller;
 
 
+import by.demon.zoom.domain.Lenta;
 import by.demon.zoom.service.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.Objects;
 
-@RestController
+@Controller
 @RequestMapping("/excel")
 public class ExcelController {
-
+    private Date before;
     private final DetmirService detmirService;
     private final VlookService vlookService;
     private final MegatopService megatopService;
@@ -89,7 +92,6 @@ public class ExcelController {
         return "index";
     }
 
-
     @PostMapping("/lenta")
     public String excelLenta(@RequestParam("file") MultipartFile multipartFile) {
         if (ifExist(multipartFile)) {
@@ -103,24 +105,26 @@ public class ExcelController {
                 return "File uploaded failed: " + getOrgName(multipartFile);
             }
         }
-        return "index";
+        return "/clients/lenta";
     }
 
     @PostMapping("/lentaReport")
-    public String excelLentaReport(@RequestParam("file") MultipartFile multipartFile) {
+    public String excelLentaReport(@ModelAttribute("lenta") Lenta lenta
+            , @RequestParam("file") MultipartFile multipartFile) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);
             try {
                 multipartFile.transferTo(transferTo);
-                return lentaService.exportReport(filePath, transferTo, response);
+                return lentaService.exportReport(filePath, transferTo, response, lenta.getAfterDate());
             } catch (IllegalStateException | IOException e) {
                 e.printStackTrace();
                 return "File uploaded failed: " + getOrgName(multipartFile);
             }
         }
-        return "index";
+        return "/clients/lenta";
     }
+
 
     @PostMapping("/simpleReport")
     public String excelSimpleReport(@RequestParam("file") MultipartFile multipartFile) {
@@ -135,7 +139,7 @@ public class ExcelController {
                 return "File uploaded failed: " + getOrgName(multipartFile);
             }
         }
-        return "index";
+        return "/clients/simple";
     }
 
     private boolean ifExist(@RequestParam("file") MultipartFile multipartFile) {

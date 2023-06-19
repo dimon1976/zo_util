@@ -4,14 +4,17 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import java.io.Serializable;
+import java.util.Date;
 import java.util.HashSet;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class Lenta {
+public class Lenta implements Serializable {
 
     // task
     private String id;
@@ -44,6 +47,8 @@ public class Lenta {
     private String weightLentaKg;
     private String priceEdeadealKg;
     private String conversionToLentaWeight;
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    private Date afterDate;
 
 }
 
