@@ -18,15 +18,16 @@
                 </blockquote>
                 <div class="col-6 col-sm-4">
                     <form th:action="@{/excel/lenta}" th:method="post" enctype="multipart/form-data">
-                        <div class="row">
-                            <br>
-                            <input type="file" class="form-control" name="file">
+                        <label for="lentaTask" class="form-label">Обработка задания клиента lenta</label>
+                        <div class="row mb-3">
+<!--                            <br>-->
+                            <input type="file" class="form-control" name="file" id="lentaTask">
                         </div>
-                        <br>
+<!--                        <br>-->
                         <div class="row">
                             <div class="col-6 col-sm-8">
                                 <button class="btn btn-primary">
-                                    Обработка задания.
+                                    Загрузить
                                 </button>
                             </div>
                         </div>
@@ -35,26 +36,36 @@
 
                 <div class="col-6 col-sm-8">
                     <form th:action="@{/excel/lentaReport}" th:method="post" th:object="${lenta}" enctype="multipart/form-data">
-                        <div class="row align-items-center">
-                            <div class="col-sm-6">
-                                <input type="file" class="form-control" name="file">
-                            </div>
-                            <div class="col-sm-4">
-                                <div class="row align-items-center">
-                                    <div class="col-8 col-sm-3">
-                                        <label for="date">Date</label>
-                                    </div>
-                                    <div class="col-4 col-sm-9">
-                                        <input type="date" th:field="${lenta.afterDate}" id="date"/>
-                                    </div>
-                                </div>
-                            </div>
+                        <label for="lentaReport" class="form-label">Обработка отчета клиента lenta</label>
+                        <div class="input-group mb-3">
+                            <input type="file" class="form-control" name="file" id="lentaReport" placeholder="file">
+                            <span class="input-group-text"> Удалить акции старше </span>
+                            <input type="date" th:field="${lenta.afterDate}"/>
                         </div>
-                        <br>
+
+
+
+
+<!--                        <div class="row align-items-center">-->
+<!--                            <div class="col-sm-6">-->
+<!--                                <input type="file" class="form-control form-control-sm" name="file" id="lentaReport">-->
+<!--                            </div>-->
+<!--                            <div class="col-sm-6">-->
+<!--                                <div class="row align-items-center">-->
+                                    <!--                                    <div class="col-8 col-sm-3">-->
+                                    <!--                                        <label for="date">Date</label>-->
+                                    <!--                                    </div>-->
+<!--                                    <div class="col-4 col-sm-9">-->
+<!--                                        <input type="date" th:field="${lenta.afterDate}" aria-describedby="dateHelp"/>-->
+<!--                                        <div id="dateHelp" class="form-text">Удалить акции старше</div>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                        </div>-->
                         <div class="row">
                             <div class="col-6 col-sm-8">
                                 <button type="submit" class="btn btn-primary">
-                                    Обработка отчета.
+                                    Загрузить
                                 </button>
                             </div>
                         </div>

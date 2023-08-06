@@ -44,7 +44,7 @@ public class ExcelController {
     }
 
     @PostMapping("/stat/detmirStats")
-    public String detmirStats(@RequestParam("file") MultipartFile multipartFile) {
+    public String detmirStats(@RequestParam("file") MultipartFile multipartFile, @RequestParam(value = "showSource", required = false) String showSource, @RequestParam(value = "sourceReplace", required = false) String sourceReplace) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);
@@ -58,6 +58,7 @@ public class ExcelController {
         }
         return "index";
     }
+
 
     @PostMapping("/vlook")
     public String excelVlook(@RequestParam("file") MultipartFile multipartFile) {

@@ -18,12 +18,16 @@
                 </blockquote>
                 <div class="col-12 col-sm-6">
                     <form th:action="@{/excel/megatop}" th:method="post" enctype="multipart/form-data">
+                        <label for="megatopReport" class="form-label">Обработка отчета клиента megatop.by (kari, belwest, marko).</label>
                         <div class="">
-                            <br>
-                            <input type="file" class="form-control" name="file">
+<!--                            <br>-->
+                            <input type="file" class="form-control form-control-sm" name="file" id="megatopReport" aria-describedby="megatopHelp" multiple>
+                            <div id="megatopHelp" class="form-text">Удаляются дубли в отчетах. <br>
+                                В отчете kari удаляются старые записи (старше 01.08.2020)
+                            </div>
                             <br>
                             <button class="btn btn-primary">
-                                Выбрать файл
+                                Загрузка
                             </button>
                         </div>
                     </form>

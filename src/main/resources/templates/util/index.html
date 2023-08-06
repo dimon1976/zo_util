@@ -17,12 +17,19 @@
           <p>Утилиты</p>
         </blockquote>
         <form th:action="@{/excel/vlook}" th:method="post" enctype="multipart/form-data">
+          <label for="extendVlook" class="form-label">ВПР по массиву ШК (в т.ч. перечисление через запятую)</label>
           <div class="">
-            <br>
-            <input type="file" class="form-control" name="file">
+<!--            <br>-->
+            <input type="file" class="form-control form-control-sm" name="file" id="extendVlook" aria-description="VlookHelp">
+            <div id="VlookHelp" class="form-text">* Столбец A - Id клиента кому добавляем ссылки <br>
+              * Столбец B - BAR. Все ненужные знаки игнорируются, некорректные ШК (!=13) игнорируются.<br>
+              Допускается несколько ШК через запятую в одной ячейке<br>
+              * Столбец D - Bar где ищем. Все ненужные знаки игнорируются, некорректные ШК (!=13) игнорируются.<br>
+              Допускается несколько ШК через запятую в одной ячейке<br>
+              * Столбец E - Ссылка<br></div>
             <br>
             <button class="btn btn-primary">
-              Vlook
+              Загрузка
             </button>
           </div>
         </form>

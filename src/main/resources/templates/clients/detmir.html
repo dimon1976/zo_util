@@ -18,14 +18,27 @@
                 </blockquote>
                 <div class="col-12 col-sm-6">
                     <form th:action="@{/excel/stat/detmirStats}" th:method="post" enctype="multipart/form-data">
-                        <div class="">
-                            <input type="file" class="form-control" name="file">
+                        <div>
+                            <input type="file" class="form-control form-control-sm" name="file">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="showSource" name="showSource" value="1">
+                                <label class="form-check-label" for="showSource">
+                                    Оставить столбец с источником прописи
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="sourceReplace" name="sourceReplace" value="1">
+                                <label class="form-check-label" for="sourceReplace">
+                                    Заменить источник для клиента
+                                </label>
+                            </div>
                             <br>
                             <button class="btn btn-primary">
                                 Статистика detmir.ru-2
                             </button>
                         </div>
                     </form>
+
                 </div>
             </div>
         </div>
