@@ -50,7 +50,7 @@ public class ExcelController {
             File transferTo = new File(filePath);
             try {
                 multipartFile.transferTo(transferTo);
-                return detmirService.export(filePath, transferTo, response);
+                return detmirService.export(filePath, transferTo, response, showSource, sourceReplace);
             } catch (IllegalStateException | IOException e) {
                 e.printStackTrace();
                 return "File uploaded failed: " + getOrgName(multipartFile);

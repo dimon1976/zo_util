@@ -25,4 +25,5 @@ public class DetmirDTO {
     private String competitorId;
     private String competitor;
     private String on;
+    private String userAdd;
 }
