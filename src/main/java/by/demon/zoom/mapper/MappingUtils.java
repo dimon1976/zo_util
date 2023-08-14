@@ -17,7 +17,7 @@ import java.util.List;
 public final class MappingUtils {
 
     private static final List<String> listCompetitors = Arrays.asList("auchan.ru", "lenta.com", "metro-cc.ru", "myspar.ru", "okeydostavka.ru", "perekrestok.ru", "winelab.ru");
-    private static final List<String> listUsers = Arrays.asList("zms-cron", "zms-mappings-import","maudau.com.ua","detmir.ru-2");
+    private static final List<String> listUsers = Arrays.asList("zms-cron", "zms-mappings-import", "maudau.com.ua", "detmir.ru-2");
 
     public static List<VlookBarDTO> mapToVlookBarDto(Product product) {
         List<VlookBarDTO> list = new ArrayList<>();
@@ -31,7 +31,7 @@ public final class MappingUtils {
         return list;
     }
 
-    public static DetmirDTO mapToDetmirDTO(Product product, String showSource, String sourceReplace) {
+    public static DetmirDTO mapToDetmirDTO(Product product, String showSource, String sourceReplace, String showCompetitorUrl) {
         DetmirDTO detmirStatDTO = new DetmirDTO();
         detmirStatDTO.setClient(product.getClient());
         detmirStatDTO.setIdLink(product.getIdLink());
@@ -57,6 +57,9 @@ public final class MappingUtils {
             } else {
                 detmirStatDTO.setUserAdd("manager");
             }
+        }
+        if (showCompetitorUrl != null) {
+            detmirStatDTO.setCompetitorUrl(product.getCompetitorUrl());
         }
         return detmirStatDTO;
     }

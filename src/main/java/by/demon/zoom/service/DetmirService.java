@@ -13,6 +13,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,22 +24,35 @@ public class DetmirService {
             "Модель конкурента", "Код производителя конкурента", "ID конкурента", "Конкурент", "Конкурент вкл."};
     private final String[] header2 = {"Клиент", "ID связи", "ID клиента", "Верхняя категория клиента", "Категория клиента", "Бренд клиента",
             "Модель клиента", "Код производителя клиента", "Штрих-код клиента", "Статус клиента", "Цена конкурента",
-            "Модель конкурента", "Код производителя конкурента", "ID конкурента", "Конкурент", "Конкурент вкл.","Добавил"};
+            "Модель конкурента", "Код производителя конкурента", "ID конкурента", "Конкурент", "Конкурент вкл.", "Добавил"};
     private final ExcelUtil<DetmirDTO> excelUtil;
 
     public DetmirService(ExcelUtil<DetmirDTO> excelUtil) {
         this.excelUtil = excelUtil;
     }
 
+    public String[] setHeader(String str) {
+        String[] newHeader = new String[header.length + 1];
+        for (int i = 0; i < header.length; i++) {
+            newHeader[i] = header[i];
+        }
+        newHeader[newHeader.length - 1] = str;
+        return newHeader;
+    }
 
-    public String export(String filePath, File file, HttpServletResponse response, String showSource, String sourceReplace) throws IOException {
+    public String export(String filePath, File file, HttpServletResponse response, String showSource, String sourceReplace, String showCompetitorUrl) throws IOException {
         List<List<Object>> originalWb = ExcelUtil.readExcel(file);
         List<Product> result = getResultList(originalWb);
-        List<DetmirDTO> resultDTO = getDTOList(result, showSource, sourceReplace);
+        List<DetmirDTO> resultDTO = getDTOList(result, showSource, sourceReplace, showCompetitorUrl);
         try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
             if (showSource != null || sourceReplace != null) {
+//                Arrays.stream(header).flatMap()
                 short skip = 1;
-                excelUtil.exportExcel(header2, resultDTO, out, skip);
+                excelUtil.exportExcel(setHeader("Добавил"), resultDTO, out, skip);
+                excelUtil.download(file.getName(), filePath, response);
+            } else if (showCompetitorUrl != null) {
+                short skip = 1;
+                excelUtil.exportExcel(setHeader("URL"), resultDTO, out, skip);
                 excelUtil.download(file.getName(), filePath, response);
             } else {
                 short skip = 1;
@@ -70,14 +84,15 @@ public class DetmirService {
             product.setCompetitor(String.valueOf(str.get(23)));
             product.setOn(String.valueOf(str.get(24)));
             product.setUserAdd(String.valueOf(str.get(28)));
+            product.setCompetitorUrl(String.valueOf(str.get(27)));
             resultList.add(product);
         }
         return resultList;
     }
 
-    private List<DetmirDTO> getDTOList(List<Product> list, String showSource, String sourceReplace) {
+    private List<DetmirDTO> getDTOList(List<Product> list, String showSource, String sourceReplace, String showCompetitorUrl) {
         return list.stream()
-                .map((Product product) -> MappingUtils.mapToDetmirDTO(product, showSource, sourceReplace))
+                .map((Product product) -> MappingUtils.mapToDetmirDTO(product, showSource, sourceReplace, showCompetitorUrl))
                 .collect(Collectors.toList());
     }
 

@@ -44,13 +44,15 @@ public class ExcelController {
     }
 
     @PostMapping("/stat/detmirStats")
-    public String detmirStats(@RequestParam("file") MultipartFile multipartFile, @RequestParam(value = "showSource", required = false) String showSource, @RequestParam(value = "sourceReplace", required = false) String sourceReplace) {
+    public String detmirStats(@RequestParam("file") MultipartFile multipartFile, @RequestParam(value = "showSource", required = false) String showSource,
+                              @RequestParam(value = "sourceReplace", required = false) String sourceReplace,
+                              @RequestParam(value = "showCompetitorUrl", required = false) String showCompetitorUrl) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);
             try {
                 multipartFile.transferTo(transferTo);
-                return detmirService.export(filePath, transferTo, response, showSource, sourceReplace);
+                return detmirService.export(filePath, transferTo, response, showSource, sourceReplace, showCompetitorUrl);
             } catch (IllegalStateException | IOException e) {
                 e.printStackTrace();
                 return "File uploaded failed: " + getOrgName(multipartFile);

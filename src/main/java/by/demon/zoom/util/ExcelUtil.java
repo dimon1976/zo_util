@@ -302,10 +302,6 @@ public class ExcelUtil<T> {
             headerFont.setBold(true);
             headerStyle.setFont(headerFont);
             XSSFCellStyle cellStyle = workbook.createCellStyle();
-//            cellStyle.setBorderBottom(BorderStyle.THIN);
-//            cellStyle.setBorderLeft(BorderStyle.THIN);
-//            cellStyle.setBorderRight(BorderStyle.THIN);
-//            cellStyle.setBorderTop(BorderStyle.THIN);
             cellStyle.setAlignment(HorizontalAlignment.LEFT);
             cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             XSSFFont cellFont = workbook.createFont();
