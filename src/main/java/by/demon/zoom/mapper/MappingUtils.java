@@ -1,7 +1,7 @@
 package by.demon.zoom.mapper;
 
 import by.demon.zoom.domain.*;
-import by.demon.zoom.dto.DetmirDTO;
+import by.demon.zoom.dto.StatisticDTO;
 import by.demon.zoom.dto.SimpleDTO;
 import by.demon.zoom.dto.lenta.LentaDTO;
 import by.demon.zoom.dto.MegatopDTO;
@@ -17,7 +17,7 @@ import java.util.List;
 public final class MappingUtils {
 
     private static final List<String> listCompetitors = Arrays.asList("auchan.ru", "lenta.com", "metro-cc.ru", "myspar.ru", "okeydostavka.ru", "perekrestok.ru", "winelab.ru");
-    private static final List<String> listUsers = Arrays.asList("zms-cron", "zms-mappings-import", "maudau.com.ua", "detmir.ru-2");
+    public static final List<String> listUsers = Arrays.asList("zms-cron", "zms-mappings-import", "maudau.com.ua", "detmir.ru-2");
 
     public static List<VlookBarDTO> mapToVlookBarDto(Product product) {
         List<VlookBarDTO> list = new ArrayList<>();
@@ -31,8 +31,8 @@ public final class MappingUtils {
         return list;
     }
 
-    public static DetmirDTO mapToDetmirDTO(Product product, String showSource, String sourceReplace, String showCompetitorUrl) {
-        DetmirDTO detmirStatDTO = new DetmirDTO();
+    public static StatisticDTO mapToDetmirDTO(Product product, String showSource, String sourceReplace, String showCompetitorUrl) {
+        StatisticDTO detmirStatDTO = new StatisticDTO();
         detmirStatDTO.setClient(product.getClient());
         detmirStatDTO.setIdLink(product.getIdLink());
         detmirStatDTO.setClientId(product.getId());

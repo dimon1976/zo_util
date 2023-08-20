@@ -23,7 +23,7 @@ import java.util.Objects;
 @RequestMapping("/excel")
 public class ExcelController {
     private Date before;
-    private final DetmirService detmirService;
+    private final StatisticService statisticService;
     private final VlookService vlookService;
     private final MegatopService megatopService;
     private final LentaService lentaService;
@@ -34,8 +34,8 @@ public class ExcelController {
 
     private final HttpServletResponse response;
 
-    public ExcelController(DetmirService detmirService, VlookService vlookService, MegatopService megatopService, LentaService lentaService, SimpleService simpleService, HttpServletResponse response) {
-        this.detmirService = detmirService;
+    public ExcelController(StatisticService statisticService, VlookService vlookService, MegatopService megatopService, LentaService lentaService, SimpleService simpleService, HttpServletResponse response) {
+        this.statisticService = statisticService;
         this.vlookService = vlookService;
         this.megatopService = megatopService;
         this.lentaService = lentaService;
@@ -43,16 +43,16 @@ public class ExcelController {
         this.response = response;
     }
 
-    @PostMapping("/stat/detmirStats")
-    public String detmirStats(@RequestParam("file") MultipartFile multipartFile, @RequestParam(value = "showSource", required = false) String showSource,
-                              @RequestParam(value = "sourceReplace", required = false) String sourceReplace,
-                              @RequestParam(value = "showCompetitorUrl", required = false) String showCompetitorUrl) {
+    @PostMapping("/stat/")
+    public String editStatisticFile(@RequestParam("file") MultipartFile multipartFile, @RequestParam(value = "showSource", required = false) String showSource,
+                                    @RequestParam(value = "sourceReplace", required = false) String sourceReplace,
+                                    @RequestParam(value = "showCompetitorUrl", required = false) String showCompetitorUrl) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);
             try {
                 multipartFile.transferTo(transferTo);
-                return detmirService.export(filePath, transferTo, response, showSource, sourceReplace, showCompetitorUrl);
+                return statisticService.export(filePath, transferTo, response, showSource, sourceReplace, showCompetitorUrl);
             } catch (IllegalStateException | IOException e) {
                 e.printStackTrace();
                 return "File uploaded failed: " + getOrgName(multipartFile);
@@ -96,7 +96,7 @@ public class ExcelController {
     }
 
     @PostMapping("/lenta")
-    public String excelLenta(@RequestParam("file") MultipartFile multipartFile) {
+    public String excelLentaTask(@RequestParam("file") MultipartFile multipartFile) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);

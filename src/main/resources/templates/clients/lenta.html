@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Lenta</title>
+    <link href="../../static/css/global.css" rel="stylesheet">
 </head>
 <body>
 <div th:replace="/include/_header :: content"></div>
@@ -20,10 +21,10 @@
                     <form th:action="@{/excel/lenta}" th:method="post" enctype="multipart/form-data">
                         <label for="lentaTask" class="form-label">Обработка задания клиента lenta</label>
                         <div class="row mb-3">
-<!--                            <br>-->
+                            <!--                            <br>-->
                             <input type="file" class="form-control" name="file" id="lentaTask">
                         </div>
-<!--                        <br>-->
+                        <!--                        <br>-->
                         <div class="row">
                             <div class="col-6 col-sm-8">
                                 <button class="btn btn-primary">
@@ -33,37 +34,21 @@
                         </div>
                     </form>
                 </div>
-
                 <div class="col-6 col-sm-8">
-                    <form th:action="@{/excel/lentaReport}" th:method="post" th:object="${lenta}" enctype="multipart/form-data">
+                    <form th:action="@{/excel/lentaReport}" th:method="post" th:object="${lenta}"
+                          enctype="multipart/form-data">
                         <label for="lentaReport" class="form-label">Обработка отчета клиента lenta</label>
                         <div class="input-group mb-3">
                             <input type="file" class="form-control" name="file" id="lentaReport" placeholder="file">
                             <span class="input-group-text"> Удалить акции старше </span>
                             <label>
+                                <span class="datepicker-toggle">
+                                <span class="datepicker-toggle-button">
                                 <input type="date" th:field="${lenta.afterDate}"/>
+                                </span>
+                                    </span>
                             </label>
                         </div>
-
-
-
-
-<!--                        <div class="row align-items-center">-->
-<!--                            <div class="col-sm-6">-->
-<!--                                <input type="file" class="form-control form-control-sm" name="file" id="lentaReport">-->
-<!--                            </div>-->
-<!--                            <div class="col-sm-6">-->
-<!--                                <div class="row align-items-center">-->
-                                    <!--                                    <div class="col-8 col-sm-3">-->
-                                    <!--                                        <label for="date">Date</label>-->
-                                    <!--                                    </div>-->
-<!--                                    <div class="col-4 col-sm-9">-->
-<!--                                        <input type="date" th:field="${lenta.afterDate}" aria-describedby="dateHelp"/>-->
-<!--                                        <div id="dateHelp" class="form-text">Удалить акции старше</div>-->
-<!--                                    </div>-->
-<!--                                </div>-->
-<!--                            </div>-->
-<!--                        </div>-->
                         <div class="row">
                             <div class="col-6 col-sm-8">
                                 <button type="submit" class="btn btn-primary">

@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DetmirDTO {
+public class StatisticDTO {
 
     private String client;
     private String idLink;

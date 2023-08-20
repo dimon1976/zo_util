@@ -49,6 +49,5 @@ public class Lenta implements Serializable {
     private String conversionToLentaWeight;
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date afterDate;
-
 }
 

@@ -4,11 +4,6 @@ import by.demon.zoom.domain.Product;
 import by.demon.zoom.dto.VlookBarDTO;
 import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.util.ExcelUtil;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
@@ -24,7 +19,7 @@ import static by.demon.zoom.util.Globals.VLOOK_RESULT;
 @Service
 public class VlookService {
 
-    private final String[] header = {"ID", "BAR", "URL"};
+    private final List<String> header = Arrays.asList("ID", "BAR", "URL");
     private final ExcelUtil<VlookBarDTO> excelUtil;
 
     public VlookService(ExcelUtil<VlookBarDTO> excelUtil) {
