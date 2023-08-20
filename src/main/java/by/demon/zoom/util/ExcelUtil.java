@@ -1,6 +1,5 @@
 package by.demon.zoom.util;
 
-import by.demon.zoom.domain.Product;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
@@ -16,8 +15,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -272,8 +269,8 @@ public class ExcelUtil<T> {
         exportExcel(Globals.SHEET_NAME, headers, dataset, out, "yyyy-MM-dd", skip);
     }
 
-    public void exportExcel(List<String> headers, List<List<Object>> dataset, OutputStream out, short skip) throws IOException {
-        exportExcelObject(Globals.SHEET_NAME, headers, dataset, out, "yyyy-MM-dd", skip);
+    public void exportExcel(List<String> headers, List<List<Object>> dataset, OutputStream out, short skip) {
+        exportObjectToExcel(Globals.SHEET_NAME, headers, dataset, out, "yyyy-MM-dd", skip);
     }
 
     public void exportExcel(List<String> headers, Collection<T> dataset, OutputStream out, String pattern, short skip) {
@@ -392,7 +389,7 @@ public class ExcelUtil<T> {
         }
     }
 
-    public void exportExcelObject(String title, List<String> headers, List<List<Object>> dataset, OutputStream out, String pattern, short skip) throws IOException {
+    public void exportObjectToExcel(String title, List<String> headers, List<List<Object>> dataset, OutputStream out, String pattern, short skip) {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             XSSFSheet sheet = workbook.createSheet(title);
             sheet.setDefaultColumnWidth((short) 15);
@@ -454,32 +451,32 @@ public class ExcelUtil<T> {
     }
 
 
-    private String getClassSimpleName(Collection<T> dataset) {
-        Iterator<T> iterator = dataset.iterator();
-        Class<?> dataClazz = iterator.next().getClass();
-        return dataClazz.getSimpleName();
-    }
+//    private String getClassSimpleName(Collection<T> dataset) {
+//        Iterator<T> iterator = dataset.iterator();
+//        Class<?> dataClazz = iterator.next().getClass();
+//        return dataClazz.getSimpleName();
+//    }
 
-    private void exportVlookBarWorkbook(List<Product> dataset, XSSFSheet sheet) {
-        int rowIdx = 1;
-        for (Product data : dataset) {
-            short cellIdx = 0;
-            if (data.getCollectionUrl().size() >= 1) {
-                for (String str : data.getCollectionUrl()) {
-                    XSSFRow row = sheet.createRow(rowIdx++);
-                    XSSFCell cell = row.createCell(cellIdx++);
-                    String value = data.getId();
-                    cell.setCellValue(value);
-                    XSSFCell cell2 = row.createCell(cellIdx++);
-                    String value2 = data.getBar();
-                    cell2.setCellValue(value2);
-                    XSSFCell cell3 = row.createCell(cellIdx);
-                    cell3.setCellValue(str);
-                    cellIdx = 0;
-                }
-            }
-        }
-    }
+//    private void exportVlookBarWorkbook(List<Product> dataset, XSSFSheet sheet) {
+//        int rowIdx = 1;
+//        for (Product data : dataset) {
+//            short cellIdx = 0;
+//            if (data.getCollectionUrl().size() >= 1) {
+//                for (String str : data.getCollectionUrl()) {
+//                    XSSFRow row = sheet.createRow(rowIdx++);
+//                    XSSFCell cell = row.createCell(cellIdx++);
+//                    String value = data.getId();
+//                    cell.setCellValue(value);
+//                    XSSFCell cell2 = row.createCell(cellIdx++);
+//                    String value2 = data.getBar();
+//                    cell2.setCellValue(value2);
+//                    XSSFCell cell3 = row.createCell(cellIdx);
+//                    cell3.setCellValue(str);
+//                    cellIdx = 0;
+//                }
+//            }
+//        }
+//    }
 
     public static void export2003(String imagesPath, String docsPath) {
 //        ExcelExportUtil<Student> ex = new ExcelExportUtil<Student>();
@@ -523,22 +520,22 @@ public class ExcelUtil<T> {
 //        }
     }
 
-    public static void export2007(String filePath) {
-        try {
-            OutputStream os = Files.newOutputStream(Paths.get(filePath));
-            XSSFWorkbook wb = new XSSFWorkbook();
-            XSSFSheet sheet = wb.createSheet(Globals.SHEET_NAME);
-            for (int i = 0; i < 1000; i++) {
-                XSSFRow row = sheet.createRow(i);
-                row.createCell(0).setCellValue("column" + i);
-                row.createCell(1).setCellValue("column" + i);
-            }
-            wb.write(os);
-            os.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+//    public static void export2007(String filePath) {
+//        try {
+//            OutputStream os = Files.newOutputStream(Paths.get(filePath));
+//            XSSFWorkbook wb = new XSSFWorkbook();
+//            XSSFSheet sheet = wb.createSheet(Globals.SHEET_NAME);
+//            for (int i = 0; i < 1000; i++) {
+//                XSSFRow row = sheet.createRow(i);
+//                row.createCell(0).setCellValue("column" + i);
+//                row.createCell(1).setCellValue("column" + i);
+//            }
+//            wb.write(os);
+//            os.close();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
 
 
 }

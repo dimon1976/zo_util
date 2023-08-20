@@ -16,13 +16,11 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
-import java.util.Date;
 import java.util.Objects;
 
 @Controller
 @RequestMapping("/excel")
 public class ExcelController {
-    private Date before;
     private final StatisticService statisticService;
     private final VlookService vlookService;
     private final MegatopService megatopService;
