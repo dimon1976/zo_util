@@ -44,13 +44,14 @@ public class ExcelController {
     @PostMapping("/stat/")
     public String editStatisticFile(@RequestParam("file") MultipartFile multipartFile, @RequestParam(value = "showSource", required = false) String showSource,
                                     @RequestParam(value = "sourceReplace", required = false) String sourceReplace,
-                                    @RequestParam(value = "showCompetitorUrl", required = false) String showCompetitorUrl) {
+                                    @RequestParam(value = "showCompetitorUrl", required = false) String showCompetitorUrl,
+                                    @RequestParam(value = "showDateAdd", required = false) String showDateAdd) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);
             try {
                 multipartFile.transferTo(transferTo);
-                return statisticService.export(filePath, transferTo, response, showSource, sourceReplace, showCompetitorUrl);
+                return statisticService.export(filePath, transferTo, response, showSource, sourceReplace, showCompetitorUrl, showDateAdd);
             } catch (IllegalStateException | IOException e) {
                 e.printStackTrace();
                 return "File uploaded failed: " + getOrgName(multipartFile);
