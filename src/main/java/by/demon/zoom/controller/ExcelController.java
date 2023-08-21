@@ -153,7 +153,6 @@ public class ExcelController {
         String orgName = getOrgName(multipartFile);
         assert orgName != null;
         String extension = getExtension(orgName);
-//        return TEMP_PATH + "/" + orgName.replace("." + extension, "-" + getDateTimeNow()) + "." + extension;
         return TEMP_PATH + "/" + orgName.replace("." + extension, "-" + "out." + extension);
     }
 

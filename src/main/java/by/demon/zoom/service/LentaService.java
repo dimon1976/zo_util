@@ -35,7 +35,7 @@ public class LentaService {
 
     private HashMap<String, Lenta> data = new HashMap<>();
     private static final DateTimeFormatter LENTA_PATTERN = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    //    private final LocalDate afterDate = LocalDate.of(2023, 4, 22);
+
     @Value("${out.path}")
     private String outPath;
     private int countSheet = 0;

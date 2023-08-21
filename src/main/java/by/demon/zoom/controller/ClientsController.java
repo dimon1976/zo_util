@@ -22,12 +22,12 @@ public class ClientsController {
         return "/clients/megatop";
     }
 
-    @GetMapping("/detmir")
-    public String detmir(Model model) {
-        model.addAttribute("showSource", false);
-        model.addAttribute("sourceReplace", false);
-        return "/clients/detmir";
-    }
+//    @GetMapping("/detmir")
+//    public String detmir(Model model) {
+//        model.addAttribute("showSource", false);
+//        model.addAttribute("sourceReplace", false);
+//        return "/clients/detmir";
+//    }
 
 
 
