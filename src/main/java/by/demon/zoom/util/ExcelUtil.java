@@ -171,8 +171,8 @@ public class ExcelUtil<T> {
         for (int j = 0; j <= 60; j++) {
             cell = row.getCell(j);
             if (cell == null) {
-//                linked.add("");
-                linked.add(Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                linked.add("");
+//                linked.add(Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
                 continue;
             }
             if (cell.getCellType() == CellType.FORMULA) {
@@ -205,8 +205,8 @@ public class ExcelUtil<T> {
                 value = cell.getBooleanCellValue();
                 break;
             case BLANK:
-//                value = "";
-                value = Row.MissingCellPolicy.CREATE_NULL_AS_BLANK;
+                value = "";
+//                value = Row.MissingCellPolicy.CREATE_NULL_AS_BLANK;
                 break;
             default:
                 value = cell.toString();
@@ -233,8 +233,8 @@ public class ExcelUtil<T> {
                 value = cell.getBooleanCellValue();
                 break;
             case BLANK:
-//                value = "";
-                value = Row.MissingCellPolicy.CREATE_NULL_AS_BLANK;
+                value = "";
+//                value = Row.MissingCellPolicy.CREATE_NULL_AS_BLANK;
                 break;
             default:
                 value = cell.toString();
