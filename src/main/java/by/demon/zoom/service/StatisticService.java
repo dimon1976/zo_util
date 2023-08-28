@@ -32,7 +32,7 @@ public class StatisticService {
     public String export(String filePath, File file, HttpServletResponse response, String showSource, String sourceReplace, String showCompetitorUrl, String showDateAdd) throws IOException {
         List<List<Object>> originalWb = ExcelUtil.readExcel(file);
         List<Integer> columns = Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 19, 20, 22, 23, 24);
-        List<Integer> newColumn = getColumnList(showSource, showCompetitorUrl,showDateAdd, columns);
+        List<Integer> newColumn = getColumnList(showSource, showCompetitorUrl, showDateAdd, columns);
         List<List<Object>> resultTest = getResultList(originalWb, newColumn, sourceReplace);
         try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
             List<String> newHeader = new ArrayList<>(header);
@@ -60,7 +60,7 @@ public class StatisticService {
         if (showSource != null) {
             targetList.add(28);
         }
-        if (showDateAdd !=null){
+        if (showDateAdd != null) {
             targetList.add(29);
         }
         return targetList;
@@ -89,6 +89,8 @@ public class StatisticService {
                 } else if (sourceReplace != null && j == 28) {
                     if (!ifExistCompetitor((String) row.get(j), listUsers)) {
                         linked.add("manager");
+                    } else {
+                        linked.add(value);
                     }
                 } else {
                     linked.add(value);
