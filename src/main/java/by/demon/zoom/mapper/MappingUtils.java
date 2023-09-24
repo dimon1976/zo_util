@@ -1,7 +1,7 @@
 package by.demon.zoom.mapper;
 
 import by.demon.zoom.domain.*;
-import by.demon.zoom.dto.DetmirDTO;
+import by.demon.zoom.dto.StatisticDTO;
 import by.demon.zoom.dto.SimpleDTO;
 import by.demon.zoom.dto.lenta.LentaDTO;
 import by.demon.zoom.dto.MegatopDTO;
@@ -17,6 +17,7 @@ import java.util.List;
 public final class MappingUtils {
 
     private static final List<String> listCompetitors = Arrays.asList("auchan.ru", "lenta.com", "metro-cc.ru", "myspar.ru", "okeydostavka.ru", "perekrestok.ru", "winelab.ru");
+    public static final List<String> listUsers = Arrays.asList("zms-cron", "zms-mappings-import", "maudau.com.ua", "detmir.ru-2");
 
     public static List<VlookBarDTO> mapToVlookBarDto(Product product) {
         List<VlookBarDTO> list = new ArrayList<>();
@@ -30,8 +31,8 @@ public final class MappingUtils {
         return list;
     }
 
-    public static DetmirDTO mapToDetmirDTO(Product product){
-        DetmirDTO detmirStatDTO = new DetmirDTO();
+    public static StatisticDTO mapToDetmirDTO(Product product, String showSource, String sourceReplace, String showCompetitorUrl) {
+        StatisticDTO detmirStatDTO = new StatisticDTO();
         detmirStatDTO.setClient(product.getClient());
         detmirStatDTO.setIdLink(product.getIdLink());
         detmirStatDTO.setClientId(product.getId());
@@ -48,6 +49,18 @@ public final class MappingUtils {
         detmirStatDTO.setCompetitorId(product.getCompetitorId());
         detmirStatDTO.setCompetitor(product.getCompetitor());
         detmirStatDTO.setOn(product.getOn());
+        if (showSource != null) {
+            detmirStatDTO.setUserAdd(product.getUserAdd());
+        } else if (sourceReplace != null) {
+            if (ifExistCompetitor(product.getUserAdd(), listUsers)) {
+                detmirStatDTO.setUserAdd(product.getUserAdd());
+            } else {
+                detmirStatDTO.setUserAdd("manager");
+            }
+        }
+        if (showCompetitorUrl != null) {
+            detmirStatDTO.setCompetitorUrl(product.getCompetitorUrl());
+        }
         return detmirStatDTO;
     }
 
@@ -142,7 +155,7 @@ public final class MappingUtils {
         simpleDTO.setPromo(product.getPromo());
         simpleDTO.setCompetitorUrl(product.getCompetitorUrl());
         simpleDTO.setClientUrl(product.getClientUrl());
-        if (!ifExistCompetitor(product.getCompetitor())){
+        if (!ifExistCompetitor(product.getCompetitor(), listCompetitors)) {
             simpleDTO.setUrlWebCache(product.getWebCacheUrl());
         } else {
             simpleDTO.setUrlWebCache("");
@@ -150,8 +163,8 @@ public final class MappingUtils {
         return simpleDTO;
     }
 
-    public static Boolean ifExistCompetitor(String str) {
-        return listCompetitors.stream()
+    public static Boolean ifExistCompetitor(String str, List<String> list) {
+        return list.stream()
                 .anyMatch(i -> i.equals(str));
     }
 }

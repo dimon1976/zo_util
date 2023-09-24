@@ -16,14 +16,12 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
-import java.util.Date;
 import java.util.Objects;
 
 @Controller
 @RequestMapping("/excel")
 public class ExcelController {
-    private Date before;
-    private final DetmirService detmirService;
+    private final StatisticService statisticService;
     private final VlookService vlookService;
     private final MegatopService megatopService;
     private final LentaService lentaService;
@@ -34,8 +32,8 @@ public class ExcelController {
 
     private final HttpServletResponse response;
 
-    public ExcelController(DetmirService detmirService, VlookService vlookService, MegatopService megatopService, LentaService lentaService, SimpleService simpleService, HttpServletResponse response) {
-        this.detmirService = detmirService;
+    public ExcelController(StatisticService statisticService, VlookService vlookService, MegatopService megatopService, LentaService lentaService, SimpleService simpleService, HttpServletResponse response) {
+        this.statisticService = statisticService;
         this.vlookService = vlookService;
         this.megatopService = megatopService;
         this.lentaService = lentaService;
@@ -43,14 +41,17 @@ public class ExcelController {
         this.response = response;
     }
 
-    @PostMapping("/stat/detmirStats")
-    public String detmirStats(@RequestParam("file") MultipartFile multipartFile, @RequestParam(value = "showSource", required = false) String showSource, @RequestParam(value = "sourceReplace", required = false) String sourceReplace) {
+    @PostMapping("/stat/")
+    public String editStatisticFile(@RequestParam("file") MultipartFile multipartFile, @RequestParam(value = "showSource", required = false) String showSource,
+                                    @RequestParam(value = "sourceReplace", required = false) String sourceReplace,
+                                    @RequestParam(value = "showCompetitorUrl", required = false) String showCompetitorUrl,
+                                    @RequestParam(value = "showDateAdd", required = false) String showDateAdd) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);
             try {
                 multipartFile.transferTo(transferTo);
-                return detmirService.export(filePath, transferTo, response);
+                return statisticService.export(filePath, transferTo, response, showSource, sourceReplace, showCompetitorUrl, showDateAdd);
             } catch (IllegalStateException | IOException e) {
                 e.printStackTrace();
                 return "File uploaded failed: " + getOrgName(multipartFile);
@@ -94,7 +95,7 @@ public class ExcelController {
     }
 
     @PostMapping("/lenta")
-    public String excelLenta(@RequestParam("file") MultipartFile multipartFile) {
+    public String excelLentaTask(@RequestParam("file") MultipartFile multipartFile) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);
@@ -152,7 +153,6 @@ public class ExcelController {
         String orgName = getOrgName(multipartFile);
         assert orgName != null;
         String extension = getExtension(orgName);
-//        return TEMP_PATH + "/" + orgName.replace("." + extension, "-" + getDateTimeNow()) + "." + extension;
         return TEMP_PATH + "/" + orgName.replace("." + extension, "-" + "out." + extension);
     }
 

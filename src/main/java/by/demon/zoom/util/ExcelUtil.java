@@ -1,11 +1,11 @@
 package by.demon.zoom.util;
 
-import by.demon.zoom.domain.Product;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.util.IOUtils;
 import org.apache.poi.xssf.usermodel.*;
 import org.springframework.stereotype.Service;
 
@@ -16,8 +16,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -149,6 +147,8 @@ public class ExcelUtil<T> {
 
     private static List<List<Object>> readExcel2007(InputStream is) throws IOException {
         List<List<Object>> list = new LinkedList<>();
+        // https://stackoverflow.com/a/75830526
+        IOUtils.setByteArrayMaxOverride(1000000000);
         XSSFWorkbook xwb = new XSSFWorkbook(is);
         XSSFSheet sheet = xwb.getSheetAt(0);
         XSSFRow row;
@@ -171,11 +171,11 @@ public class ExcelUtil<T> {
     public static void getRowList(Row row, List<Object> linked) {
         Cell cell;
         Object value;
-//        for (int j = 0; j <= row.getLastCellNum(); j++) {
-        for (int j = 0; j <= 255; j++) {
+        for (int j = 0; j <= 60; j++) {
             cell = row.getCell(j);
             if (cell == null) {
                 linked.add("");
+//                linked.add(Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
                 continue;
             }
             if (cell.getCellType() == CellType.FORMULA) {
@@ -209,6 +209,7 @@ public class ExcelUtil<T> {
                 break;
             case BLANK:
                 value = "";
+//                value = Row.MissingCellPolicy.CREATE_NULL_AS_BLANK;
                 break;
             default:
                 value = cell.toString();
@@ -236,6 +237,7 @@ public class ExcelUtil<T> {
                 break;
             case BLANK:
                 value = "";
+//                value = Row.MissingCellPolicy.CREATE_NULL_AS_BLANK;
                 break;
             default:
                 value = cell.toString();
@@ -269,11 +271,15 @@ public class ExcelUtil<T> {
         exportExcel(Globals.SHEET_NAME, null, dataset, out, "yyyy-MM-dd", skip);
     }
 
-    public void exportExcel(String[] headers, Collection<T> dataset, OutputStream out, short skip) {
+    public void exportExcel(List<String> headers, Collection<T> dataset, OutputStream out, short skip) {
         exportExcel(Globals.SHEET_NAME, headers, dataset, out, "yyyy-MM-dd", skip);
     }
 
-    public void exportExcel(String[] headers, Collection<T> dataset, OutputStream out, String pattern, short skip) {
+    public void exportExcel(List<String> headers, List<List<Object>> dataset, OutputStream out, short skip) {
+        exportObjectToExcel(Globals.SHEET_NAME, headers, dataset, out, "yyyy-MM-dd", skip);
+    }
+
+    public void exportExcel(List<String> headers, Collection<T> dataset, OutputStream out, String pattern, short skip) {
         exportExcel(Globals.SHEET_NAME, headers, dataset, out, pattern, skip);
     }
 
@@ -284,7 +290,7 @@ public class ExcelUtil<T> {
      * @param out     Выходной поток
      * @param pattern Паттерн для замены
      */
-    public void exportExcel(String title, String[] headers, Collection<T> dataset, OutputStream out, String pattern, short skip) {
+    public void exportExcel(String title, List<String> headers, Collection<T> dataset, OutputStream out, String pattern, short skip) {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             XSSFSheet sheet = workbook.createSheet(title);
             sheet.setDefaultColumnWidth((short) 15);
@@ -302,10 +308,6 @@ public class ExcelUtil<T> {
             headerFont.setBold(true);
             headerStyle.setFont(headerFont);
             XSSFCellStyle cellStyle = workbook.createCellStyle();
-//            cellStyle.setBorderBottom(BorderStyle.THIN);
-//            cellStyle.setBorderLeft(BorderStyle.THIN);
-//            cellStyle.setBorderRight(BorderStyle.THIN);
-//            cellStyle.setBorderTop(BorderStyle.THIN);
             cellStyle.setAlignment(HorizontalAlignment.LEFT);
             cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             XSSFFont cellFont = workbook.createFont();
@@ -313,10 +315,10 @@ public class ExcelUtil<T> {
             cellStyle.setFont(cellFont);
             XSSFRow row = sheet.createRow(0);
             if (headers != null) {
-                for (short i = 0; i < headers.length; i++) {
+                for (short i = 0; i < headers.size(); i++) {
                     XSSFCell cell = row.createCell(i);
                     cell.setCellStyle(headerStyle);
-                    XSSFRichTextString text = new XSSFRichTextString(headers[i]);
+                    XSSFRichTextString text = new XSSFRichTextString(headers.get(i));
                     cell.setCellValue(text);
                 }
             }
@@ -393,32 +395,94 @@ public class ExcelUtil<T> {
         }
     }
 
-    private String getClassSimpleName(Collection<T> dataset) {
-        Iterator<T> iterator = dataset.iterator();
-        Class<?> dataClazz = iterator.next().getClass();
-        return dataClazz.getSimpleName();
-    }
-
-    private void exportVlookBarWorkbook(List<Product> dataset, XSSFSheet sheet) {
-        int rowIdx = 1;
-        for (Product data : dataset) {
-            short cellIdx = 0;
-            if (data.getCollectionUrl().size() >= 1) {
-                for (String str : data.getCollectionUrl()) {
-                    XSSFRow row = sheet.createRow(rowIdx++);
-                    XSSFCell cell = row.createCell(cellIdx++);
-                    String value = data.getId();
-                    cell.setCellValue(value);
-                    XSSFCell cell2 = row.createCell(cellIdx++);
-                    String value2 = data.getBar();
-                    cell2.setCellValue(value2);
-                    XSSFCell cell3 = row.createCell(cellIdx);
-                    cell3.setCellValue(str);
-                    cellIdx = 0;
+    public void exportObjectToExcel(String title, List<String> headers, List<List<Object>> dataset, OutputStream out, String pattern, short skip) {
+        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            XSSFSheet sheet = workbook.createSheet(title);
+            sheet.setDefaultColumnWidth((short) 15);
+            XSSFCellStyle headerStyle = workbook.createCellStyle();
+            headerStyle.setFillForegroundColor(IndexedColors.LIGHT_CORNFLOWER_BLUE.getIndex());
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            headerStyle.setBorderBottom(BorderStyle.THIN);
+            headerStyle.setBorderLeft(BorderStyle.THIN);
+            headerStyle.setBorderRight(BorderStyle.THIN);
+            headerStyle.setBorderTop(BorderStyle.THIN);
+            headerStyle.setAlignment(HorizontalAlignment.LEFT);
+            XSSFFont headerFont = workbook.createFont();
+            headerFont.setFontName("Calibri");
+            headerFont.setFontHeightInPoints((short) 10);
+            headerFont.setBold(true);
+            headerStyle.setFont(headerFont);
+            XSSFCellStyle cellStyle = workbook.createCellStyle();
+            cellStyle.setAlignment(HorizontalAlignment.LEFT);
+            cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+            XSSFFont cellFont = workbook.createFont();
+            cellFont.setBold(false);
+            cellStyle.setFont(cellFont);
+            XSSFRow row = sheet.createRow(0);
+            int rowNum = 0;
+            if (headers != null) {
+                rowNum++;
+                for (short i = 0; i < headers.size(); i++) {
+                    XSSFCell cell = row.createCell(i);
+                    cell.setCellStyle(headerStyle);
+                    XSSFRichTextString text = new XSSFRichTextString(headers.get(i));
+                    cell.setCellValue(text);
                 }
             }
+            int t = 0;
+            for (List<Object> rowData : dataset) {
+                if (t < skip) {
+                    t++;
+                    continue;
+                }
+                row = sheet.createRow(rowNum++);
+                int colNum = 0;
+                for (Object value : rowData) {
+                    Cell cell = row.createCell(colNum++);
+                    if (value instanceof String) {
+                        cell.setCellValue((String) value);
+                    } else if (value instanceof Integer) {
+                        cell.setCellValue((Integer) value);
+                    } else if (value instanceof Double) {
+                        cell.setCellValue((Double) value);
+                    } else if (value instanceof Boolean) {
+                        cell.setCellValue((Boolean) value);
+                    }
+                }
+            }
+            workbook.write(out);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
+
+
+//    private String getClassSimpleName(Collection<T> dataset) {
+//        Iterator<T> iterator = dataset.iterator();
+//        Class<?> dataClazz = iterator.next().getClass();
+//        return dataClazz.getSimpleName();
+//    }
+
+//    private void exportVlookBarWorkbook(List<Product> dataset, XSSFSheet sheet) {
+//        int rowIdx = 1;
+//        for (Product data : dataset) {
+//            short cellIdx = 0;
+//            if (data.getCollectionUrl().size() >= 1) {
+//                for (String str : data.getCollectionUrl()) {
+//                    XSSFRow row = sheet.createRow(rowIdx++);
+//                    XSSFCell cell = row.createCell(cellIdx++);
+//                    String value = data.getId();
+//                    cell.setCellValue(value);
+//                    XSSFCell cell2 = row.createCell(cellIdx++);
+//                    String value2 = data.getBar();
+//                    cell2.setCellValue(value2);
+//                    XSSFCell cell3 = row.createCell(cellIdx);
+//                    cell3.setCellValue(str);
+//                    cellIdx = 0;
+//                }
+//            }
+//        }
+//    }
 
     public static void export2003(String imagesPath, String docsPath) {
 //        ExcelExportUtil<Student> ex = new ExcelExportUtil<Student>();
@@ -462,21 +526,22 @@ public class ExcelUtil<T> {
 //        }
     }
 
-    public static void export2007(String filePath) {
-        try {
-            OutputStream os = Files.newOutputStream(Paths.get(filePath));
-            XSSFWorkbook wb = new XSSFWorkbook();
-            XSSFSheet sheet = wb.createSheet(Globals.SHEET_NAME);
-            for (int i = 0; i < 1000; i++) {
-                XSSFRow row = sheet.createRow(i);
-                row.createCell(0).setCellValue("column" + i);
-                row.createCell(1).setCellValue("column" + i);
-            }
-            wb.write(os);
-            os.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+//    public static void export2007(String filePath) {
+//        try {
+//            OutputStream os = Files.newOutputStream(Paths.get(filePath));
+//            XSSFWorkbook wb = new XSSFWorkbook();
+//            XSSFSheet sheet = wb.createSheet(Globals.SHEET_NAME);
+//            for (int i = 0; i < 1000; i++) {
+//                XSSFRow row = sheet.createRow(i);
+//                row.createCell(0).setCellValue("column" + i);
+//                row.createCell(1).setCellValue("column" + i);
+//            }
+//            wb.write(os);
+//            os.close();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
+
 
 }

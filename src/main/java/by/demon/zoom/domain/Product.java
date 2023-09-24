@@ -51,6 +51,7 @@ public class Product {
     private String weightLentaKg;
     private String priceEdeadealKg;
     private String conversionToLentaWeight;
+    private String userAdd;
 //    private long id;
     private String heelHeight;
     private String collection;

@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DetmirDTO {
+public class StatisticDTO {
 
     private String client;
     private String idLink;
@@ -25,4 +25,6 @@ public class DetmirDTO {
     private String competitorId;
     private String competitor;
     private String on;
+    private String userAdd;
+    private String competitorUrl;
 }
