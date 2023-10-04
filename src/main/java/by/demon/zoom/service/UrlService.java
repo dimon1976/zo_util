@@ -1,7 +1,5 @@
 package by.demon.zoom.service;
 
-import by.demon.zoom.domain.Product;
-import by.demon.zoom.dto.SimpleDTO;
 import by.demon.zoom.dto.UrlDTO;
 import by.demon.zoom.util.ExcelUtil;
 import org.springframework.stereotype.Service;
@@ -33,30 +31,27 @@ public class UrlService {
         Path of = Path.of(filePath);
         List<List<Object>> lists = readExcel(file);
         Collection<UrlDTO> collect = getUrlDTOList(lists);
-//        try (OutputStream out = Files.newOutputStream(of)) {
-//            short skipLines = 1;
-//            excelUtil.exportExcel(header, collect, out, skipLines);
-//            excelUtil.download(file.getName(), filePath, response);
-//        }
-
-
+        try (OutputStream out = Files.newOutputStream(of)) {
+            short skipLines = 0;
+            excelUtil.exportExcel(header, collect, out, skipLines);
+            excelUtil.download(file.getName(), filePath, response);
+        }
         return null;
     }
 
     private Collection<UrlDTO> getUrlDTOList(List<List<Object>> lists) {
-        ArrayList<Object> listUrlDto = new ArrayList<>();
+        ArrayList<UrlDTO> listUrlDto = new ArrayList<>();
         for (int i = 0; i < lists.size(); i++) {
             for (int j = 0; j < lists.get(i).size(); j++) {
                 String cell = (String) lists.get(i).get(j);
                 if (cell.startsWith("http://") || cell.startsWith("https://")) {
-
+                    UrlDTO urlDTO = new UrlDTO();
+                    urlDTO.setId(lists.get(i).get(0).toString());
+                    urlDTO.setUrl(cell);
+                    listUrlDto.add(urlDTO);
                 }
             }
-
-
         }
-
-
-        return null;
+        return listUrlDto;
     }
 }
