@@ -29,7 +29,6 @@ public class VlookService {
     public String export(String filePath, File file, HttpServletResponse response) throws IOException {
         List<List<Object>> list = readExcel(file);
         short skip = 0;
-
         // key = BAR value = Set[id]
         HashMap<String, HashSet<String>> mapOne = new HashMap<>();
         // key = BAR value = set[url]

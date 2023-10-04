@@ -168,7 +168,7 @@ public class ExcelUtil<T> {
     public static void getRowList(Row row, List<Object> linked) {
         Cell cell;
         Object value;
-        for (int j = 0; j <= 60; j++) {
+        for (int j = 0; j <= 250; j++) {
             cell = row.getCell(j);
             if (cell == null) {
                 linked.add("");

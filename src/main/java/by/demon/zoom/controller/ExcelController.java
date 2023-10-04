@@ -26,19 +26,37 @@ public class ExcelController {
     private final MegatopService megatopService;
     private final LentaService lentaService;
     private final SimpleService simpleService;
+    private final UrlService urlService;
 
     @Value("${temp.path}")
     private String TEMP_PATH;
 
     private final HttpServletResponse response;
 
-    public ExcelController(StatisticService statisticService, VlookService vlookService, MegatopService megatopService, LentaService lentaService, SimpleService simpleService, HttpServletResponse response) {
+    public ExcelController(StatisticService statisticService, VlookService vlookService, MegatopService megatopService, LentaService lentaService, SimpleService simpleService, UrlService urlService, HttpServletResponse response) {
         this.statisticService = statisticService;
         this.vlookService = vlookService;
         this.megatopService = megatopService;
         this.lentaService = lentaService;
         this.simpleService = simpleService;
+        this.urlService = urlService;
         this.response = response;
+    }
+
+    @PostMapping("/getUrl/")
+    public String getUrl(@RequestParam("file") MultipartFile multipartFile) {
+        if (ifExist(multipartFile)) {
+            String filePath = getFilePath(multipartFile);
+            File transferTo = new File(filePath);
+            try {
+                multipartFile.transferTo(transferTo);
+                return urlService.export(filePath, transferTo, response);
+            } catch (IllegalStateException | IOException e) {
+                e.printStackTrace();
+                return "File uploaded failed: " + getOrgName(multipartFile);
+            }
+        }
+        return "index";
     }
 
     @PostMapping("/stat/")
