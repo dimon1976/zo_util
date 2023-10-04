@@ -5,6 +5,7 @@ import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.util.IOUtils;
 import org.apache.poi.xssf.usermodel.*;
 import org.springframework.stereotype.Service;
 
@@ -146,6 +147,8 @@ public class ExcelUtil<T> {
 
     private static List<List<Object>> readExcel2007(InputStream is) throws IOException {
         List<List<Object>> list = new LinkedList<>();
+        // https://stackoverflow.com/a/75830526
+        IOUtils.setByteArrayMaxOverride(1000000000);
         XSSFWorkbook xwb = new XSSFWorkbook(is);
         XSSFSheet sheet = xwb.getSheetAt(0);
         XSSFRow row;

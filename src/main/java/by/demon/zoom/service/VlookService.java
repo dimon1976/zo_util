@@ -119,7 +119,8 @@ public class VlookService {
                 if (bar.length() > 13) {
                     String[] strings = bar.split(",");
                     for (String string : strings) {
-                        lengthCheck(mapTwo, url, string);
+                        String barClear = string.replaceAll("\\D", "");
+                        lengthCheck(mapTwo, url, barClear);
                     }
                 } else lengthCheck(mapTwo, url, bar);
             }
