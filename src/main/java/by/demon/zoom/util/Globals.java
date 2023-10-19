@@ -1,7 +1,6 @@
 package by.demon.zoom.util;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.File;
 
 public class Globals {
 
@@ -11,6 +10,7 @@ public class Globals {
     public static final String VLOOK_RESULT = "vlook_result" + System.currentTimeMillis() + SUFFIX_XLSX;
     public static final String EXPORT_PRODUCT = "product" + System.currentTimeMillis() + SUFFIX_XLS;
     public static final String SHEET_NAME = "Data";
+    public static final String TEMP_PATH = "C:/temp";
 
     public static String getBasePath(HttpServletRequest request) {
         String path = request.getContextPath();

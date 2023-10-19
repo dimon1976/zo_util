@@ -175,7 +175,6 @@ public class ExcelUtil<T> {
             cell = row.getCell(j);
             if (cell == null) {
                 linked.add("");
-//                linked.add(Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
                 continue;
             }
             if (cell.getCellType() == CellType.FORMULA) {
@@ -237,7 +236,6 @@ public class ExcelUtil<T> {
                 break;
             case BLANK:
                 value = "";
-//                value = Row.MissingCellPolicy.CREATE_NULL_AS_BLANK;
                 break;
             default:
                 value = cell.toString();

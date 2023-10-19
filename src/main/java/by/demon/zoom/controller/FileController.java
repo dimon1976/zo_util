@@ -3,6 +3,8 @@ package by.demon.zoom.controller;
 
 import by.demon.zoom.domain.Lenta;
 import by.demon.zoom.service.*;
+import by.demon.zoom.util.CsvUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,9 +20,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 
+@Slf4j
 @Controller
 @RequestMapping("/excel")
-public class ExcelController {
+public class FileController {
     private final StatisticService statisticService;
     private final VlookService vlookService;
     private final MegatopService megatopService;
@@ -33,7 +36,7 @@ public class ExcelController {
 
     private final HttpServletResponse response;
 
-    public ExcelController(StatisticService statisticService, VlookService vlookService, MegatopService megatopService, LentaService lentaService, SimpleService simpleService, UrlService urlService, HttpServletResponse response) {
+    public FileController(StatisticService statisticService, VlookService vlookService, MegatopService megatopService, LentaService lentaService, SimpleService simpleService, UrlService urlService, CsvUtil csvUtil, HttpServletResponse response) {
         this.statisticService = statisticService;
         this.vlookService = vlookService;
         this.megatopService = megatopService;

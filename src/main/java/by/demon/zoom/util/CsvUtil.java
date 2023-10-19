@@ -2,9 +2,9 @@ package by.demon.zoom.util;
 
 import com.opencsv.*;
 import com.opencsv.exceptions.CsvException;
+import com.opencsv.exceptions.CsvValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.mozilla.universalchardet.UniversalDetector;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -15,6 +15,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static by.demon.zoom.util.Globals.TEMP_PATH;
 import static com.opencsv.ICSVWriter.DEFAULT_ESCAPE_CHARACTER;
 import static com.opencsv.ICSVWriter.DEFAULT_LINE_END;
 import static java.nio.file.StandardOpenOption.CREATE;
@@ -25,15 +26,43 @@ public class CsvUtil {
     private final static String header = "\"Клиент\";\"ID связи\";\"ID клиента\";\"Верхняя категория клиента\";\"Категория клиента\";\"Бренд клиента\";\"Модель клиента\";" +
             "\"Код производителя клиента\";\"Штрих-код клиента\";\"Статус клиента\";\"Цена конкурента\";\"Модель конкурента\";\"Код производителя конкурента\";\"ID конкурента\";" +
             "\"Конкурент\";\"Конкурент вкл.\"\n";
-    @Value("${temp.path}")
-    private String TEMP_PATH;
+
     private static int max = 0;
-    public List<String[]> readFile(File file) throws IOException, CsvException {
+
+    /*Оригинальный метод чтения CSV*/
+    public static List<String[]> readCsv(File file) throws IOException, CsvException {
         log.info(String.format("file %s processing", file.getName()));
         Path path = getPath(file.getName());
         String charset = getNameCharset(path);
         String separator = getSeparator(file, charset);
         return getStrings(path, charset, separator);
+    }
+
+
+    /*Новый метод чтения CSV*/
+    public static List<List<Object>> readFile(File file) throws IOException {
+        log.info(String.format("file %s processing", file.getName()));
+        Path path = getPath(file.getName());
+        String charset = getNameCharset(path);
+        String separator = getSeparator(file, charset);
+        CSVParser parser = getCsvParser(separator);
+        List<List<Object>> csvData = new ArrayList<>();
+
+        try (Reader reader = Files.newBufferedReader(path, Charset.forName(charset))) {
+            CSVReader csvReader = getCsvReader(reader, parser);
+            String[] nextLine;
+            while ((nextLine = csvReader.readNext()) != null) {
+                List<Object> row = new ArrayList<>();
+                for (String cell : nextLine) {
+                    row.add(cell);
+                }
+                csvData.add(row);
+            }
+        } catch (IOException | CsvValidationException e) {
+            e.printStackTrace();
+        }
+
+        return csvData;
     }
 
     /**
@@ -55,7 +84,7 @@ public class CsvUtil {
     }
 
     /**
-     * Рекурсивно удалить все вхождения символа с в строку string
+     * Рекурсивно удалить все вхождения символа "с" в строку string
      */
     public static String removeCharacters(String string, char c) {
         StringBuilder stringBuilder = new StringBuilder();
@@ -65,6 +94,7 @@ public class CsvUtil {
         }
         return stringBuilder.toString();
     }
+
     public static String getCharset(File file) throws IOException {
 
         byte[] buf = new byte[4096];
@@ -91,21 +121,23 @@ public class CsvUtil {
                 .limit(10)
                 .collect(Collectors.joining());
     }
-    private Path getPath(String file) {
+
+    private static Path getPath(String file) {
         return Path.of(TEMP_PATH, file);
     }
-    private String getSeparator(File file, String charset) throws IOException {
+
+    private static String getSeparator(File file, String charset) throws IOException {
         return findSeparator(getFirstRowsInFile(file, charset));
     }
 
-    private String getNameCharset(Path path) throws IOException {
+    private static String getNameCharset(Path path) throws IOException {
         return getCharset(path.toFile());
     }
 
     public static String findSeparator(String string) {
         Map<Character, Integer> map = new HashMap<>();
         string = removeCharacters(string, '"');
-        while (string.length() != 0) {
+        while (!string.isEmpty()) {
             int count = countCharacter(string, string.charAt(0));
             if (count > max) {
                 max = count;
@@ -117,25 +149,29 @@ public class CsvUtil {
         }
         return Collections.max(map.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey().toString();
     }
-    private List<String[]> getStrings(Path path, String charset, String separator) throws IOException, CsvException {
+
+    private static List<String[]> getStrings(Path path, String charset, String separator) throws IOException, CsvException {
         try (Reader reader = Files.newBufferedReader(path, Charset.forName(charset))) {
             CSVParser parser = getCsvParser(separator);
             CSVReader csvReader = getCsvReader(reader, parser);
             return getStrings(csvReader);
         }
     }
-    private CSVReader getCsvReader(Reader reader, CSVParser parser) {
+
+    private static CSVReader getCsvReader(Reader reader, CSVParser parser) {
         return new CSVReaderBuilder(reader)
                 .withSkipLines(0)
                 .withCSVParser(parser)
                 .build();
     }
-    private CSVParser getCsvParser(String separator) {
+
+    private static CSVParser getCsvParser(String separator) {
         return new CSVParserBuilder()
                 .withSeparator(separator.charAt(0))
                 .build();
     }
-    private List<String[]> getStrings(CSVReader csvReader) throws IOException, CsvException {
+
+    private static List<String[]> getStrings(CSVReader csvReader) throws IOException, CsvException {
         return csvReader.readAll().stream()
 //                .filter(this::filterString)
                 .skip(1)
