@@ -1,5 +1,6 @@
 package by.demon.zoom.controller;
 
+import by.demon.zoom.domain.Edadeal;
 import by.demon.zoom.domain.Lenta;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,6 +15,7 @@ public class ClientsController {
     @GetMapping("/lenta")
     public String lenta(Model model) {
         model.addAttribute("lenta", new Lenta());
+        model.addAttribute("edadeal", new Edadeal());
         return "/clients/lenta";
     }
 
