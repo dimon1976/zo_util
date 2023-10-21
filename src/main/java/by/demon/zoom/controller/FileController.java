@@ -49,7 +49,6 @@ public class FileController {
     }
 
 
-
     @PostMapping("/getUrl/")
     public String getUrl(@RequestParam("file") MultipartFile multipartFile) {
         if (ifExist(multipartFile)) {
@@ -118,22 +117,23 @@ public class FileController {
         }
         return "index";
     }
-//edeadeal
-@PostMapping("/edadeal")
-public String excelEdadeal(@RequestParam("file") MultipartFile multipartFile) {
-    if (ifExist(multipartFile)) {
-        String filePath = getFilePath(multipartFile);
-        File transferTo = new File(filePath);
-        try {
-            multipartFile.transferTo(transferTo);
-            return edadealService.export(filePath, transferTo, response);
-        } catch (IllegalStateException | IOException e) {
-            e.printStackTrace();
-            return "File uploaded failed: " + getOrgName(multipartFile);
+
+    //edeadeal
+    @PostMapping("/edadeal")
+    public String excelEdadeal(@RequestParam("file") MultipartFile multipartFile) {
+        if (ifExist(multipartFile)) {
+            String filePath = getFilePath(multipartFile);
+            File transferTo = new File(filePath);
+            try {
+                multipartFile.transferTo(transferTo);
+                return edadealService.export(filePath, transferTo, response);
+            } catch (IllegalStateException | IOException e) {
+                e.printStackTrace();
+                return "File uploaded failed: " + getOrgName(multipartFile);
+            }
         }
+        return "/clients/lenta";
     }
-    return "/clients/lenta";
-}
 
     @PostMapping("/lenta")
     public String excelLentaTask(@RequestParam("file") MultipartFile multipartFile) {

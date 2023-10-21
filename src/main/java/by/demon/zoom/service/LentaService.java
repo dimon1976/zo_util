@@ -40,7 +40,7 @@ public class LentaService {
     private String outPath;
     private int countSheet = 0;
     private final List<String> headerLentaTask = Arrays.asList("Id", "Наименование товара", "Вес", "Цена", "Москва, Нижний новгород", "Ростов-на-Дону", "Санкт-Петербург, Петрозаводск", "Новосибирск, Иркутск, Красноярск", "Екатеринбург", "Саратов, Уфа, Ульяновск", "Штрихкод");
-    private final List<String> headerLentaReport = Arrays.asList("Город", "Товар", "Наименование товара", "Цена", "Сеть", "Акц. Цена 1", "Дата начала промо", "Дата окончания промо", "% скидки", "Механика акции", "Фото (ссылка)", "Доп.цена", "Модель", "Вес Едадил", "Вес Едадил, кг", "Вес Ленты", "Вес Ленты, кг", "Цена Едадил за КГ", "Пересчет к весу Ленты");
+    private final List<String> headerLentaReport = Arrays.asList("Город", "Товар", "Наименование товара", "Цена", "Сеть", "Акц. Цена 1", "Дата начала промо", "Дата окончания промо", "% скидки", "Механика акции", "Фото (ссылка)", "Доп.цена", "Модель", "Вес Едадил", "Вес Едадил, кг", "Вес Ленты", "Вес Ленты, кг", "Цена Едадил за КГ", "Пересчет к весу Ленты", "Доп. поле");
 
 
     public String exportReport(String filePath, File file, HttpServletResponse response, Date date) throws IOException {
@@ -86,6 +86,7 @@ public class LentaService {
             lenta.setWeightLentaKg(String.valueOf(str.get(16)));
             lenta.setPriceEdeadealKg(getFormattedString(String.valueOf(str.get(17)), nf));
             lenta.setConversionToLentaWeight(getFormattedString(String.valueOf(str.get(18)), nf));
+            lenta.setAdditionalField(String.valueOf(str.get(22)));
             resultList.add(lenta);
             count++;
         }
