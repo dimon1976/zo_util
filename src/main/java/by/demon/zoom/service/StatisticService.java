@@ -20,6 +20,7 @@ import static by.demon.zoom.mapper.MappingUtils.listUsers;
 
 @Service
 public class StatisticService {
+
     private static final List<String> header = Arrays.asList("Клиент", "ID связи", "ID клиента", "Верхняя категория клиента", "Категория клиента", "Бренд клиента",
             "Модель клиента", "Код производителя клиента", "Штрих-код клиента", "Статус клиента", "Цена конкурента",
             "Модель конкурента", "Код производителя конкурента", "ID конкурента", "Конкурент", "Конкурент вкл.");

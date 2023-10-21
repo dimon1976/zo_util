@@ -1,123 +1,101 @@
 package by.demon.zoom.service;
 
-import by.demon.zoom.domain.Lenta;
-import by.demon.zoom.dto.lenta.LentaDTO;
+import by.demon.zoom.util.CsvUtil;
 import by.demon.zoom.util.ExcelUtil;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.*;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+
+import static by.demon.zoom.util.Globals.SUFFIX_XLSX;
+
 
 @Service
 public class EdadealService {
-
-    @Value("${out.path}")
-    private String outPath;
-    private HashMap<String, Lenta> data = new HashMap<>();
-    private int countSheet = 0;
+    private static final String EXCLUDE_STRING = "от ";
     private final List<String> header = Arrays.asList("Категория из файла", "Сайт", "ZMS ID", "Категория", "Бренд", "Модель", "Код производителя", "Цена", "Маркетинговое описание", "Маркетинговое описание 3",
             "Маркетинговое описание 4", "Статус", "Ссылка", "Старая цена", "Продавец", "Дата", "Позиция", "Ссылка на родителя");
+    private final ExcelUtil<Object> excelUtil;
 
-    public String export(String filePath, File filename, HttpServletResponse response) throws IOException {
-        try (Workbook workbook = loadWorkbook(filename)) {
-            Iterator<Sheet> sheetIterator = workbook.sheetIterator();
-            while (sheetIterator.hasNext()) {
-                Sheet sheet = sheetIterator.next();
-                processSheet(sheet);
-                countSheet++;
-            }
-            countSheet = 0;
-            workbook.close();
-            write(filePath, filename, response);
+    public EdadealService(ExcelUtil<Object> excelUtil) {
+        this.excelUtil = excelUtil;
+    }
+
+    public String export(String filePath, File file, HttpServletResponse response) throws IOException {
+        String fileName = file.getName();
+        String extension = fileName.lastIndexOf(".") == -1 ? "" : fileName.substring(fileName.lastIndexOf(".") + 1);
+        List<List<Object>> originalWb;
+        if ("csv".equals(extension)) {
+            originalWb = CsvUtil.readFile(file);
+            fileName = fileName.lastIndexOf(".") == -1 ? "" : fileName.substring(0, fileName.lastIndexOf(".")) + SUFFIX_XLSX;
+        } else {
+            originalWb = ExcelUtil.readExcel(file);
+        }
+        List<Integer> columns = Arrays.asList(0, 1, 2, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24);
+        List<List<Object>> resultList = getResultList(originalWb, columns);
+        try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
+            short skip = 1;
+            excelUtil.exportExcel(header, resultList, out, skip);
+            excelUtil.download(fileName, filePath, response);
         }
         return filePath;
     }
 
 
-    private Workbook loadWorkbook(File filename) throws IOException {
-        String extension = getExtension(filename);
-        try (FileInputStream file = new FileInputStream(filename)) {
-            switch (extension) {
-                case "xls":
-                    // old format
-                    return new HSSFWorkbook(file);
-                case "xlsx":
-                    // new format
-                    return new XSSFWorkbook(file);
-                default:
-                    throw new RuntimeException("Unknown Excel file extension: " + extension);
-            }
-        }
-    }
-    @NotNull
-    private String getExtension(File filename) {
-        return filename.getName().substring(filename.getName().lastIndexOf(".") + 1).toLowerCase();
-    }
-
-    // Обработка листа
-    private void processSheet(Sheet sheet) {
-        Row row;
+    private static List<List<Object>> getResultList(List<List<Object>> list, List<Integer> columnList) {
+        List<List<Object>> newList = new LinkedList<>();
         int counter = 0;
-        for (int i = sheet.getFirstRowNum(); counter < sheet.getPhysicalNumberOfRows(); i++) {
-            row = sheet.getRow(i);
-            if (row == null) {
-                continue;
-            } else {
-                counter++;
-            }
-            List<Object> linked = new LinkedList<>();
-            ExcelUtil.getRowList(row, linked);
-            if (countSheet == 0) {
-                data.put(linked.get(0).toString(), new Lenta());
-            }
-            addLenta(linked, data.get(linked.get(0).toString()));
-        }
-    }
-    // Обработка строки
-    private void addLenta(List<Object> row, Lenta lenta) {
-        if (row != null) {
-            if (countSheet == 0) {
-                lenta.setId(row.get(0).toString());
-                lenta.setModel(row.get(1).toString());
-                lenta.setPrice(row.get(2).toString());
-                lenta.setMoscow(row.get(3).toString());
-                lenta.setRostovNaDonu(row.get(4).toString());
-                lenta.setSpb(row.get(5).toString());
-                lenta.setNovosibirsk(row.get(6).toString());
-                lenta.setYekaterinburg(row.get(7).toString());
-                lenta.setSaratov(row.get(8).toString());
+        for (int i = 0; counter < list.size(); i++) {
+            counter++;
+            List<Object> linked = getRowList(columnList, list.get(i));
+            if (linked != null) {
+                newList.add(linked);
             }
         }
-        if (countSheet == 1 && lenta != null) {
-            assert row != null;
-            lenta.getEan().add(row.get(2).toString());
-        }
-        if (countSheet == 2 && lenta != null) {
-            assert row != null;
-            lenta.setWeight(row.get(2).toString());
-        }
+        return newList;
     }
 
-    private void write(String filePath, File fileName, HttpServletResponse response) throws IOException {
-        File file = Path.of(outPath, fileName.getName().toLowerCase(Locale.ROOT).replace("." + getExtension(fileName), ".xlsx")).toFile();
-        Collection<LentaDTO> lentaDTOs = getLentaDTOList();
-        try (FileOutputStream fileOutputStream = new FileOutputStream(fileName)) {
-            ExcelUtil<LentaDTO> excelUtil = new ExcelUtil<>();
-            excelUtil.exportExcel(header, lentaDTOs, fileOutputStream, (short) 1);
-            excelUtil.download(file.getName(), filePath, response);
+    private static List<Object> getRowList(List<Integer> columnList, List<Object> row) {
+        Object value;
+        List<Object> linked = new LinkedList<>();
+        for (int j = 0; j <= row.size(); j++) {
+            if (ifExistField(j, columnList)) {
+                value = row.get(j);
+                if (value == null) {
+                    linked.add("");
+                    break;
+                } else if (j == 16) {
+                    // Проверка на вхождение подстроки "от" для исключения строки из выгрузки
+                    if (value.toString().startsWith(EXCLUDE_STRING)) {
+                        return null;
+                    } else {
+                        linked.add(value);
+                    }
+                } else if (j == 24) {
+                    // Проверка на пустые поля с моделью и продавцом
+                    if (row.get(21).equals("") || row.get(11).equals("")) {
+                        return null;
+                    } else {
+                        value = row.get(21) + "-" + row.get(11);
+                        linked.add(value);
+                    }
+                } else {
+                    linked.add(value);
+                }
+            }
         }
-        data = new HashMap<>();
+        return linked;
+    }
+
+    public static Boolean ifExistField(int i, List<Integer> listColumns) {
+        return listColumns.stream()
+                .anyMatch(numberColumns -> numberColumns == i);
     }
 }
