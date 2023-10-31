@@ -1,5 +1,6 @@
 package by.demon.zoom.util;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
@@ -26,6 +27,8 @@ import java.util.regex.Pattern;
  * @param <T>
  * @version 1.0
  */
+
+@Slf4j
 @Service
 public class ExcelUtil<T> {
 
@@ -64,12 +67,15 @@ public class ExcelUtil<T> {
         fis.close();
         response.reset();
         response.addHeader("Content-Disposition", "attachment;filename=" + new String(filename.getBytes(), StandardCharsets.ISO_8859_1));
-        OutputStream toClient = new BufferedOutputStream(response.getOutputStream());
         response.setContentType("application/vnd.ms-excel;charset=gb2312");
-        toClient.write(buffer);
-        toClient.flush();
-        toClient.close();
-        is.close();
+        try (OutputStream toClient = new BufferedOutputStream(response.getOutputStream())){
+            toClient.write(buffer);
+            toClient.flush();
+            toClient.close();
+            is.close();
+        } catch (IOException ex){
+            log.error("error:" + ex.getMessage());
+        }
     }
 
 

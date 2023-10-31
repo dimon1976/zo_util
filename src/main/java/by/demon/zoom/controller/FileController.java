@@ -75,7 +75,7 @@ public class FileController {
             File transferTo = new File(filePath);
             try {
                 multipartFile.transferTo(transferTo);
-                return statisticService.export(filePath, transferTo, response, showSource, sourceReplace, showCompetitorUrl, showDateAdd);
+                statisticService.export(filePath, transferTo, response, showSource, sourceReplace, showCompetitorUrl, showDateAdd);
             } catch (IllegalStateException | IOException e) {
                 e.printStackTrace();
                 return "File uploaded failed: " + getOrgName(multipartFile);

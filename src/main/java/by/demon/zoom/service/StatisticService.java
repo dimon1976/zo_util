@@ -43,7 +43,8 @@ public class StatisticService {
         List<Integer> columns = Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 19, 20, 22, 23, 24);
         List<Integer> newColumn = getColumnList(showSource, showCompetitorUrl, showDateAdd, columns);
         List<List<Object>> resultTest = getResultList(originalWb, newColumn, sourceReplace);
-        try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
+        try (OutputStream out = Files.newOutputStream(Paths.get(filePath)))
+        {
             List<String> newHeader = new ArrayList<>(header);
             short skip = 1;
             if (showCompetitorUrl != null) {
