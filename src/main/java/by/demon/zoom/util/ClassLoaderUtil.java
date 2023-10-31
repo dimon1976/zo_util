@@ -1,5 +1,6 @@
 package by.demon.zoom.util;
 
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,8 +13,10 @@ import java.nio.charset.StandardCharsets;
 public class ClassLoaderUtil {
     protected static final Logger LOGGER = LoggerFactory.getLogger(ClassLoaderUtil.class);
     // class path
+    @Getter
     private static String classPath;
     // loader
+    @Getter
     private static ClassLoader loader = Thread.currentThread().getContextClassLoader();
 
     private ClassLoaderUtil() {
@@ -68,11 +71,4 @@ public class ClassLoaderUtil {
         }
     }
 
-    public static String getClassPath() {
-        return classPath;
-    }
-
-    public static ClassLoader getLoader() {
-        return loader;
-    }
 }

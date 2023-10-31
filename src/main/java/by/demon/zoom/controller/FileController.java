@@ -9,10 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
@@ -50,7 +47,7 @@ public class FileController {
 
 
     @PostMapping("/getUrl/")
-    public String getUrl(@RequestParam("file") MultipartFile multipartFile) {
+    public @ResponseBody String getUrl(@RequestParam("file") MultipartFile multipartFile) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);
@@ -66,10 +63,10 @@ public class FileController {
     }
 
     @PostMapping("/stat/")
-    public String editStatisticFile(@RequestParam("file") MultipartFile multipartFile, @RequestParam(value = "showSource", required = false) String showSource,
-                                    @RequestParam(value = "sourceReplace", required = false) String sourceReplace,
-                                    @RequestParam(value = "showCompetitorUrl", required = false) String showCompetitorUrl,
-                                    @RequestParam(value = "showDateAdd", required = false) String showDateAdd) {
+    public @ResponseBody String editStatisticFile(@RequestParam("file") MultipartFile multipartFile, @RequestParam(value = "showSource", required = false) String showSource,
+                                                  @RequestParam(value = "sourceReplace", required = false) String sourceReplace,
+                                                  @RequestParam(value = "showCompetitorUrl", required = false) String showCompetitorUrl,
+                                                  @RequestParam(value = "showDateAdd", required = false) String showDateAdd) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);
@@ -81,12 +78,12 @@ public class FileController {
                 return "File uploaded failed: " + getOrgName(multipartFile);
             }
         }
-        return "index";
+        return "ok";
     }
 
 
     @PostMapping("/vlook")
-    public String excelVlook(@RequestParam("file") MultipartFile multipartFile) {
+    public @ResponseBody String excelVlook(@RequestParam("file") MultipartFile multipartFile) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);
@@ -103,7 +100,7 @@ public class FileController {
 
 
     @PostMapping("/megatop")
-    public String excelMegatop(@RequestParam("file") MultipartFile multipartFile) {
+    public @ResponseBody String excelMegatop(@RequestParam("file") MultipartFile multipartFile) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);
@@ -120,7 +117,7 @@ public class FileController {
 
     //edeadeal
     @PostMapping("/edadeal")
-    public String excelEdadeal(@RequestParam("file") MultipartFile multipartFile) {
+    public @ResponseBody String excelEdadeal(@RequestParam("file") MultipartFile multipartFile) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);
@@ -136,7 +133,7 @@ public class FileController {
     }
 
     @PostMapping("/lenta")
-    public String excelLentaTask(@RequestParam("file") MultipartFile multipartFile) {
+    public @ResponseBody String excelLentaTask(@RequestParam("file") MultipartFile multipartFile) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);
@@ -152,7 +149,7 @@ public class FileController {
     }
 
     @PostMapping("/lentaReport")
-    public String excelLentaReport(@ModelAttribute("lenta") Lenta lenta
+    public @ResponseBody String excelLentaReport(@ModelAttribute("lenta") Lenta lenta
             , @RequestParam("file") MultipartFile multipartFile) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
@@ -170,7 +167,7 @@ public class FileController {
 
 
     @PostMapping("/simpleReport")
-    public String excelSimpleReport(@RequestParam("file") MultipartFile multipartFile) {
+    public @ResponseBody String excelSimpleReport(@RequestParam("file") MultipartFile multipartFile) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);

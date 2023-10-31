@@ -1,13 +1,18 @@
 package by.demon.zoom.util;
 
-import com.opencsv.*;
-import com.opencsv.exceptions.CsvException;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.mozilla.universalchardet.UniversalDetector;
 import org.springframework.stereotype.Service;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,28 +21,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.Globals.TEMP_PATH;
-import static com.opencsv.ICSVWriter.DEFAULT_ESCAPE_CHARACTER;
-import static com.opencsv.ICSVWriter.DEFAULT_LINE_END;
-import static java.nio.file.StandardOpenOption.CREATE;
 
 @Slf4j
 @Service
 public class CsvUtil {
-    private final static String header = "\"Клиент\";\"ID связи\";\"ID клиента\";\"Верхняя категория клиента\";\"Категория клиента\";\"Бренд клиента\";\"Модель клиента\";" +
-            "\"Код производителя клиента\";\"Штрих-код клиента\";\"Статус клиента\";\"Цена конкурента\";\"Модель конкурента\";\"Код производителя конкурента\";\"ID конкурента\";" +
-            "\"Конкурент\";\"Конкурент вкл.\"\n";
-
     private static int max = 0;
-
-    /*Оригинальный метод чтения CSV*/
-    public static List<String[]> readCsv(File file) throws IOException, CsvException {
-        log.info(String.format("file %s processing", file.getName()));
-        Path path = getPath(file.getName());
-        String charset = getNameCharset(path);
-        String separator = getSeparator(file, charset);
-        return getStrings(path, charset, separator);
-    }
-
 
     /*Новый метод чтения CSV*/
     public static List<List<Object>> readFile(File file) throws IOException {
@@ -52,10 +40,7 @@ public class CsvUtil {
             CSVReader csvReader = getCsvReader(reader, parser);
             String[] nextLine;
             while ((nextLine = csvReader.readNext()) != null) {
-                List<Object> row = new ArrayList<>();
-                for (String cell : nextLine) {
-                    row.add(cell);
-                }
+                List<Object> row = new ArrayList<>(Arrays.asList(nextLine));
                 csvData.add(row);
             }
         } catch (IOException | CsvValidationException e) {
@@ -150,14 +135,6 @@ public class CsvUtil {
         return Collections.max(map.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey().toString();
     }
 
-    private static List<String[]> getStrings(Path path, String charset, String separator) throws IOException, CsvException {
-        try (Reader reader = Files.newBufferedReader(path, Charset.forName(charset))) {
-            CSVParser parser = getCsvParser(separator);
-            CSVReader csvReader = getCsvReader(reader, parser);
-            return getStrings(csvReader);
-        }
-    }
-
     private static CSVReader getCsvReader(Reader reader, CSVParser parser) {
         return new CSVReaderBuilder(reader)
                 .withSkipLines(0)
@@ -169,40 +146,5 @@ public class CsvUtil {
         return new CSVParserBuilder()
                 .withSeparator(separator.charAt(0))
                 .build();
-    }
-
-    private static List<String[]> getStrings(CSVReader csvReader) throws IOException, CsvException {
-        return csvReader.readAll().stream()
-//                .filter(this::filterString)
-                .skip(1)
-//                .map(DetmirRow::new)
-//                .map(CsvRow::toCsvArrays)
-                .collect(Collectors.toList());
-    }
-
-    public void write(List<String[]> strings, File file) throws IOException {
-        Path pathOut = getPathOut(file);
-        Files.write(pathOut, header.getBytes("Windows-1251"), CREATE);
-        CSVWriter csvWriter = null;
-        try {
-            csvWriter = new CSVWriter(new FileWriter(pathOut.toString(), Charset.forName("Windows-1251"), true)
-                    , getSeparator(file, getCharset(file)).charAt(0), '"', DEFAULT_ESCAPE_CHARACTER, DEFAULT_LINE_END);
-            csvWriter.writeAll(strings);
-        } catch (IOException | RuntimeException e) {
-            log.info(String.format("Error Save %s", file.getName()));
-            e.printStackTrace();
-        } finally {
-            try {
-                assert csvWriter != null;
-                csvWriter.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-
-    private Path getPathOut(File file) {
-        return Path.of(TEMP_PATH, file.getName().replace(".csv", "_out.csv"));
     }
 }
