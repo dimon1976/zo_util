@@ -1,5 +1,6 @@
 package by.demon.zoom.service;
 
+import by.demon.zoom.util.CsvUtil;
 import by.demon.zoom.util.ExcelUtil;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ import static by.demon.zoom.mapper.MappingUtils.listUsers;
 
 @Service
 public class StatisticService {
+
     private static final List<String> header = Arrays.asList("Клиент", "ID связи", "ID клиента", "Верхняя категория клиента", "Категория клиента", "Бренд клиента",
             "Модель клиента", "Код производителя клиента", "Штрих-код клиента", "Статус клиента", "Цена конкурента",
             "Модель конкурента", "Код производителя конкурента", "ID конкурента", "Конкурент", "Конкурент вкл.");
@@ -30,11 +32,19 @@ public class StatisticService {
 
 
     public String export(String filePath, File file, HttpServletResponse response, String showSource, String sourceReplace, String showCompetitorUrl, String showDateAdd) throws IOException {
-        List<List<Object>> originalWb = ExcelUtil.readExcel(file);
+        String fileName = file.getName();
+        String extension = fileName.lastIndexOf(".") == -1 ? "" : fileName.substring(fileName.lastIndexOf(".") + 1);
+        List<List<Object>> originalWb;
+        if ("csv".equals(extension)) {
+            originalWb = CsvUtil.readFile(file);
+        } else {
+            originalWb = ExcelUtil.readExcel(file);
+        }
         List<Integer> columns = Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 19, 20, 22, 23, 24);
         List<Integer> newColumn = getColumnList(showSource, showCompetitorUrl, showDateAdd, columns);
         List<List<Object>> resultTest = getResultList(originalWb, newColumn, sourceReplace);
-        try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
+        try (OutputStream out = Files.newOutputStream(Paths.get(filePath)))
+        {
             List<String> newHeader = new ArrayList<>(header);
             short skip = 1;
             if (showCompetitorUrl != null) {

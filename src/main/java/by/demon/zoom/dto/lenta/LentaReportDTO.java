@@ -28,4 +28,5 @@ public class LentaReportDTO {
     private String weightLentaKg;
     private String priceEdeadealKg;
     private String conversionToLentaWeight;
+    private String additionalField;
 }

@@ -1,5 +1,6 @@
 package by.demon.zoom.util;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
@@ -26,6 +27,8 @@ import java.util.regex.Pattern;
  * @param <T>
  * @version 1.0
  */
+
+@Slf4j
 @Service
 public class ExcelUtil<T> {
 
@@ -58,32 +61,49 @@ public class ExcelUtil<T> {
 
 
     public void download(String filename, InputStream is, HttpServletResponse response) throws IOException {
+        log.info("filename= " + filename);
         InputStream fis = new BufferedInputStream(is);
         byte[] buffer = new byte[fis.available()];
         fis.read(buffer);
         fis.close();
-        response.reset();
         response.addHeader("Content-Disposition", "attachment;filename=" + new String(filename.getBytes(), StandardCharsets.ISO_8859_1));
-        OutputStream toClient = new BufferedOutputStream(response.getOutputStream());
         response.setContentType("application/vnd.ms-excel;charset=gb2312");
-        toClient.write(buffer);
-        toClient.flush();
-        toClient.close();
-        is.close();
+        try (OutputStream toClient = new BufferedOutputStream(response.getOutputStream())) {
+            toClient.write(buffer);
+            toClient.close();
+//            toClient.flush();
+            is.close();
+        } catch (IOException ex) {
+            log.error("error:" + ex.getMessage());
+        }
+
+// Создаем файл на жестком диске
+//        File file = new File(filename);
+//
+//        // Создаем поток для записи данных в файл
+//        FileOutputStream fos = new FileOutputStream(file);
+//
+//        // Копируем данные из InputStream в FileOutputStream
+//        IOUtils.copy(is, fos);
+//
+//        // Закрываем потоки
+//        fos.close();
+//        is.close();
+//
+//        // Устанавливаем заголовок ответа для скачивания файла
+//        response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+//
+//        // Отправляем файл клиенту
+//        IOUtils.copy(new FileInputStream(file), response.getOutputStream());
+//
+//        // Удаляем временный файл с жесткого диска
+//        file.delete();
+
     }
 
 
     public void download(String filename, String path, HttpServletResponse response) throws IOException {
         download(filename, new FileInputStream(path), response);
-    }
-
-
-    public static String export2003(String fileName, HttpServletResponse response) {
-        return null;
-    }
-
-    public static String export2007(String fileName, HttpServletResponse response) {
-        return null;
     }
 
     private static List<List<Object>> readExcel2003(InputStream is) throws IOException {
@@ -171,11 +191,10 @@ public class ExcelUtil<T> {
     public static void getRowList(Row row, List<Object> linked) {
         Cell cell;
         Object value;
-        for (int j = 0; j <= 60; j++) {
+        for (int j = 0; j <= 250; j++) {
             cell = row.getCell(j);
             if (cell == null) {
                 linked.add("");
-//                linked.add(Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
                 continue;
             }
             if (cell.getCellType() == CellType.FORMULA) {
@@ -237,7 +256,6 @@ public class ExcelUtil<T> {
                 break;
             case BLANK:
                 value = "";
-//                value = Row.MissingCellPolicy.CREATE_NULL_AS_BLANK;
                 break;
             default:
                 value = cell.toString();
@@ -267,20 +285,12 @@ public class ExcelUtil<T> {
         return readExcel2007(new FileInputStream(file));
     }
 
-    public void exportExcel(Collection<T> dataset, OutputStream out, short skip) {
-        exportExcel(Globals.SHEET_NAME, null, dataset, out, "yyyy-MM-dd", skip);
-    }
-
     public void exportExcel(List<String> headers, Collection<T> dataset, OutputStream out, short skip) {
         exportExcel(Globals.SHEET_NAME, headers, dataset, out, "yyyy-MM-dd", skip);
     }
 
     public void exportExcel(List<String> headers, List<List<Object>> dataset, OutputStream out, short skip) {
         exportObjectToExcel(Globals.SHEET_NAME, headers, dataset, out, "yyyy-MM-dd", skip);
-    }
-
-    public void exportExcel(List<String> headers, Collection<T> dataset, OutputStream out, String pattern, short skip) {
-        exportExcel(Globals.SHEET_NAME, headers, dataset, out, pattern, skip);
     }
 
     /**
@@ -455,93 +465,4 @@ public class ExcelUtil<T> {
             throw new RuntimeException(e);
         }
     }
-
-
-//    private String getClassSimpleName(Collection<T> dataset) {
-//        Iterator<T> iterator = dataset.iterator();
-//        Class<?> dataClazz = iterator.next().getClass();
-//        return dataClazz.getSimpleName();
-//    }
-
-//    private void exportVlookBarWorkbook(List<Product> dataset, XSSFSheet sheet) {
-//        int rowIdx = 1;
-//        for (Product data : dataset) {
-//            short cellIdx = 0;
-//            if (data.getCollectionUrl().size() >= 1) {
-//                for (String str : data.getCollectionUrl()) {
-//                    XSSFRow row = sheet.createRow(rowIdx++);
-//                    XSSFCell cell = row.createCell(cellIdx++);
-//                    String value = data.getId();
-//                    cell.setCellValue(value);
-//                    XSSFCell cell2 = row.createCell(cellIdx++);
-//                    String value2 = data.getBar();
-//                    cell2.setCellValue(value2);
-//                    XSSFCell cell3 = row.createCell(cellIdx);
-//                    cell3.setCellValue(str);
-//                    cellIdx = 0;
-//                }
-//            }
-//        }
-//    }
-
-    public static void export2003(String imagesPath, String docsPath) {
-//        ExcelExportUtil<Student> ex = new ExcelExportUtil<Student>();
-//        String[] headers = {"学号", "姓名", "年龄", "性别", "出生日期"};
-//        List<Student> dataset = new ArrayList<Student>();
-//        dataset.add(new Student(10000001L, "张三", 20, true, new Date()));
-//        dataset.add(new Student(20000002L, "李四", 24, false, new Date()));
-//        dataset.add(new Student(30000003L, "王五", 22, true, new Date()));
-//        ExcelExportUtil<Book> exBook = new ExcelExportUtil<Book>();
-//        String[] headersBook = {"图书编号", "图书名称", "图书作者", "图书价格", "图书ISBN", "图书出版社", "封面图片"};
-//        List<Book> datasetBook = new ArrayList<Book>();
-//        try {
-//            Resource resource = new ClassPathResource(imagesPath);
-//            InputStream is = resource.getInputStream();
-//            BufferedInputStream bis = new BufferedInputStream(is);
-//            byte[] buf = new byte[bis.available()];
-//            while ((bis.read(buf)) != -1) {
-//                //
-//            }
-//            datasetBook.add(new Book(1, "jsp", "leno", 300.33f, "1234567",
-//                    "清华出版社", buf));
-//            datasetBook.add(new Book(2, "java编程思想", "brucl", 300.33f, "1234567",
-//                    "阳光出版社", buf));
-//            datasetBook.add(new Book(3, "DOM艺术", "lenotang", 300.33f, "1234567",
-//                    "清华出版社", buf));
-//            datasetBook.add(new Book(4, "c++经典", "leno", 400.33f, "1234567",
-//                    "清华出版社", buf));
-//            datasetBook.add(new Book(5, "c#入门", "leno", 300.33f, "1234567",
-//                    "汤春秀出版社", buf));
-//            OutputStream out = new FileOutputStream(
-//                    docsPath + File.separator + Globals.EXPORT_STUDENT);
-//            OutputStream outBook = new FileOutputStream(
-//                    docsPath + File.separator + Globals.EXPORT_BOOK);
-//            ex.exportExcel(headers, dataset, out);
-//            exBook.exportExcel(headersBook, datasetBook, outBook);
-//            out.close();
-//            outBook.close();
-
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-    }
-
-//    public static void export2007(String filePath) {
-//        try {
-//            OutputStream os = Files.newOutputStream(Paths.get(filePath));
-//            XSSFWorkbook wb = new XSSFWorkbook();
-//            XSSFSheet sheet = wb.createSheet(Globals.SHEET_NAME);
-//            for (int i = 0; i < 1000; i++) {
-//                XSSFRow row = sheet.createRow(i);
-//                row.createCell(0).setCellValue("column" + i);
-//                row.createCell(1).setCellValue("column" + i);
-//            }
-//            wb.write(os);
-//            os.close();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
-
-
 }

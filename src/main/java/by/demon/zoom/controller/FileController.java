@@ -3,14 +3,13 @@ package by.demon.zoom.controller;
 
 import by.demon.zoom.domain.Lenta;
 import by.demon.zoom.service.*;
+import by.demon.zoom.util.CsvUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
@@ -18,40 +17,43 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 
+@Slf4j
 @Controller
 @RequestMapping("/excel")
-public class ExcelController {
+public class FileController {
     private final StatisticService statisticService;
     private final VlookService vlookService;
     private final MegatopService megatopService;
     private final LentaService lentaService;
     private final SimpleService simpleService;
+    private final UrlService urlService;
+    private final EdadealService edadealService;
 
     @Value("${temp.path}")
     private String TEMP_PATH;
 
     private final HttpServletResponse response;
 
-    public ExcelController(StatisticService statisticService, VlookService vlookService, MegatopService megatopService, LentaService lentaService, SimpleService simpleService, HttpServletResponse response) {
+    public FileController(StatisticService statisticService, VlookService vlookService, MegatopService megatopService, LentaService lentaService, SimpleService simpleService, UrlService urlService, CsvUtil csvUtil, EdadealService edadealService, HttpServletResponse response) {
         this.statisticService = statisticService;
         this.vlookService = vlookService;
         this.megatopService = megatopService;
         this.lentaService = lentaService;
         this.simpleService = simpleService;
+        this.urlService = urlService;
+        this.edadealService = edadealService;
         this.response = response;
     }
 
-    @PostMapping("/stat/")
-    public String editStatisticFile(@RequestParam("file") MultipartFile multipartFile, @RequestParam(value = "showSource", required = false) String showSource,
-                                    @RequestParam(value = "sourceReplace", required = false) String sourceReplace,
-                                    @RequestParam(value = "showCompetitorUrl", required = false) String showCompetitorUrl,
-                                    @RequestParam(value = "showDateAdd", required = false) String showDateAdd) {
+
+    @PostMapping("/getUrl/")
+    public @ResponseBody String getUrl(@RequestParam("file") MultipartFile multipartFile) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);
             try {
                 multipartFile.transferTo(transferTo);
-                return statisticService.export(filePath, transferTo, response, showSource, sourceReplace, showCompetitorUrl, showDateAdd);
+                return urlService.export(filePath, transferTo, response);
             } catch (IllegalStateException | IOException e) {
                 e.printStackTrace();
                 return "File uploaded failed: " + getOrgName(multipartFile);
@@ -60,9 +62,28 @@ public class ExcelController {
         return "index";
     }
 
+    @PostMapping("/stat/")
+    public @ResponseBody String editStatisticFile(@RequestParam("file") MultipartFile multipartFile, @RequestParam(value = "showSource", required = false) String showSource,
+                                                  @RequestParam(value = "sourceReplace", required = false) String sourceReplace,
+                                                  @RequestParam(value = "showCompetitorUrl", required = false) String showCompetitorUrl,
+                                                  @RequestParam(value = "showDateAdd", required = false) String showDateAdd) {
+        if (ifExist(multipartFile)) {
+            String filePath = getFilePath(multipartFile);
+            File transferTo = new File(filePath);
+            try {
+                multipartFile.transferTo(transferTo);
+                statisticService.export(filePath, transferTo, response, showSource, sourceReplace, showCompetitorUrl, showDateAdd);
+            } catch (IllegalStateException | IOException e) {
+                e.printStackTrace();
+                return "File uploaded failed: " + getOrgName(multipartFile);
+            }
+        }
+        return "ok";
+    }
+
 
     @PostMapping("/vlook")
-    public String excelVlook(@RequestParam("file") MultipartFile multipartFile) {
+    public @ResponseBody String excelVlook(@RequestParam("file") MultipartFile multipartFile) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);
@@ -79,7 +100,7 @@ public class ExcelController {
 
 
     @PostMapping("/megatop")
-    public String excelMegatop(@RequestParam("file") MultipartFile multipartFile) {
+    public @ResponseBody String excelMegatop(@RequestParam("file") MultipartFile multipartFile) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);
@@ -94,8 +115,25 @@ public class ExcelController {
         return "index";
     }
 
+    //edeadeal
+    @PostMapping("/edadeal")
+    public @ResponseBody String excelEdadeal(@RequestParam("file") MultipartFile multipartFile) {
+        if (ifExist(multipartFile)) {
+            String filePath = getFilePath(multipartFile);
+            File transferTo = new File(filePath);
+            try {
+                multipartFile.transferTo(transferTo);
+                return edadealService.export(filePath, transferTo, response);
+            } catch (IllegalStateException | IOException e) {
+                e.printStackTrace();
+                return "File uploaded failed: " + getOrgName(multipartFile);
+            }
+        }
+        return "/clients/lenta";
+    }
+
     @PostMapping("/lenta")
-    public String excelLentaTask(@RequestParam("file") MultipartFile multipartFile) {
+    public @ResponseBody String excelLentaTask(@RequestParam("file") MultipartFile multipartFile) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);
@@ -111,7 +149,7 @@ public class ExcelController {
     }
 
     @PostMapping("/lentaReport")
-    public String excelLentaReport(@ModelAttribute("lenta") Lenta lenta
+    public @ResponseBody String excelLentaReport(@ModelAttribute("lenta") Lenta lenta
             , @RequestParam("file") MultipartFile multipartFile) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
@@ -129,7 +167,7 @@ public class ExcelController {
 
 
     @PostMapping("/simpleReport")
-    public String excelSimpleReport(@RequestParam("file") MultipartFile multipartFile) {
+    public @ResponseBody String excelSimpleReport(@RequestParam("file") MultipartFile multipartFile) {
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);

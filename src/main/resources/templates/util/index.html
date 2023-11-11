@@ -77,6 +77,20 @@
                         </div>
                     </form>
                 </div>
+                <div class="row">
+                    <form th:action="@{/excel/getUrl/}" th:method="post" enctype="multipart/form-data">
+                        <br>
+                        <label for="getUrl" class="form-label">Сбор ссылок</label>
+                        <div>
+                            <input type="file" class="form-control form-control-sm" name="file" id="getUrl">
+                            <br>
+                            <button class="btn btn-primary">
+                                Загрузить
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
             </div>
         </div>
     </div>

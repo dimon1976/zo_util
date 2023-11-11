@@ -59,6 +59,28 @@
                     </form>
                 </div>
             </div>
+            <br>
+            <div class="row">
+                <div class="col-6 col-sm-8">
+                    <form th:action="@{/excel/edadeal}" th:method="post" th:object="${edadeal}"
+                          enctype="multipart/form-data">
+                        <label for="edadeal" class="form-label">Обработка выгрузки едадила</label>
+                        <div class="">
+                            <input type="file" class="form-control" name="file" id="edadeal" placeholder="file" aria-describedby="edadelAria">
+                            <div id="edadelAria" class="form-text">Удалить все строки содержащие цены "от" и склеить продавец + модель в ID
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 col-sm-8">
+                                <button type="submit" class="btn btn-primary">
+                                    Загрузить
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
         </div>
     </div>
 </div>
