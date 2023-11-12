@@ -1,10 +1,6 @@
 package by.demon.zoom.util;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.hssf.usermodel.HSSFCell;
-import org.apache.poi.hssf.usermodel.HSSFRow;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.util.IOUtils;
 import org.apache.poi.xssf.usermodel.*;
@@ -40,7 +36,7 @@ public class ExcelUtil<T> {
         String fileName = file.getName();
         String extension = fileName.lastIndexOf(".") == -1 ? "" : fileName.substring(fileName.lastIndexOf(".") + 1);
         if ("xls".equals(extension)) {
-            return readExcel2003(file);
+            throw new IOException("Неподдерживаемый тип файлов");
         } else if ("xlsx".equals(extension)) {
             return readExcel2007(file);
         } else {
@@ -51,7 +47,7 @@ public class ExcelUtil<T> {
 
     public static List<List<Object>> readExcel(InputStream is, String suffix) throws IOException {
         if (Globals.SUFFIX_XLS.equals(suffix)) {
-            return readExcel2003(is);
+            throw new IOException("Неподдерживаемый тип файлов");
         } else if (Globals.SUFFIX_XLSX.equals(suffix)) {
             return readExcel2007(is);
         } else {
@@ -62,83 +58,25 @@ public class ExcelUtil<T> {
 
     public void download(String filename, InputStream is, HttpServletResponse response) throws IOException {
         log.info("filename= " + filename);
-        byte[] buffer = new byte[4096];
-        response.setHeader("Content-Disposition", "attachment;filename=" + new String(filename.getBytes(), StandardCharsets.ISO_8859_1));
+        InputStream fis = new BufferedInputStream(is);
+        byte[] buffer = new byte[fis.available()];
+        fis.read(buffer);
+        fis.close();
+        response.addHeader("Content-Disposition", "attachment;filename=" + new String(filename.getBytes(), StandardCharsets.ISO_8859_1));
         response.setContentType("application/vnd.ms-excel;charset=gb2312");
-        try (InputStream fis = new BufferedInputStream(is);
-                OutputStream toClient = new BufferedOutputStream(response.getOutputStream())) {
-            int bytesRead;
-            while ((bytesRead = fis.read(buffer)) !=-1){
-                toClient.write(buffer,0,bytesRead);
-            }
+        try (OutputStream toClient = new BufferedOutputStream(response.getOutputStream())) {
+            toClient.write(buffer);
+            toClient.close();
+//            toClient.flush();
+            is.close();
         } catch (IOException ex) {
-            log.error("Ошибка при скачивании файла: {}", ex.getMessage());
+            log.error("error:" + ex.getMessage());
         }
-        is.close();
     }
 
 
     public void download(String filename, String path, HttpServletResponse response) throws IOException {
         download(filename, new FileInputStream(path), response);
-    }
-
-    private static List<List<Object>> readExcel2003(InputStream is) throws IOException {
-        List<List<Object>> list = new LinkedList<>();
-        HSSFWorkbook hwb = new HSSFWorkbook(is);
-        HSSFSheet sheet = hwb.getSheetAt(0);
-        Object value;
-        HSSFRow row;
-        HSSFCell cell;
-        int counter = 0;
-        for (int i = sheet.getFirstRowNum(); counter < sheet.getPhysicalNumberOfRows(); i++) {
-            row = sheet.getRow(i);
-            if (row == null) {
-                continue;
-            } else {
-                counter++;
-            }
-            List<Object> linked = new LinkedList<>();
-            for (int j = 0; j <= row.getLastCellNum(); j++) {
-                cell = row.getCell(j);
-                if (cell == null) {
-                    linked.add(null);
-                    continue;
-                }
-                switch (cell.getCellType()) {
-                    case STRING:
-                        value = cell.getStringCellValue();
-                        break;
-                    case NUMERIC:
-                        if ("@".equals(cell.getCellStyle().getDataFormatString())) {
-                            value = df.format(cell.getNumericCellValue());
-                        } else if ("General".equals(
-                                cell.getCellStyle().getDataFormatString())) {
-                            value = nf.format(cell.getNumericCellValue());
-                        } else {
-                            value = sdf.format(org.apache.poi.ss.usermodel.DateUtil.getJavaDate(cell.getNumericCellValue()));
-                        }
-                        break;
-                    case BOOLEAN:
-                        value = cell.getBooleanCellValue();
-                        break;
-                    case BLANK:
-                        value = "";
-                        break;
-                    default:
-                        value = cell.toString();
-                }
-                if (value == null || "".equals(value)) {
-                    continue;
-                }
-                linked.add(value);
-            }
-            list.add(linked);
-        }
-        return list;
-    }
-
-    private static List<List<Object>> readExcel2003(File file) throws IOException {
-        return readExcel2003(new FileInputStream(file));
     }
 
     private static List<List<Object>> readExcel2007(InputStream is) throws IOException {

@@ -1,12 +1,15 @@
 package by.demon.zoom.domain;
 
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.sql.Timestamp;
+import java.security.Timestamp;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+
 
 @Data
 @NoArgsConstructor
@@ -52,7 +55,7 @@ public class Product {
     private String priceEdeadealKg;
     private String conversionToLentaWeight;
     private String userAdd;
-//    private long id;
+    //    private long id;
     private String heelHeight;
     private String collection;
     private String upperConstruction;
@@ -88,6 +91,12 @@ public class Product {
     private String webCacheUrl;
     private Set<String> collectionUrl;/* for vlookBarService */
 
+    public Product(String id, String bar, Set<String> collectionUrl) {
+        this.id = id;
+        this.bar = bar;
+        this.collectionUrl = collectionUrl;
+    }
+
 
     @Override
     public boolean equals(Object o) {
@@ -102,3 +111,5 @@ public class Product {
         return Objects.hash(concatUrlRostovChildren);
     }
 }
+
+
