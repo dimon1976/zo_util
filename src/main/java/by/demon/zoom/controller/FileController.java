@@ -28,11 +28,11 @@ public class FileController {
     private final SimpleService simpleService;
     private final UrlService urlService;
     private final EdadealService edadealService;
+    private final HttpServletResponse response;
 
     @Value("${temp.path}")
     private String TEMP_PATH;
 
-    private final HttpServletResponse response;
 
     public FileController(StatisticService statisticService, VlookService vlookService, MegatopService megatopService, LentaService lentaService, SimpleService simpleService, UrlService urlService, CsvUtil csvUtil, EdadealService edadealService, HttpServletResponse response) {
         this.statisticService = statisticService;
@@ -53,9 +53,10 @@ public class FileController {
             File transferTo = new File(filePath);
             try {
                 multipartFile.transferTo(transferTo);
+                log.info("File uploaded successfully: {}", getOrgName(multipartFile));
                 return urlService.export(filePath, transferTo, response);
             } catch (IllegalStateException | IOException e) {
-                e.printStackTrace();
+                log.error("Error while uploading file: {}", e.getMessage());
                 return "File uploaded failed: " + getOrgName(multipartFile);
             }
         }
@@ -72,9 +73,10 @@ public class FileController {
             File transferTo = new File(filePath);
             try {
                 multipartFile.transferTo(transferTo);
+                log.info("File uploaded successfully: {}", getOrgName(multipartFile));
                 statisticService.export(filePath, transferTo, response, showSource, sourceReplace, showCompetitorUrl, showDateAdd);
             } catch (IllegalStateException | IOException e) {
-                e.printStackTrace();
+                log.error("Error while uploading file: {}", e.getMessage());
                 return "File uploaded failed: " + getOrgName(multipartFile);
             }
         }
@@ -89,9 +91,10 @@ public class FileController {
             File transferTo = new File(filePath);
             try {
                 multipartFile.transferTo(transferTo);
+                log.info("File uploaded successfully: {}", getOrgName(multipartFile));
                 return vlookService.export(filePath, transferTo, response);
             } catch (IllegalStateException | IOException e) {
-                e.printStackTrace();
+                log.error("Error while uploading file: {}", e.getMessage());
                 return "File uploaded failed: " + getOrgName(multipartFile);
             }
         }
@@ -106,9 +109,10 @@ public class FileController {
             File transferTo = new File(filePath);
             try {
                 multipartFile.transferTo(transferTo);
+                log.info("File uploaded successfully: {}", getOrgName(multipartFile));
                 return megatopService.export(filePath, transferTo, response);
             } catch (IllegalStateException | IOException e) {
-                e.printStackTrace();
+                log.error("Error while uploading file: {}", e.getMessage());
                 return "File uploaded failed: " + getOrgName(multipartFile);
             }
         }
@@ -123,9 +127,10 @@ public class FileController {
             File transferTo = new File(filePath);
             try {
                 multipartFile.transferTo(transferTo);
+                log.info("File uploaded successfully: {}", getOrgName(multipartFile));
                 return edadealService.export(filePath, transferTo, response);
             } catch (IllegalStateException | IOException e) {
-                e.printStackTrace();
+                log.error("Error while uploading file: {}", e.getMessage());
                 return "File uploaded failed: " + getOrgName(multipartFile);
             }
         }
@@ -139,9 +144,10 @@ public class FileController {
             File transferTo = new File(filePath);
             try {
                 multipartFile.transferTo(transferTo);
+                log.info("File uploaded successfully: {}", getOrgName(multipartFile));
                 return lentaService.export(filePath, transferTo, response);
             } catch (IllegalStateException | IOException e) {
-                e.printStackTrace();
+                log.error("Error while uploading file: {}", e.getMessage());
                 return "File uploaded failed: " + getOrgName(multipartFile);
             }
         }
@@ -156,9 +162,10 @@ public class FileController {
             File transferTo = new File(filePath);
             try {
                 multipartFile.transferTo(transferTo);
+                log.info("File uploaded successfully: {}", getOrgName(multipartFile));
                 return lentaService.exportReport(filePath, transferTo, response, lenta.getAfterDate());
             } catch (IllegalStateException | IOException e) {
-                e.printStackTrace();
+                log.error("Error while uploading file: {}", e.getMessage());
                 return "File uploaded failed: " + getOrgName(multipartFile);
             }
         }
@@ -173,9 +180,10 @@ public class FileController {
             File transferTo = new File(filePath);
             try {
                 multipartFile.transferTo(transferTo);
+                log.info("File uploaded successfully: {}", getOrgName(multipartFile));
                 return simpleService.export(filePath, transferTo, response);
             } catch (IllegalStateException | IOException e) {
-                e.printStackTrace();
+                log.error("Error while uploading file: {}", e.getMessage());
                 return "File uploaded failed: " + getOrgName(multipartFile);
             }
         }

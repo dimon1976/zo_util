@@ -62,43 +62,19 @@ public class ExcelUtil<T> {
 
     public void download(String filename, InputStream is, HttpServletResponse response) throws IOException {
         log.info("filename= " + filename);
-        InputStream fis = new BufferedInputStream(is);
-        byte[] buffer = new byte[fis.available()];
-        fis.read(buffer);
-        fis.close();
-        response.addHeader("Content-Disposition", "attachment;filename=" + new String(filename.getBytes(), StandardCharsets.ISO_8859_1));
+        byte[] buffer = new byte[4096];
+        response.setHeader("Content-Disposition", "attachment;filename=" + new String(filename.getBytes(), StandardCharsets.ISO_8859_1));
         response.setContentType("application/vnd.ms-excel;charset=gb2312");
-        try (OutputStream toClient = new BufferedOutputStream(response.getOutputStream())) {
-            toClient.write(buffer);
-            toClient.close();
-//            toClient.flush();
-            is.close();
+        try (InputStream fis = new BufferedInputStream(is);
+                OutputStream toClient = new BufferedOutputStream(response.getOutputStream())) {
+            int bytesRead;
+            while ((bytesRead = fis.read(buffer)) !=-1){
+                toClient.write(buffer,0,bytesRead);
+            }
         } catch (IOException ex) {
-            log.error("error:" + ex.getMessage());
+            log.error("Ошибка при скачивании файла: {}", ex.getMessage());
         }
-
-// Создаем файл на жестком диске
-//        File file = new File(filename);
-//
-//        // Создаем поток для записи данных в файл
-//        FileOutputStream fos = new FileOutputStream(file);
-//
-//        // Копируем данные из InputStream в FileOutputStream
-//        IOUtils.copy(is, fos);
-//
-//        // Закрываем потоки
-//        fos.close();
-//        is.close();
-//
-//        // Устанавливаем заголовок ответа для скачивания файла
-//        response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
-//
-//        // Отправляем файл клиенту
-//        IOUtils.copy(new FileInputStream(file), response.getOutputStream());
-//
-//        // Удаляем временный файл с жесткого диска
-//        file.delete();
-
+        is.close();
     }
 
 
