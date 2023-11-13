@@ -9,11 +9,9 @@ import org.springframework.stereotype.Service;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -28,49 +26,50 @@ import java.util.regex.Pattern;
 @Service
 public class ExcelUtil<T> {
 
-    private static final DecimalFormat df = new DecimalFormat("0");
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    private static final DecimalFormat nf = new DecimalFormat("0.00");
+    private static final short DEFAULT_COLUMN_WIDTH = 15;
+    private static final String DEFAULT_FONT_NAME = "Calibri";
+
 
     public static List<List<Object>> readExcel(File file) throws IOException {
         String fileName = file.getName();
         String extension = fileName.lastIndexOf(".") == -1 ? "" : fileName.substring(fileName.lastIndexOf(".") + 1);
-        if ("xls".equals(extension)) {
-            throw new IOException("Неподдерживаемый тип файлов");
-        } else if ("xlsx".equals(extension)) {
-            return readExcel2007(file);
-        } else {
+        if (!"xlsx".equals(extension)) {
             throw new IOException("Неподдерживаемый тип файлов");
         }
+        return readExcel2007(file);
     }
-
 
     public static List<List<Object>> readExcel(InputStream is, String suffix) throws IOException {
-        if (Globals.SUFFIX_XLS.equals(suffix)) {
-            throw new IOException("Неподдерживаемый тип файлов");
-        } else if (Globals.SUFFIX_XLSX.equals(suffix)) {
-            return readExcel2007(is);
-        } else {
+        if (!Globals.SUFFIX_XLSX.equals(suffix)) {
             throw new IOException("Неподдерживаемый тип файлов");
         }
+        return readExcel2007(is);
     }
+
 
 
     public void download(String filename, InputStream is, HttpServletResponse response) throws IOException {
-        log.info("filename= " + filename);
-        InputStream fis = new BufferedInputStream(is);
-        byte[] buffer = new byte[fis.available()];
-        fis.read(buffer);
-        fis.close();
-        response.addHeader("Content-Disposition", "attachment;filename=" + new String(filename.getBytes(), StandardCharsets.ISO_8859_1));
-        response.setContentType("application/vnd.ms-excel;charset=gb2312");
-        try (OutputStream toClient = new BufferedOutputStream(response.getOutputStream())) {
-            toClient.write(buffer);
-            toClient.close();
-//            toClient.flush();
-            is.close();
+        if (filename == null) {
+            log.error("Filename is null. Unable to proceed with download.");
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Filename is null");
+            return;
+        }
+        log.info("Downloading file: {}", filename);
+        response.setHeader("Content-Disposition", "attachment;filename=" + new String(filename.getBytes(StandardCharsets.UTF_8)));
+        response.setContentType("application/vnd.ms-excel;charset=utf-8");
+        try (InputStream fis = new BufferedInputStream(is);
+             OutputStream toClient = new BufferedOutputStream(response.getOutputStream())) {
+
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = fis.read(buffer)) != -1) {
+                toClient.write(buffer, 0, bytesRead);
+            }
+            toClient.flush(); // Flush the output stream after writing all the data
         } catch (IOException ex) {
-            log.error("error:" + ex.getMessage());
+            log.error("Error during file download: {}", ex.getMessage());
+            throw ex;
         }
     }
 
@@ -78,6 +77,7 @@ public class ExcelUtil<T> {
     public void download(String filename, String path, HttpServletResponse response) throws IOException {
         download(filename, new FileInputStream(path), response);
     }
+
 
     private static List<List<Object>> readExcel2007(InputStream is) throws IOException {
         List<List<Object>> list = new LinkedList<>();
@@ -214,169 +214,164 @@ public class ExcelUtil<T> {
      * @param out     Выходной поток
      * @param pattern Паттерн для замены
      */
+
     public void exportExcel(String title, List<String> headers, Collection<T> dataset, OutputStream out, String pattern, short skip) {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             XSSFSheet sheet = workbook.createSheet(title);
-            sheet.setDefaultColumnWidth((short) 15);
-            XSSFCellStyle headerStyle = workbook.createCellStyle();
-            headerStyle.setFillForegroundColor(IndexedColors.LIGHT_CORNFLOWER_BLUE.getIndex());
-            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            headerStyle.setBorderBottom(BorderStyle.THIN);
-            headerStyle.setBorderLeft(BorderStyle.THIN);
-            headerStyle.setBorderRight(BorderStyle.THIN);
-            headerStyle.setBorderTop(BorderStyle.THIN);
-            headerStyle.setAlignment(HorizontalAlignment.LEFT);
-            XSSFFont headerFont = workbook.createFont();
-            headerFont.setFontName("Calibri");
-            headerFont.setFontHeightInPoints((short) 10);
-            headerFont.setBold(true);
-            headerStyle.setFont(headerFont);
-            XSSFCellStyle cellStyle = workbook.createCellStyle();
-            cellStyle.setAlignment(HorizontalAlignment.LEFT);
-            cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
-            XSSFFont cellFont = workbook.createFont();
-            cellFont.setBold(false);
-            cellStyle.setFont(cellFont);
-            XSSFRow row = sheet.createRow(0);
-            if (headers != null) {
-                for (short i = 0; i < headers.size(); i++) {
-                    XSSFCell cell = row.createCell(i);
-                    cell.setCellStyle(headerStyle);
-                    XSSFRichTextString text = new XSSFRichTextString(headers.get(i));
-                    cell.setCellValue(text);
-                }
-            }
-            Iterator<T> it = dataset.iterator();
-            int index = 0;
-            short marker = 0;
-            while (it.hasNext()) {
-                if (marker < skip) {
-                    it.next();
-                    marker++;
-                    continue;
-                }
-                index++;
-                row = sheet.createRow(index);
-                T t = it.next();
-                Field[] fields = t.getClass().getDeclaredFields();
-                for (short i = 0; i < fields.length; i++) {
-                    XSSFCell cell = row.createCell(i);
-                    cell.setCellStyle(cellStyle);
-                    Field field = fields[i];
-                    String fieldName = field.getName();
-                    String getMethodName = "get" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
-                    try {
-                        Class<?> tCls = t.getClass();
-                        Method getMethod = tCls.getMethod(getMethodName);
-                        Object value = getMethod.invoke(t);
-                        String textValue = null;
-                        if (null == value) {
-                            value = "";
-                        }
-                        if (value instanceof Boolean) {
-                            boolean bValue = (Boolean) value;
-                            textValue = "true";
-                            if (!bValue) {
-                                textValue = "false";
-                            }
-                        } else if (value instanceof Date) {
-                            Date date = (Date) value;
-                            SimpleDateFormat sdf = new SimpleDateFormat(pattern);
-                            textValue = sdf.format(date);
-                        } else if (value instanceof byte[]) {
-                            row.setHeightInPoints(60);
-                            sheet.setColumnWidth(i, (short) (35.7 * 80));
-                            byte[] bsValue = (byte[]) value;
-                        } else {
-                            textValue = value.toString();
-                        }
-                        if (textValue != null) {
-                            Pattern p = Pattern.compile("^//d+(//.//d+)?$");
-                            Matcher matcher = p.matcher(textValue);
-                            if (matcher.matches()) {
-                                cell.setCellValue(Double.parseDouble(textValue));
-                            } else {
-                                XSSFRichTextString richString = new XSSFRichTextString(textValue);
-                                richString.applyFont(cellFont);
-                                cell.setCellStyle(cellStyle);
-                                cell.setCellValue(richString);
-                            }
-                        }
-                    } catch (SecurityException | InvocationTargetException | IllegalAccessException |
-                             IllegalArgumentException | NoSuchMethodException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            try {
-                workbook.write(out);
-                workbook.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            sheet.setDefaultColumnWidth(DEFAULT_COLUMN_WIDTH);
+
+            XSSFCellStyle headerStyle = createHeaderStyle(workbook);
+            XSSFCellStyle cellStyle = createCellStyle(workbook);
+
+            createHeaderRow(sheet, headers, headerStyle);
+
+            Iterator<T> iterator = dataset.iterator();
+            skipRows(iterator, skip);
+
+            populateDataRows(sheet, iterator, cellStyle, pattern);
+
+            workbook.write(out);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            log.error("Error while exporting Excel: {}", e.getMessage());
+            throw new RuntimeException("Error while exporting Excel", e);
         }
     }
+
+    private XSSFCellStyle createHeaderStyle(XSSFWorkbook workbook) {
+        XSSFCellStyle headerStyle = workbook.createCellStyle();
+        headerStyle.setFillForegroundColor(IndexedColors.LIGHT_CORNFLOWER_BLUE.getIndex());
+        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        setBorder(headerStyle);
+        headerStyle.setAlignment(HorizontalAlignment.LEFT);
+
+        XSSFFont headerFont = workbook.createFont();
+        headerFont.setFontName(DEFAULT_FONT_NAME);
+        headerFont.setFontHeightInPoints((short) 10);
+        headerFont.setBold(true);
+        headerStyle.setFont(headerFont);
+
+        return headerStyle;
+    }
+
+    private XSSFCellStyle createCellStyle(XSSFWorkbook workbook) {
+        XSSFCellStyle cellStyle = workbook.createCellStyle();
+        cellStyle.setAlignment(HorizontalAlignment.LEFT);
+        cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+
+        XSSFFont cellFont = workbook.createFont();
+        cellFont.setBold(false);
+        cellStyle.setFont(cellFont);
+
+        return cellStyle;
+    }
+
+    private void createHeaderRow(XSSFSheet sheet, List<String> headers, XSSFCellStyle headerStyle) {
+        XSSFRow row = sheet.createRow(0);
+        for (int i = 0; i < headers.size(); i++) {
+            XSSFCell cell = row.createCell(i);
+            cell.setCellStyle(headerStyle);
+            cell.setCellValue(headers.get(i));
+        }
+    }
+
+    private void skipRows(Iterator<T> iterator, short skip) {
+        for (int i = 0; i < skip; i++) {
+            if (iterator.hasNext()) {
+                iterator.next();
+            }
+        }
+    }
+
+    private void populateDataRows(XSSFSheet sheet, Iterator<T> iterator, XSSFCellStyle cellStyle, String pattern) {
+        int rowIndex = 0;
+        while (iterator.hasNext()) {
+            T data = iterator.next();
+            Field[] fields = data.getClass().getDeclaredFields();
+            XSSFRow row = sheet.createRow(++rowIndex);
+            for (int i = 0; i < fields.length; i++) {
+                XSSFCell cell = row.createCell(i);
+                cell.setCellStyle(cellStyle);
+                Field field = fields[i];
+                String fieldName = field.getName();
+                String getMethodName = "get" + capitalize(fieldName);
+                try {
+                    Method getMethod = data.getClass().getMethod(getMethodName);
+                    Object value = getMethod.invoke(data);
+                    setCellValue(cell, value, pattern);
+                } catch (Exception e) {
+                    log.error("Error while processing data row: {}", e.getMessage());
+                    throw new RuntimeException("Error while processing data row", e);
+                }
+            }
+        }
+    }
+
+    private String capitalize(String str) {
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
+
+    private void setCellValue(XSSFCell cell, Object value, String pattern) {
+        if (value == null) {
+            cell.setCellValue("");
+            return;
+        }
+
+        if (value instanceof Boolean) {
+
+            cell.setCellValue((Boolean) value);
+        } else if (value instanceof Date) {
+            if (pattern != null && !pattern.isEmpty()) {
+                SimpleDateFormat sdf = new SimpleDateFormat(pattern);
+                cell.setCellValue(sdf.format((Date) value));
+            } else {
+                cell.setCellValue((Date) value);
+            }
+        } else if (value instanceof byte[]) {
+            cell.getRow().setHeightInPoints(60);
+            cell.getSheet().setColumnWidth(cell.getColumnIndex(), (short) (35.7 * 80));
+        } else {
+            cell.setCellValue(value.toString());
+        }
+    }
+
+    private void setBorder(XSSFCellStyle cellStyle) {
+        cellStyle.setBorderBottom(BorderStyle.THIN);
+        cellStyle.setBorderLeft(BorderStyle.THIN);
+        cellStyle.setBorderRight(BorderStyle.THIN);
+        cellStyle.setBorderTop(BorderStyle.THIN);
+    }
+
 
     public void exportObjectToExcel(String title, List<String> headers, List<List<Object>> dataset, OutputStream out, String pattern, short skip) {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             XSSFSheet sheet = workbook.createSheet(title);
-            sheet.setDefaultColumnWidth((short) 15);
-            XSSFCellStyle headerStyle = workbook.createCellStyle();
-            headerStyle.setFillForegroundColor(IndexedColors.LIGHT_CORNFLOWER_BLUE.getIndex());
-            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            headerStyle.setBorderBottom(BorderStyle.THIN);
-            headerStyle.setBorderLeft(BorderStyle.THIN);
-            headerStyle.setBorderRight(BorderStyle.THIN);
-            headerStyle.setBorderTop(BorderStyle.THIN);
-            headerStyle.setAlignment(HorizontalAlignment.LEFT);
-            XSSFFont headerFont = workbook.createFont();
-            headerFont.setFontName("Calibri");
-            headerFont.setFontHeightInPoints((short) 10);
-            headerFont.setBold(true);
-            headerStyle.setFont(headerFont);
-            XSSFCellStyle cellStyle = workbook.createCellStyle();
-            cellStyle.setAlignment(HorizontalAlignment.LEFT);
-            cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
-            XSSFFont cellFont = workbook.createFont();
-            cellFont.setBold(false);
-            cellStyle.setFont(cellFont);
-            XSSFRow row = sheet.createRow(0);
+            sheet.setDefaultColumnWidth(DEFAULT_COLUMN_WIDTH);
+
+            XSSFCellStyle headerStyle = createHeaderStyle(workbook);
+            XSSFCellStyle cellStyle = createCellStyle(workbook);
+
+            createHeaderRow(sheet, headers, headerStyle);
+
             int rowNum = 0;
-            if (headers != null) {
-                rowNum++;
-                for (short i = 0; i < headers.size(); i++) {
-                    XSSFCell cell = row.createCell(i);
-                    cell.setCellStyle(headerStyle);
-                    XSSFRichTextString text = new XSSFRichTextString(headers.get(i));
-                    cell.setCellValue(text);
-                }
-            }
-            int t = 0;
+            int skipCount = 0;
             for (List<Object> rowData : dataset) {
-                if (t < skip) {
-                    t++;
+                if (skipCount < skip) {
+                    skipCount++;
                     continue;
                 }
-                row = sheet.createRow(rowNum++);
+
+                XSSFRow row = sheet.createRow(rowNum++);
                 int colNum = 0;
                 for (Object value : rowData) {
-                    Cell cell = row.createCell(colNum++);
-                    if (value instanceof String) {
-                        cell.setCellValue((String) value);
-                    } else if (value instanceof Integer) {
-                        cell.setCellValue((Integer) value);
-                    } else if (value instanceof Double) {
-                        cell.setCellValue((Double) value);
-                    } else if (value instanceof Boolean) {
-                        cell.setCellValue((Boolean) value);
-                    }
+                    XSSFCell cell = row.createCell(colNum++);
+                    setCellValue(cell, value, pattern);
                 }
             }
             workbook.write(out);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            log.error("Error exporting object to Excel: {}", e.getMessage());
+            throw new RuntimeException("Error exporting object to Excel", e);
         }
     }
+
 }
