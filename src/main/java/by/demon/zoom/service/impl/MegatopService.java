@@ -66,14 +66,33 @@ public class MegatopService implements FileProcessingService {
         return filePath;
     }
 
+//    private HashSet<MegatopDTO> getMegatopDTOList(Collection<Megatop> megatopList) {
+//        return megatopList.stream()
+//                .filter(megatop -> "belwest.by".equals(megatop.getCompetitor()) ||
+//                        (!megatop.getUrl().contains("/ru/") && !megatop.getUrl().contains("/kz/") &&
+//                                !megatop.getDate().toLocalDate().isBefore(beforeDate)))
+//                .map(MappingUtils::mapToMegatopDTO)
+//                .collect(Collectors.toCollection(HashSet::new));
+//    }
+
     private HashSet<MegatopDTO> getMegatopDTOList(Collection<Megatop> megatopList) {
         return megatopList.stream()
-                .filter(megatop -> "belwest.by".equals(megatop.getCompetitor()) ||
-                        (!megatop.getUrl().contains("/ru/") && !megatop.getUrl().contains("/kz/") &&
-                                !megatop.getDate().toLocalDate().isBefore(beforeDate)))
+                .filter(megatop -> {
+                    boolean condition = "belwest.by".equals(megatop.getCompetitor()) ||
+                            (!megatop.getUrl().contains("/ru/") && !megatop.getUrl().contains("/kz/") &&
+                                    !megatop.getDate().toLocalDate().isBefore(beforeDate));
+
+                    // Логирование исключенных строк
+                    if (!condition) {
+                        log.info("Excluded Megatop: {}", megatop.toString());
+                    }
+
+                    return condition;
+                })
                 .map(MappingUtils::mapToMegatopDTO)
                 .collect(Collectors.toCollection(HashSet::new));
     }
+
 
     private Collection<Megatop> getMegatopList(List<List<Object>> lists) {
         Timestamp instant = Timestamp.from(Instant.now());

@@ -12,6 +12,7 @@ import javax.persistence.Id;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.StringJoiner;
 
 @Getter
 @Setter
@@ -59,5 +60,13 @@ public class Megatop {
     @Override
     public int hashCode() {
         return Objects.hash(concatUrlRostovChildren);
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", Megatop.class.getSimpleName() + "[", "]")
+                .add("id=" + id)
+                .add("date=" + date)
+                .toString();
     }
 }
