@@ -24,8 +24,8 @@ public class MegatopDTO {
     private String brand;
     private String model;
     private String vendorCode;
-    private String price;
-    private String oldPrice;
+    private Double price;
+    private Double oldPrice;
     private String url;
     private String status;
 

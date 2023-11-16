@@ -2,8 +2,11 @@ package by.demon.zoom.util;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.util.IOUtils;
 import org.apache.poi.xssf.usermodel.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
@@ -12,6 +15,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -26,9 +31,16 @@ import java.util.regex.Pattern;
 @Service
 public class ExcelUtil<T> {
 
-    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final Logger LOG = LoggerFactory.getLogger(ExcelUtil.class);
+    private static final SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final String PATTERN_NUMBER = "0.#";
+    private static final DecimalFormatSymbols symbols = new DecimalFormatSymbols();
     private static final short DEFAULT_COLUMN_WIDTH = 15;
     private static final String DEFAULT_FONT_NAME = "Calibri";
+
+    static {
+        symbols.setDecimalSeparator(',');
+    }
 
 
     public static List<List<Object>> readExcel(File file) throws IOException {
@@ -48,16 +60,15 @@ public class ExcelUtil<T> {
     }
 
 
-
     public void download(String filename, InputStream is, HttpServletResponse response) throws IOException {
         if (filename == null) {
-            log.error("Filename is null. Unable to proceed with download.");
+            LOG.error("Filename is null. Unable to proceed with download.");
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Filename is null");
             return;
         }
-        log.info("Downloading file: {}", filename);
-        response.setHeader("Content-Disposition", "attachment;filename=" + new String(filename.getBytes(StandardCharsets.UTF_8)));
-        response.setContentType("application/vnd.ms-excel;charset=utf-8");
+        LOG.info("Downloading file: {}", filename);
+        response.setHeader("Content-Disposition", "attachment;filename=" + new String(filename.getBytes(), StandardCharsets.ISO_8859_1));
+        response.setContentType("application/vnd.ms-excel;charset=gb2312");
         try (InputStream fis = new BufferedInputStream(is);
              OutputStream toClient = new BufferedOutputStream(response.getOutputStream())) {
 
@@ -68,7 +79,7 @@ public class ExcelUtil<T> {
             }
             toClient.flush(); // Flush the output stream after writing all the data
         } catch (IOException ex) {
-            log.error("Error during file download: {}", ex.getMessage());
+            LOG.error("Error during file download: {}", ex.getMessage());
             throw ex;
         }
     }
@@ -79,45 +90,57 @@ public class ExcelUtil<T> {
     }
 
 
-    private static List<List<Object>> readExcel2007(InputStream is) throws IOException {
-        List<List<Object>> list = new LinkedList<>();
+    private static List<List<Object>> readExcel2007(InputStream is) {
+        Long now = MethodPerformance.start();
+        List<List<Object>> list = new ArrayList<>();
         // https://stackoverflow.com/a/75830526
         IOUtils.setByteArrayMaxOverride(1000000000);
-        XSSFWorkbook xwb = new XSSFWorkbook(is);
-        XSSFSheet sheet = xwb.getSheetAt(0);
-        XSSFRow row;
-        int counter = 0;
-        for (int i = sheet.getFirstRowNum(); counter < sheet.getPhysicalNumberOfRows(); i++) {
-            row = sheet.getRow(i);
-            if (row == null) {
-                continue;
-            } else {
-                counter++;
+        try (Workbook workbook = new XSSFWorkbook(is)) {
+            Sheet sheet = workbook.getSheetAt(0);
+            for (Row row : sheet) {
+                List<Object> objectList = new ArrayList<>();
+                getRowList(row, objectList);
+                list.add(objectList);
             }
-            List<Object> linked = new LinkedList<>();
-            getRowList(row, linked);
-            list.add(linked);
+        } catch (IOException e) {
+            LOG.error("Ошибка при чтении файла Excel", e);
         }
-        is.close();
+        MethodPerformance.finish(now, "чтения файла excel");
         return list;
     }
 
     public static void getRowList(Row row, List<Object> linked) {
-        Cell cell;
-        Object value;
         for (int j = 0; j <= 250; j++) {
-            cell = row.getCell(j);
+            Cell cell = row.getCell(j);
             if (cell == null) {
                 linked.add("");
-                continue;
-            }
-            if (cell.getCellType() == CellType.FORMULA) {
-                value = getValueFormula(cell);
-                linked.add(value);
+            } else if (cell.getCellType() == CellType.FORMULA) {
+                linked.add(cell.getCellFormula());
             } else {
-                value = getValue(cell);
-                linked.add(value);
+                linked.add(getCellValue(cell));
             }
+        }
+    }
+
+    public static Object getCellValue(Cell cell) {
+        switch (cell.getCellType()) {
+            case STRING:
+                return cell.getStringCellValue();
+            case NUMERIC:
+                double numericValue = cell.getNumericCellValue();
+                long longValue = (long) numericValue; // Проверяем, является ли значение целым числом
+                if (numericValue == longValue) {
+                    return longValue; // Возвращаем целочисленное значение
+                } else {
+                    DecimalFormat decimalFormat = new DecimalFormat("#,###.#####"); // Форматирование числа с разделителем ","
+                    return decimalFormat.format(numericValue); // Возвращаем числовое значение с десятичной частью
+                }
+            case BOOLEAN:
+                return cell.getBooleanCellValue();
+            case FORMULA:
+                return cell.getCellFormula();
+            default:
+                return "";
         }
     }
 
@@ -130,7 +153,7 @@ public class ExcelUtil<T> {
                 break;
             case NUMERIC:
                 if (DateUtil.isCellDateFormatted(cell)) {
-                    value = ExcelUtil.sdf.format(DateUtil.getJavaDate(cell.getNumericCellValue()));
+                    value = ExcelUtil.SDF.format(DateUtil.getJavaDate(cell.getNumericCellValue()));
                 } else {
                     value = String.valueOf(cell.getNumericCellValue());
                     value = matchDoneBigDecimal(String.valueOf(value));
@@ -142,7 +165,6 @@ public class ExcelUtil<T> {
                 break;
             case BLANK:
                 value = "";
-//                value = Row.MissingCellPolicy.CREATE_NULL_AS_BLANK;
                 break;
             default:
                 value = cell.toString();
@@ -158,7 +180,7 @@ public class ExcelUtil<T> {
                 break;
             case NUMERIC:
                 if (DateUtil.isCellDateFormatted(cell)) {
-                    value = ExcelUtil.sdf.format(DateUtil.getJavaDate(cell.getNumericCellValue()));
+                    value = ExcelUtil.SDF.format(DateUtil.getJavaDate(cell.getNumericCellValue()));
                 } else {
                     value = String.valueOf(cell.getNumericCellValue());
                     value = matchDoneBigDecimal(String.valueOf(value));
@@ -199,11 +221,11 @@ public class ExcelUtil<T> {
         return readExcel2007(new FileInputStream(file));
     }
 
-    public void exportExcel(List<String> headers, Collection<T> dataset, OutputStream out, short skip) {
-        exportExcel(Globals.SHEET_NAME, headers, dataset, out, "yyyy-MM-dd", skip);
+    public void exportToWorkbookExcel(List<String> headers, Collection<T> dataset, OutputStream out, short skip) {
+        exportToWorkbookExcel(Globals.SHEET_NAME, headers, dataset, out, "yyyy-MM-dd", skip);
     }
 
-    public void exportExcel(List<String> headers, List<List<Object>> dataset, OutputStream out, short skip) {
+    public void exportToWorkbookExcel(List<String> headers, List<List<Object>> dataset, OutputStream out, short skip) {
         exportObjectToExcel(Globals.SHEET_NAME, headers, dataset, out, "yyyy-MM-dd", skip);
     }
 
@@ -215,7 +237,7 @@ public class ExcelUtil<T> {
      * @param pattern Паттерн для замены
      */
 
-    public void exportExcel(String title, List<String> headers, Collection<T> dataset, OutputStream out, String pattern, short skip) {
+    public void exportToWorkbookExcel(String title, List<String> headers, Collection<T> dataset, OutputStream out, String pattern, short skip) {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             XSSFSheet sheet = workbook.createSheet(title);
             sheet.setDefaultColumnWidth(DEFAULT_COLUMN_WIDTH);
@@ -232,7 +254,7 @@ public class ExcelUtil<T> {
 
             workbook.write(out);
         } catch (IOException e) {
-            log.error("Error while exporting Excel: {}", e.getMessage());
+            LOG.error("Error while exporting Excel: {}", e.getMessage());
             throw new RuntimeException("Error while exporting Excel", e);
         }
     }
@@ -265,12 +287,16 @@ public class ExcelUtil<T> {
         return cellStyle;
     }
 
-    private void createHeaderRow(XSSFSheet sheet, List<String> headers, XSSFCellStyle headerStyle) {
-        XSSFRow row = sheet.createRow(0);
-        for (int i = 0; i < headers.size(); i++) {
-            XSSFCell cell = row.createCell(i);
-            cell.setCellStyle(headerStyle);
-            cell.setCellValue(headers.get(i));
+    private void createHeaderRow(XSSFSheet sheet, List<String> header, XSSFCellStyle headerStyle) {
+        if (header != null && !header.isEmpty()) {
+            XSSFRow row = sheet.createRow(0);
+            for (int i = 0; i < header.size(); i++) {
+                XSSFCell cell = row.createCell(i);
+                cell.setCellStyle(headerStyle);
+                cell.setCellValue(header.get(i));
+            }
+            sheet.createFreezePane(0, 1);
+            sheet.setAutoFilter(new CellRangeAddress(0,0,0,header.size()-1));
         }
     }
 
@@ -297,7 +323,7 @@ public class ExcelUtil<T> {
                 try {
                     Method getMethod = data.getClass().getMethod(getMethodName);
                     Object value = getMethod.invoke(data);
-                    setCellValue(cell, value, pattern);
+                    setCellValue(cell, value, cellStyle, pattern);
                 } catch (Exception e) {
                     log.error("Error while processing data row: {}", e.getMessage());
                     throw new RuntimeException("Error while processing data row", e);
@@ -310,15 +336,15 @@ public class ExcelUtil<T> {
         return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 
-    private void setCellValue(XSSFCell cell, Object value, String pattern) {
+    // For ObjectToExcel
+    private void setCellValue(XSSFCell cell, Object value, XSSFCellStyle cellStyle, String pattern) {
+        cell.setCellStyle(cellStyle);
         if (value == null) {
-            cell.setCellValue("");
+            cell.setBlank();
             return;
         }
-
         if (value instanceof Boolean) {
-
-            cell.setCellValue((Boolean) value);
+            cell.setCellValue((boolean) value);
         } else if (value instanceof Date) {
             if (pattern != null && !pattern.isEmpty()) {
                 SimpleDateFormat sdf = new SimpleDateFormat(pattern);
@@ -329,8 +355,14 @@ public class ExcelUtil<T> {
         } else if (value instanceof byte[]) {
             cell.getRow().setHeightInPoints(60);
             cell.getSheet().setColumnWidth(cell.getColumnIndex(), (short) (35.7 * 80));
+        } else if (value instanceof Number) {
+            DecimalFormat decimalFormat = new DecimalFormat(PATTERN_NUMBER, symbols);
+            decimalFormat.setParseBigDecimal(true);
+            cell.setCellValue(((Number) value).doubleValue());
+            cellStyle.setDataFormat(cell.getCellStyle().getDataFormat());
         } else {
-            cell.setCellValue(value.toString());
+            cell.setCellType(CellType.STRING);
+            cell.setCellValue(String.valueOf(value));
         }
     }
 
@@ -364,12 +396,12 @@ public class ExcelUtil<T> {
                 int colNum = 0;
                 for (Object value : rowData) {
                     XSSFCell cell = row.createCell(colNum++);
-                    setCellValue(cell, value, pattern);
+                    setCellValue(cell, value, cellStyle, pattern);
                 }
             }
             workbook.write(out);
         } catch (IOException e) {
-            log.error("Error exporting object to Excel: {}", e.getMessage());
+            LOG.error("Error exporting object to Excel: {}", e.getMessage());
             throw new RuntimeException("Error exporting object to Excel", e);
         }
     }

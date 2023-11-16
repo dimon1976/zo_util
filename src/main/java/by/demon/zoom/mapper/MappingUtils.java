@@ -82,8 +82,8 @@ public final class MappingUtils {
         megatopDTO.setBrand(entity.getBrand());
         megatopDTO.setModel(entity.getModel());
         megatopDTO.setVendorCode(entity.getVendorCode());
-        megatopDTO.setPrice(entity.getPrice());
-        megatopDTO.setOldPrice(entity.getOldPrice());
+        megatopDTO.setPrice(entity.getPrice().isEmpty() ? null : Double.parseDouble(entity.getPrice()));
+        megatopDTO.setOldPrice(entity.getOldPrice().isEmpty() ? null : Double.parseDouble(entity.getOldPrice()));
         megatopDTO.setUrl(entity.getUrl());
         megatopDTO.setStatus(entity.getStatus());
         return megatopDTO;
@@ -109,24 +109,24 @@ public final class MappingUtils {
     public static LentaReportDTO mapToLentaReportDTO(Lenta entity) {
         LentaReportDTO lentaReportDTO = new LentaReportDTO();
         lentaReportDTO.setCity(entity.getCity());
-        lentaReportDTO.setProduct(entity.getProduct());
+        lentaReportDTO.setProduct(entity.getProduct().isEmpty() ? null : Double.parseDouble(entity.getProduct()));
         lentaReportDTO.setProductName(entity.getProductName());
-        lentaReportDTO.setPrice(entity.getPrice());
+        lentaReportDTO.setPrice(entity.getPrice().isEmpty() ? null : Double.parseDouble(entity.getPrice()));
         lentaReportDTO.setNetwork(entity.getNetwork());
-        lentaReportDTO.setActionPrice1(entity.getActionPrice1());
+        lentaReportDTO.setActionPrice1(entity.getActionPrice1().isEmpty() ? null : Double.parseDouble(entity.getActionPrice1()));
         lentaReportDTO.setDateFromPromo(entity.getDateFromPromo());
         lentaReportDTO.setDateToPromo(entity.getDateToPromo());
-        lentaReportDTO.setDiscountPercentage(entity.getDiscountPercentage());
+        lentaReportDTO.setDiscountPercentage(entity.getDiscountPercentage().isEmpty() ? null : Double.parseDouble(entity.getDiscountPercentage()));
         lentaReportDTO.setMechanicsOfTheAction(entity.getMechanicsOfTheAction());
         lentaReportDTO.setUrl(entity.getUrl());
         lentaReportDTO.setAdditionalPrice(entity.getAdditionalPrice());
         lentaReportDTO.setModel(entity.getModel());
         lentaReportDTO.setWeightEdeadeal(entity.getWeightEdeadeal());
         lentaReportDTO.setWeightEdeadealKg(entity.getPriceEdeadealKg());
-        lentaReportDTO.setWeightLenta(entity.getWeightLenta());
+        lentaReportDTO.setWeightLenta(entity.getWeightLenta().isEmpty() ? null : Double.parseDouble(entity.getWeightLenta()));
         lentaReportDTO.setWeightLentaKg(entity.getWeightLentaKg());
-        lentaReportDTO.setPriceEdeadealKg(entity.getPriceEdeadealKg());
-        lentaReportDTO.setConversionToLentaWeight(entity.getConversionToLentaWeight());
+        lentaReportDTO.setPriceEdeadealKg(entity.getPriceEdeadealKg().isEmpty() ? null : Double.parseDouble(entity.getPriceEdeadealKg()));
+        lentaReportDTO.setConversionToLentaWeight(entity.getConversionToLentaWeight().isEmpty() ? null : Double.parseDouble(entity.getConversionToLentaWeight()));
         lentaReportDTO.setAdditionalField(entity.getAdditionalField());
         return lentaReportDTO;
     }
@@ -139,14 +139,14 @@ public final class MappingUtils {
         simpleDTO.setCategory3(product.getCategory3());
         simpleDTO.setBrand(product.getBrand());
         simpleDTO.setModel(product.getModel());
-        simpleDTO.setPrice(product.getPrice());
+        simpleDTO.setPrice(product.getPrice().isEmpty() ? null : Double.parseDouble(product.getPrice().replace(",", ".")));
         simpleDTO.setCity(product.getCity());
         simpleDTO.setCompetitor(product.getCompetitor());
         simpleDTO.setTime(product.getTime());
         simpleDTO.setDate(product.getDate());
-        simpleDTO.setCompetitorPrice(product.getCompetitorPrice());
-        simpleDTO.setCompetitorOldPrice(product.getCompetitorOldPrice());
-        simpleDTO.setCompetitorActionPrice(product.getCompetitorActionPrice());
+        simpleDTO.setCompetitorPrice(product.getCompetitorPrice().isEmpty() ? null : Double.parseDouble(product.getCompetitorPrice().replace(",", ".")));
+        simpleDTO.setCompetitorOldPrice(product.getCompetitorOldPrice().isEmpty() ? null : Double.parseDouble(product.getCompetitorOldPrice().replace(",", ".")));
+        simpleDTO.setCompetitorActionPrice(product.getCompetitorActionPrice().isEmpty() ? null : Double.parseDouble(product.getCompetitorActionPrice().replace(",", ".")));
         simpleDTO.setComment(product.getComment());
         simpleDTO.setCompetitorModel(product.getCompetitorModel());
         simpleDTO.setCompetitorYear(product.getYearCompetitor());
@@ -156,11 +156,7 @@ public final class MappingUtils {
         simpleDTO.setPromo(product.getPromo());
         simpleDTO.setCompetitorUrl(product.getCompetitorUrl());
         simpleDTO.setClientUrl(product.getClientUrl());
-        if (!ifExistCompetitor(product.getCompetitor(), listCompetitors)) {
-            simpleDTO.setUrlWebCache(product.getWebCacheUrl());
-        } else {
-            simpleDTO.setUrlWebCache("");
-        }
+        simpleDTO.setUrlWebCache(!ifExistCompetitor(product.getCompetitor(), listCompetitors) ? product.getWebCacheUrl() : "");
         return simpleDTO;
     }
 

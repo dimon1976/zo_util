@@ -10,23 +10,23 @@ import lombok.NoArgsConstructor;
 public class LentaReportDTO {
 
     private String city;
-    private String product;
+    private Double product;
     private String productName;
-    private String price;
+    private Double price;
     private String network;
-    private String actionPrice1;
+    private Double actionPrice1;
     private String dateFromPromo;
     private String dateToPromo;
-    private String discountPercentage;
+    private Double discountPercentage;
     private String mechanicsOfTheAction;
     private String url;
     private String additionalPrice;
     private String model;
     private String weightEdeadeal;
     private String weightEdeadealKg;
-    private String weightLenta;
+    private Double weightLenta;
     private String weightLentaKg;
-    private String priceEdeadealKg;
-    private String conversionToLentaWeight;
+    private Double priceEdeadealKg;
+    private Double conversionToLentaWeight;
     private String additionalField;
 }

@@ -7,6 +7,7 @@ import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DateUtils;
 import by.demon.zoom.util.ExcelUtil;
+import by.demon.zoom.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -56,7 +57,7 @@ public class MegatopService implements FileProcessingService {
         megatopCsvRBeanRepository.saveAll(megatopArrayList);
         try (OutputStream out = Files.newOutputStream(of)) {
             short skipLines = 1;
-            excelUtil.exportExcel(header, collect, out, skipLines);
+            excelUtil.exportToWorkbookExcel(header, collect, out, skipLines);
             excelUtil.download(file.getName(), filePath, response);
             log.info("Data exported successfully to Excel: {}", filePath);
         } catch (IOException e) {
@@ -66,14 +67,6 @@ public class MegatopService implements FileProcessingService {
         return filePath;
     }
 
-//    private HashSet<MegatopDTO> getMegatopDTOList(Collection<Megatop> megatopList) {
-//        return megatopList.stream()
-//                .filter(megatop -> "belwest.by".equals(megatop.getCompetitor()) ||
-//                        (!megatop.getUrl().contains("/ru/") && !megatop.getUrl().contains("/kz/") &&
-//                                !megatop.getDate().toLocalDate().isBefore(beforeDate)))
-//                .map(MappingUtils::mapToMegatopDTO)
-//                .collect(Collectors.toCollection(HashSet::new));
-//    }
 
     private HashSet<MegatopDTO> getMegatopDTOList(Collection<Megatop> megatopList) {
         return megatopList.stream()
@@ -84,7 +77,7 @@ public class MegatopService implements FileProcessingService {
 
                     // Логирование исключенных строк
                     if (!condition) {
-                        log.info("Excluded Megatop: {}", megatop.toString());
+                        log.info("Excluded Megatop: {}", megatop);
                     }
 
                     return condition;
@@ -95,10 +88,10 @@ public class MegatopService implements FileProcessingService {
 
 
     private Collection<Megatop> getMegatopList(List<List<Object>> lists) {
-        Timestamp instant = Timestamp.from(Instant.now());
+//        Timestamp instant = Timestamp.from(Instant.now());
         return lists.stream()
                 .filter(str -> !"Категория 1".equals(str.get(0)))
-                .map(str -> createMegatopFromList(str, instant))
+                .map(str -> createMegatopFromList(str, Timestamp.from(Instant.now())))
                 .collect(Collectors.toCollection(HashSet::new));
     }
 
@@ -120,13 +113,15 @@ public class MegatopService implements FileProcessingService {
         megatop.setBrand(getStringValue(str, 13));
         megatop.setModel(getStringValue(str, 14));
         megatop.setVendorCode(getStringValue(str, 15));
-        megatop.setPrice(getStringValue(str, 16));
-        megatop.setOldPrice(getStringValue(str, 17));
+        megatop.setPrice(StringUtil.cleanAndReplace(getStringValue(str, 16), "."));
+        megatop.setOldPrice(StringUtil.cleanAndReplace(getStringValue(str, 17), "."));
         megatop.setUrl(getStringValue(str, 18));
         megatop.setStatus(getStringValue(str, 19));
-        if (!getStringValue(str, 20).equals("")) {
-            megatop.setDate(DateUtils.getDateTime(getStringValue(str, 20), MEGATOP_PATTERN));
-        }
+        String dateValue = getStringValue(str, 20);
+        megatop.setDate(!dateValue.isEmpty() ? DateUtils.getDateTime(dateValue, MEGATOP_PATTERN) : null);
+//        if (!getStringValue(str, 20).isEmpty()) {
+//            megatop.setDate(DateUtils.getDateTime(getStringValue(str, 20), MEGATOP_PATTERN));
+//        }
         megatop.setConcatUrlRostovChildren((getStringValue(str, 18)) + getStringValue(str, 7));
         megatop.setFileName(fileName);
         megatop.setDateTime(instant);
@@ -135,5 +130,15 @@ public class MegatopService implements FileProcessingService {
 
     private String getStringValue(List<Object> list, int index) {
         return (index >= 0 && index < list.size()) ? String.valueOf(list.get(index)) : "";
+    }
+
+    @Override
+    public String saveAll(String filePath, File transferTo, HttpServletResponse response, String[] additionalParams) {
+        return null;
+    }
+
+    @Override
+    public String deleteAll() {
+        return null;
     }
 }

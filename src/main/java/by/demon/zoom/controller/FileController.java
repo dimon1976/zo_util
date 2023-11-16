@@ -85,6 +85,22 @@ public class FileController {
     public @ResponseBody String excelLentaTask(@RequestParam("file") MultipartFile multipartFile) {
         return processFile("lenta", multipartFile);
     }
+    @PostMapping("/urlFrom")
+    public @ResponseBody String excelUrlFrom(@RequestParam("file") MultipartFile multipartFile) {
+        return processFile("urlFrom", multipartFile);
+    }
+
+    @PostMapping("/urlTo")
+    public @ResponseBody String excelUrlTo(@RequestParam("file") MultipartFile multipartFile) {
+        return processFile("urlTo", multipartFile);
+    }
+
+    @PostMapping("/deleteAll")
+    public @ResponseBody String excelDeleteAll() {
+        Object deleteAll = processingServices.get("vlook");
+        return ((FileProcessingService) deleteAll).deleteAll();
+    }
+
 
     @PostMapping("/lentaReport")
     public @ResponseBody String excelLentaReport(@ModelAttribute("lenta") Lenta lenta
@@ -107,8 +123,9 @@ public class FileController {
 
     private String processFile(String action, MultipartFile multipartFile, String... additionalParams) {
         Object processingService = processingServices.get(action);
-
-        if (ifExist(multipartFile) && processingService instanceof FileProcessingService) {
+        String result ="";
+//&& processingService instanceof FileProcessingService
+        if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);
             File transferTo = new File(filePath);
 
@@ -121,7 +138,15 @@ public class FileController {
             try {
                 multipartFile.transferTo(transferTo);
                 log.info("File uploaded successfully: {}", getOrgName(multipartFile));
-                String result = ((FileProcessingService) processingService).export(filePath, transferTo, response, additionalParams);
+                if (action.equals("urlFrom")){
+                    Object urlFrom = processingServices.get("vlook");
+                    result = ((FileProcessingService) urlFrom).saveAll(filePath, transferTo, response, action);
+                } else if (action.equals("urlTo")) {
+                    Object urlTo = processingServices.get("vlook");
+                    result = ((FileProcessingService) urlTo).saveAll(filePath, transferTo, response, action);
+                } else {
+                    result = ((FileProcessingService) processingService).export(filePath, transferTo, response, additionalParams);
+                }
 
                 // Проверяем, существует ли папка
                 if (directory.exists()) {

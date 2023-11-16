@@ -24,7 +24,7 @@ import static by.demon.zoom.mapper.MappingUtils.listUsers;
 @Service
 public class StatisticService implements FileProcessingService {
 
-    private static final Logger logger = LoggerFactory.getLogger(StatisticService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(StatisticService.class);
 
     private static final List<String> HEADER = Arrays.asList("Клиент", "ID связи", "ID клиента", "Верхняя категория клиента", "Категория клиента", "Бренд клиента",
             "Модель клиента", "Код производителя клиента", "Штрих-код клиента", "Статус клиента", "Цена конкурента",
@@ -46,15 +46,16 @@ public class StatisticService implements FileProcessingService {
         try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
             List<String> newHeader = addAdditionalColumnsToString(additionalParams[2], additionalParams[0], additionalParams[3]);
             short skip = 1;
-            excelUtil.exportExcel(newHeader, resultTest, out, skip);
+            excelUtil.exportToWorkbookExcel(newHeader, resultTest, out, skip);
             excelUtil.download(file.getName(), filePath, response);
         } catch (IOException e) {
-            logger.error("Error exporting data to Excel: {}", e.getMessage(), e);
+            LOG.error("Error exporting data to Excel: {}", e.getMessage(), e);
             throw e;
         }
-        logger.info("Data exported successfully to Excel: {}", filePath);
+        LOG.info("Data exported successfully to Excel: {}", filePath);
         return filePath;
     }
+
 
     private static List<Integer> getColumnList(String showSource, String showCompetitorUrl, String showDateAdd, List<Integer> source) {
         List<Integer> targetList = new ArrayList<>(source);
@@ -117,6 +118,16 @@ public class StatisticService implements FileProcessingService {
 
     private static boolean ifExistField(int i, List<Integer> listColumns) {
         return listColumns.contains(i);
+    }
+
+    @Override
+    public String saveAll(String filePath, File transferTo, HttpServletResponse response, String... additionalParams) throws IOException {
+        return null;
+    }
+
+    @Override
+    public String deleteAll() {
+        return null;
     }
 }
 

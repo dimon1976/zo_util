@@ -14,14 +14,14 @@ public class SimpleDTO {
     private String category3;
     private String brand;
     private String model;
-    private String price;
+    private Double price;
     private String city;
     private String competitor;
     private String time;
     private String date;
-    private String competitorPrice;
-    private String competitorOldPrice;
-    private String competitorActionPrice;
+    private Double competitorPrice;
+    private Double competitorOldPrice;
+    private Double competitorActionPrice;
     private String comment;
     private String competitorModel;
     private String competitorYear;

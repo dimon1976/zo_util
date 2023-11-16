@@ -20,15 +20,13 @@ import java.util.List;
 @Service
 public class EdadealService implements FileProcessingService {
 
+    private static final Logger LOG = LoggerFactory.getLogger(EdadealService.class);
     private static final String EXCLUDE_STRING = "от ";
     private static final String SUFFIX_XLSX = ".xlsx";
-
     private final List<String> header = Arrays.asList("Категория из файла", "Сайт", "ZMS ID", "Категория", "Бренд", "Модель", "Код производителя", "Цена", "Маркетинговое описание", "Маркетинговое описание 3",
             "Маркетинговое описание 4", "Статус", "Ссылка", "Старая цена", "Продавец", "Дата", "Позиция", "Ссылка на родителя");
 
     private final ExcelUtil<Object> excelUtil;
-
-    private static final Logger log = LoggerFactory.getLogger(EdadealService.class);
 
     public EdadealService(ExcelUtil<Object> excelUtil) {
         this.excelUtil = excelUtil;
@@ -36,7 +34,7 @@ public class EdadealService implements FileProcessingService {
 
     @Override
     public String export(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
-        log.info("Exporting data...");
+        LOG.info("Exporting data...");
         String fileName = file.getName();
         String extension = fileName.lastIndexOf(".") == -1 ? "" : fileName.substring(fileName.lastIndexOf(".") + 1);
         List<List<Object>> originalWb;
@@ -50,15 +48,16 @@ public class EdadealService implements FileProcessingService {
         List<List<Object>> resultList = getResultList(originalWb, columns);
         try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
             short skip = 1;
-            excelUtil.exportExcel(header, resultList, out, skip);
+            excelUtil.exportToWorkbookExcel(header, resultList, out, skip);
             excelUtil.download(fileName, filePath, response);
         }
-        log.info("Exported data to Excel: {}", filePath);
+        LOG.info("Exported data to Excel: {}", filePath);
         return filePath;
     }
 
+
     private List<List<Object>> getResultList(List<List<Object>> list, List<Integer> columnList) {
-        log.debug("Getting result list...");
+        LOG.debug("Getting result list...");
         List<List<Object>> newList = new LinkedList<>();
         int counter = 0;
         for (int i = 0; counter < list.size(); i++) {
@@ -68,12 +67,12 @@ public class EdadealService implements FileProcessingService {
                 newList.add(linked);
             }
         }
-        log.debug("Result list size: {}", newList.size());
+        LOG.debug("Result list size: {}", newList.size());
         return newList;
     }
 
     private List<Object> getRowList(List<Integer> columnList, List<Object> row) {
-        log.debug("Getting row list...");
+        LOG.debug("Getting row list...");
         Object value;
         List<Object> linked = new LinkedList<>();
         for (int j = 0; j <= row.size(); j++) {
@@ -85,7 +84,7 @@ public class EdadealService implements FileProcessingService {
                 } else if (j == 16) {
                     // Проверка на вхождение подстроки "от" для исключения строки из выгрузки
                     if (value.toString().startsWith(EXCLUDE_STRING)) {
-                        log.debug("Excluded row: {}", row);
+                        LOG.debug("Excluded row: {}", row);
                         return null;
                     } else {
                         linked.add(value);
@@ -93,7 +92,7 @@ public class EdadealService implements FileProcessingService {
                 } else if (j == 24) {
                     // Проверка на пустые поля с моделью и продавцом
                     if (row.get(21).equals("") || row.get(11).equals("")) {
-                        log.debug("Excluded row due to empty model or seller: {}", row);
+                        LOG.debug("Excluded row due to empty model or seller: {}", row);
                         return null;
                     } else {
                         value = row.get(21) + "-" + row.get(11);
@@ -104,12 +103,22 @@ public class EdadealService implements FileProcessingService {
                 }
             }
         }
-        log.debug("Row list size: {}", linked.size());
+        LOG.debug("Row list size: {}", linked.size());
         return linked;
     }
 
+    @Override
+    public String saveAll(String filePath, File transferTo, HttpServletResponse response, String... additionalParams) throws IOException {
+        return null;
+    }
+
+    @Override
+    public String deleteAll() {
+        return null;
+    }
+
     public static Boolean ifExistField(int i, List<Integer> listColumns) {
-        log.debug("Checking if column {} exists in the list...", i);
+        LOG.debug("Checking if column {} exists in the list...", i);
         return listColumns.contains(i);
     }
 }

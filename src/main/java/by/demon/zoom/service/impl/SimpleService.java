@@ -5,6 +5,7 @@ import by.demon.zoom.dto.SimpleDTO;
 import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.ExcelUtil;
+import by.demon.zoom.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,8 +26,8 @@ import static by.demon.zoom.util.ExcelUtil.readExcel;
 @Service
 public class SimpleService implements FileProcessingService {
 
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleService.class);
     private final ExcelUtil<SimpleDTO> excelUtil;
-    private final Logger log = LoggerFactory.getLogger(SimpleService.class);
 
     private final List<String> header = Arrays.asList("ID", "Категория 1", "Категория 2", "Категория 3", "Бренд", "Модель", "Цена Simplewine на дату парсинга", "Город", "Конкурент", "Время выкачки"
             , "Дата", "Цена конкурента регуляр (по карте)", "Цена конкурента без карты", "Цена конкурента промо/акция"
@@ -44,11 +45,11 @@ public class SimpleService implements FileProcessingService {
         Collection<SimpleDTO> collect = getSimpleDTOList(productList);
         try (OutputStream out = Files.newOutputStream(of)) {
             short skipLines = 1;
-            excelUtil.exportExcel(header, collect, out, skipLines);
+            excelUtil.exportToWorkbookExcel(header, collect, out, skipLines);
             excelUtil.download(file.getName(), filePath, response);
-            log.info("Data exported successfully to Excel: {}", filePath);
+            LOG.info("Data exported successfully to Excel: {}", filePath);
         } catch (IOException e) {
-            log.error("Error exporting data to Excel: {}", e.getMessage(), e);
+            LOG.error("Error exporting data to Excel: {}", e.getMessage(), e);
             throw e;
         }
         return filePath;
@@ -57,6 +58,7 @@ public class SimpleService implements FileProcessingService {
 
     private Collection<SimpleDTO> getSimpleDTOList(Collection<Product> simpleArrayList) {
         return simpleArrayList.stream()
+                .skip(1) //пропускаем заголовок
                 .map(MappingUtils::mapToSimpleDTO)
                 .collect(Collectors.toList());
     }
@@ -75,14 +77,14 @@ public class SimpleService implements FileProcessingService {
         product.setCategory3(getStringValue(str, 3));
         product.setBrand(getStringValue(str, 4));
         product.setModel(getStringValue(str, 5));
-        product.setPrice(getStringValue(str, 6));
+        product.setPrice(StringUtil.cleanAndReplace(getStringValue(str, 6),"."));
         product.setCity(getStringValue(str, 7));
         product.setCompetitor(getStringValue(str, 8));
         product.setTime(getStringValue(str, 9));
         product.setDate(getStringValue(str, 10));
-        product.setCompetitorPrice(getStringValue(str, 11));
-        product.setCompetitorOldPrice(getStringValue(str, 12));
-        product.setCompetitorActionPrice(getStringValue(str, 13));
+        product.setCompetitorPrice(StringUtil.cleanAndReplace(getStringValue(str, 11),"."));
+        product.setCompetitorOldPrice(StringUtil.cleanAndReplace(getStringValue(str, 12),"."));
+        product.setCompetitorActionPrice(StringUtil.cleanAndReplace(getStringValue(str, 13),"."));
         product.setComment(getStringValue(str, 14));
         product.setCompetitorModel(getStringValue(str, 15));
         product.setYearCompetitor(getStringValue(str, 16));
@@ -95,7 +97,17 @@ public class SimpleService implements FileProcessingService {
         product.setWebCacheUrl(getStringValue(str, 23));
         return product;
     }
+
     private String getStringValue(List<Object> list, int index) {
         return (index >= 0 && index < list.size()) ? String.valueOf(list.get(index)) : "";
+    }
+    @Override
+    public String saveAll(String filePath, File transferTo, HttpServletResponse response, String... additionalParams) throws IOException {
+        return null;
+    }
+
+    @Override
+    public String deleteAll() {
+        return null;
     }
 }
