@@ -25,7 +25,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -73,7 +72,6 @@ public class LentaService implements FileProcessingService {
         try {
             LOG.info("Getting result list...");
 
-//            DecimalFormat nf = new DecimalFormat("0.00");
             ArrayList<Lenta> resultList = new ArrayList<>();
             int count = 0;
             for (List<Object> str : list) {
@@ -83,24 +81,24 @@ public class LentaService implements FileProcessingService {
                 }
                 Lenta lenta = new Lenta();
                 lenta.setCity(String.valueOf(str.get(0)));
-                lenta.setProduct(StringUtil.cleanAndReplace(String.valueOf(str.get(1)),"."));
+                lenta.setProduct(StringUtil.cleanAndReplace(String.valueOf(str.get(1)), "."));
                 lenta.setProductName(String.valueOf(str.get(2)));
-                lenta.setPrice(StringUtil.cleanAndReplace(String.valueOf(str.get(3)),"."));
+                lenta.setPrice(StringUtil.cleanAndReplace(String.valueOf(str.get(3)), "."));
                 lenta.setNetwork(String.valueOf(str.get(4)));
-                lenta.setActionPrice1(StringUtil.cleanAndReplace(String.valueOf(str.get(5)),"."));
+                lenta.setActionPrice1(StringUtil.cleanAndReplace(String.valueOf(str.get(5)), "."));
                 lenta.setDateFromPromo(String.valueOf(str.get(6)));
                 lenta.setDateToPromo(String.valueOf(str.get(7)));
-                lenta.setDiscountPercentage(StringUtil.cleanAndReplace(String.valueOf(str.get(8)),"."));
+                lenta.setDiscountPercentage(StringUtil.cleanAndReplace(String.valueOf(str.get(8)), "."));
                 lenta.setMechanicsOfTheAction(String.valueOf(str.get(9)));
                 lenta.setUrl(String.valueOf(str.get(10)));
                 lenta.setAdditionalPrice(String.valueOf(str.get(11)));
                 lenta.setModel(String.valueOf(str.get(12)));
                 lenta.setWeightEdeadeal(String.valueOf(str.get(13)));
                 lenta.setWeightEdeadealKg(String.valueOf(str.get(14)));
-                lenta.setWeightLenta(StringUtil.cleanAndReplace(String.valueOf(str.get(15)),"."));
+                lenta.setWeightLenta(StringUtil.cleanAndReplace(String.valueOf(str.get(15)), "."));
                 lenta.setWeightLentaKg(String.valueOf(str.get(16)));
-                lenta.setPriceEdeadealKg(StringUtil.cleanAndReplace(String.valueOf(str.get(17)),"."));
-                lenta.setConversionToLentaWeight(StringUtil.cleanAndReplace(String.valueOf(str.get(18)),"."));
+                lenta.setPriceEdeadealKg(StringUtil.cleanAndReplace(String.valueOf(str.get(17)), "."));
+                lenta.setConversionToLentaWeight(StringUtil.cleanAndReplace(String.valueOf(str.get(18)), "."));
                 lenta.setAdditionalField(String.valueOf(str.get(22)));
                 resultList.add(lenta);
                 count++;
@@ -113,27 +111,12 @@ public class LentaService implements FileProcessingService {
         }
     }
 
-    private String getFormattedString(String value, DecimalFormat pattern) {
-        try {
-            LOG.info("Getting formatted string: {}", value);
-
-            if (value.equals("")) {
-                return value;
-            }
-            Float i = Float.parseFloat(value);
-            return pattern.format(i);
-        } catch (NumberFormatException e) {
-            LOG.error("Error formatting string: {}", e.getMessage());
-            return "";
-        }
-    }
-
     private HashSet<LentaReportDTO> getLentaReportDTOList(Collection<Lenta> lentaList, LocalDate afterDate) {
         try {
             LOG.info("Getting LentaReportDTO list...");
             HashSet<LentaReportDTO> lentaReportDTOs = new HashSet<>();
             for (Lenta lenta : lentaList) {
-                if (!lenta.getDateToPromo().equals("")) {
+                if (!lenta.getDateToPromo().isEmpty()) {
                     if (DateUtils.getDate(lenta.getDateToPromo(), LENTA_PATTERN).isAfter(afterDate)) {
                         LentaReportDTO lentaReportDTO = MappingUtils.mapToLentaReportDTO(lenta);
                         lentaReportDTOs.add(lentaReportDTO);
@@ -149,7 +132,7 @@ public class LentaService implements FileProcessingService {
 
     }
 
-// Обработка задания от ленты
+    // Обработка задания от ленты
     public String export(String filePath, File fileName, HttpServletResponse response, String... additionalParams) throws IOException {
         LOG.info("Exporting data...");
         try (Workbook workbook = loadWorkbook(fileName)) {
@@ -180,7 +163,7 @@ public class LentaService implements FileProcessingService {
     }
 
 
-    private Workbook loadWorkbook(File filename) throws IOException {
+    private Workbook loadWorkbook(File filename) {
         LOG.info("Loading workbook...");
         String extension = getExtension(filename);
         try (FileInputStream file = new FileInputStream(filename)) {
@@ -266,6 +249,7 @@ public class LentaService implements FileProcessingService {
             LOG.error("Error adding Lenta: {}", e.getMessage());
         }
     }
+
     private Collection<LentaDTO> getLentaDTOList() {
         try {
             LOG.info("Getting LentaDTO list...");
@@ -284,7 +268,7 @@ public class LentaService implements FileProcessingService {
     }
 
     @Override
-    public String saveAll(String filePath, File transferTo, HttpServletResponse response, String... additionalParams) throws IOException {
+    public String saveAll(String filePath, File transferTo, HttpServletResponse response, String... additionalParams) {
         return null;
     }
 

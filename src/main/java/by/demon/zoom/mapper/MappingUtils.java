@@ -1,15 +1,14 @@
 package by.demon.zoom.mapper;
 
-import by.demon.zoom.domain.*;
-import by.demon.zoom.dto.StatisticDTO;
+import by.demon.zoom.domain.Lenta;
+import by.demon.zoom.domain.Megatop;
+import by.demon.zoom.domain.Product;
+import by.demon.zoom.dto.MegatopDTO;
 import by.demon.zoom.dto.SimpleDTO;
 import by.demon.zoom.dto.lenta.LentaDTO;
-import by.demon.zoom.dto.MegatopDTO;
-import by.demon.zoom.dto.VlookBarDTO;
 import by.demon.zoom.dto.lenta.LentaReportDTO;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -18,51 +17,6 @@ public final class MappingUtils {
 
     private static final List<String> listCompetitors = Arrays.asList("auchan.ru", "lenta.com", "metro-cc.ru", "myspar.ru", "okeydostavka.ru", "perekrestok.ru", "winelab.ru");
     public static final List<String> listUsers = Arrays.asList("zms-cron", "zms-mappings-import", "maudau.com.ua", "detmir.ru-2");
-
-    public static List<VlookBarDTO> mapToVlookBarDto(Product product) {
-        List<VlookBarDTO> list = new ArrayList<>();
-        for (String url : product.getCollectionUrl()) {
-            VlookBarDTO dto = new VlookBarDTO();
-            dto.setId(product.getId());
-            dto.setBar(product.getBar());
-            dto.setUrl(url);
-            list.add(dto);
-        }
-        return list;
-    }
-
-    public static StatisticDTO mapToDetmirDTO(Product product, String showSource, String sourceReplace, String showCompetitorUrl) {
-        StatisticDTO detmirStatDTO = new StatisticDTO();
-        detmirStatDTO.setClient(product.getClient());
-        detmirStatDTO.setIdLink(product.getIdLink());
-        detmirStatDTO.setClientId(product.getId());
-        detmirStatDTO.setParentCategory(product.getParentCategory());
-        detmirStatDTO.setCategory(product.getCategory());
-        detmirStatDTO.setVendor(product.getVendor());
-        detmirStatDTO.setModel(product.getModel());
-        detmirStatDTO.setProductCode(product.getProductCode());
-        detmirStatDTO.setBar(product.getBar());
-        detmirStatDTO.setStatus(product.getStatus());
-        detmirStatDTO.setCompetitorPrice(product.getCompetitorPrice());
-        detmirStatDTO.setCompetitorModel(product.getCompetitorModel());
-        detmirStatDTO.setCompetitorProductCode(product.getCompetitorProductCode());
-        detmirStatDTO.setCompetitorId(product.getCompetitorId());
-        detmirStatDTO.setCompetitor(product.getCompetitor());
-        detmirStatDTO.setOn(product.getOn());
-        if (showSource != null) {
-            detmirStatDTO.setUserAdd(product.getUserAdd());
-        } else if (sourceReplace != null) {
-            if (ifExistCompetitor(product.getUserAdd(), listUsers)) {
-                detmirStatDTO.setUserAdd(product.getUserAdd());
-            } else {
-                detmirStatDTO.setUserAdd("manager");
-            }
-        }
-        if (showCompetitorUrl != null) {
-            detmirStatDTO.setCompetitorUrl(product.getCompetitorUrl());
-        }
-        return detmirStatDTO;
-    }
 
     public static MegatopDTO mapToMegatopDTO(Megatop entity) {
         MegatopDTO megatopDTO = new MegatopDTO();

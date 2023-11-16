@@ -102,7 +102,7 @@ public class SimpleService implements FileProcessingService {
         return (index >= 0 && index < list.size()) ? String.valueOf(list.get(index)) : "";
     }
     @Override
-    public String saveAll(String filePath, File transferTo, HttpServletResponse response, String... additionalParams) throws IOException {
+    public String saveAll(String filePath, File transferTo, HttpServletResponse response, String... additionalParams) {
         return null;
     }
 

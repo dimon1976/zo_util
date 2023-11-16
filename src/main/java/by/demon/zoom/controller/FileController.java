@@ -123,7 +123,7 @@ public class FileController {
 
     private String processFile(String action, MultipartFile multipartFile, String... additionalParams) {
         Object processingService = processingServices.get(action);
-        String result ="";
+        String result;
 //&& processingService instanceof FileProcessingService
         if (ifExist(multipartFile)) {
             String filePath = getFilePath(multipartFile);

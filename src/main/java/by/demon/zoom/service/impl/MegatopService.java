@@ -119,9 +119,6 @@ public class MegatopService implements FileProcessingService {
         megatop.setStatus(getStringValue(str, 19));
         String dateValue = getStringValue(str, 20);
         megatop.setDate(!dateValue.isEmpty() ? DateUtils.getDateTime(dateValue, MEGATOP_PATTERN) : null);
-//        if (!getStringValue(str, 20).isEmpty()) {
-//            megatop.setDate(DateUtils.getDateTime(getStringValue(str, 20), MEGATOP_PATTERN));
-//        }
         megatop.setConcatUrlRostovChildren((getStringValue(str, 18)) + getStringValue(str, 7));
         megatop.setFileName(fileName);
         megatop.setDateTime(instant);

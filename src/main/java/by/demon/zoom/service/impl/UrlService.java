@@ -53,20 +53,17 @@ public class UrlService implements FileProcessingService {
     }
 
     private Collection<UrlDTO> getUrlDTOList(List<List<Object>> excelData) {
-//        Long now = MethodPerformance.start();
-        List<UrlDTO> collect = excelData.stream()
+        return excelData.stream()
                 .flatMap(row -> row.stream()
                         .filter(cell -> cell instanceof String)
                         .map(cell -> (String) cell)
                         .filter(cell -> cell.startsWith("http://") || cell.startsWith("https://"))
                         .map(cell -> new UrlDTO(row.get(0).toString(), cell)))
                 .collect(Collectors.toList());
-//        MethodPerformance.finish(now);
-        return collect;
     }
 
     @Override
-    public String saveAll(String filePath, File transferTo, HttpServletResponse response, String... additionalParams) throws IOException {
+    public String saveAll(String filePath, File transferTo, HttpServletResponse response, String... additionalParams) {
         return null;
     }
 

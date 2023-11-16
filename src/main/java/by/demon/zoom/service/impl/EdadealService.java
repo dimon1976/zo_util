@@ -108,7 +108,7 @@ public class EdadealService implements FileProcessingService {
     }
 
     @Override
-    public String saveAll(String filePath, File transferTo, HttpServletResponse response, String... additionalParams) throws IOException {
+    public String saveAll(String filePath, File transferTo, HttpServletResponse response, String... additionalParams) {
         return null;
     }
 
