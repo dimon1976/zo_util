@@ -21,9 +21,4 @@ public class Urlfrom {
     private String bar;
     private String url;
 
-    public Urlfrom(String idFrom, String bar, String url) {
-        this.idFrom = idFrom;
-        this.bar = bar;
-        this.url = url;
-    }
 }

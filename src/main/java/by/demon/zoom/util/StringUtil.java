@@ -12,7 +12,6 @@ public class StringUtil {
         }
         // Удаление и замена символов
         String cleanedStr = str.replaceAll("[^\\d.,-]", "").trim();
-        String replacedStr = cleanedStr.replaceAll(",", replacement);
-        return replacedStr;
+        return cleanedStr.replaceAll(",", replacement);
     }
 }
