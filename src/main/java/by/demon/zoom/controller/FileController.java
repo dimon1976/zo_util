@@ -138,6 +138,7 @@ public class FileController {
             try {
                 multipartFile.transferTo(transferTo);
                 log.info("File uploaded successfully: {}", getOrgName(multipartFile));
+                // условие для выбора метода в сервисном классе
                 if (action.equals("urlFrom")){
                     Object urlFrom = processingServices.get("vlook");
                     result = ((FileProcessingService) urlFrom).saveAll(filePath, transferTo, response, action);

@@ -48,7 +48,7 @@ public class EdadealService implements FileProcessingService {
         List<List<Object>> resultList = getResultList(originalWb, columns);
         try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
             short skip = 1;
-            excelUtil.exportToWorkbookExcel(header, resultList, out, skip);
+            excelUtil.exportToExcel(header, resultList, out, skip);
             excelUtil.download(fileName, filePath, response);
         }
         LOG.info("Exported data to Excel: {}", filePath);

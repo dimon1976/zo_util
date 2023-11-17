@@ -57,7 +57,7 @@ public class MegatopService implements FileProcessingService {
         megatopCsvRBeanRepository.saveAll(megatopArrayList);
         try (OutputStream out = Files.newOutputStream(of)) {
             short skipLines = 1;
-            excelUtil.exportToWorkbookExcel(header, collect, out, skipLines);
+            excelUtil.exportToExcel(header, collect, out, skipLines);
             excelUtil.download(file.getName(), filePath, response);
             log.info("Data exported successfully to Excel: {}", filePath);
         } catch (IOException e) {

@@ -40,7 +40,7 @@ public class UrlService implements FileProcessingService {
 
             try (OutputStream out = Files.newOutputStream(path)) {
                 short skipLines = 0;
-                excelUtil.exportToWorkbookExcel(HEADER, urlDTOList, out, skipLines);
+                excelUtil.exportToExcel(HEADER, urlDTOList, out, skipLines);
                 excelUtil.download(file.getName(), filePath, response);
             }
 

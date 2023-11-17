@@ -45,7 +45,7 @@ public class SimpleService implements FileProcessingService {
         Collection<SimpleDTO> collect = getSimpleDTOList(productList);
         try (OutputStream out = Files.newOutputStream(of)) {
             short skipLines = 1;
-            excelUtil.exportToWorkbookExcel(header, collect, out, skipLines);
+            excelUtil.exportToExcel(header, collect, out, skipLines);
             excelUtil.download(file.getName(), filePath, response);
             LOG.info("Data exported successfully to Excel: {}", filePath);
         } catch (IOException e) {

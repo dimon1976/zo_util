@@ -57,7 +57,7 @@ public class LentaService implements FileProcessingService {
             try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
                 ExcelUtil<LentaReportDTO> excelUtil = new ExcelUtil<>();
                 short skip = 1;
-                excelUtil.exportToWorkbookExcel(headerLentaReport, lentaReportDTO, out, skip);
+                excelUtil.exportToExcel(headerLentaReport, lentaReportDTO, out, skip);
                 excelUtil.download(file.getName(), filePath, response);
             }
             LOG.info("Report exported successfully: {}", filePath);
@@ -148,7 +148,7 @@ public class LentaService implements FileProcessingService {
                 Collection<LentaDTO> lentaDTOs = getLentaDTOList();
                 try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
                     ExcelUtil<LentaDTO> excelUtil = new ExcelUtil<>();
-                    excelUtil.exportToWorkbookExcel(headerLentaTask, lentaDTOs, fileOutputStream, (short) 0);
+                    excelUtil.exportToExcel(headerLentaTask, lentaDTOs, fileOutputStream, (short) 0);
                     excelUtil.download(file.getName(), filePath, response);
                 }
                 data = new HashMap<>();

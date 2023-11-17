@@ -1,6 +1,7 @@
 package by.demon.zoom.util;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.util.IOUtils;
@@ -36,6 +37,7 @@ public class ExcelUtil<T> {
     private static final String PATTERN_NUMBER = "0.#";
     private static final DecimalFormatSymbols symbols = new DecimalFormatSymbols();
     private static final short DEFAULT_COLUMN_WIDTH = 15;
+    private static final int MAX_COLUMNS = 250;
     private static final String DEFAULT_FONT_NAME = "Calibri";
 
     static {
@@ -45,7 +47,7 @@ public class ExcelUtil<T> {
 
     public static List<List<Object>> readExcel(File file) throws IOException {
         String fileName = file.getName();
-        String extension = fileName.lastIndexOf(".") == -1 ? "" : fileName.substring(fileName.lastIndexOf(".") + 1);
+        String extension = FilenameUtils.getExtension(fileName);
         if (!"xlsx".equals(extension)) {
             throw new IOException("Неподдерживаемый тип файлов");
         }
@@ -110,15 +112,21 @@ public class ExcelUtil<T> {
     }
 
     public static void getRowList(Row row, List<Object> linked) {
-        for (int j = 0; j <= 250; j++) {
-            Cell cell = row.getCell(j);
-            if (cell == null) {
-                linked.add("");
-            } else if (cell.getCellType() == CellType.FORMULA) {
+        for (int j = 0; j <= MAX_COLUMNS; j++) {
+            Cell cell = row.getCell(j, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+            if (cell.getCellType() == CellType.FORMULA) {
                 linked.add(cell.getCellFormula());
             } else {
                 linked.add(getCellValue(cell));
             }
+
+//            if (cell == null) {
+//                linked.add("");
+//            } else if (cell.getCellType() == CellType.FORMULA) {
+//                linked.add(cell.getCellFormula());
+//            } else {
+//                linked.add(getCellValue(cell));
+//            }
         }
     }
 
@@ -221,11 +229,11 @@ public class ExcelUtil<T> {
         return readExcel2007(new FileInputStream(file));
     }
 
-    public void exportToWorkbookExcel(List<String> headers, Collection<T> dataset, OutputStream out, short skip) {
-        exportToWorkbookExcel(Globals.SHEET_NAME, headers, dataset, out, "yyyy-MM-dd", skip);
+    public void exportToExcel(List<String> headers, Collection<T> dataset, OutputStream out, short skip) {
+        exportToExcel(Globals.SHEET_NAME, headers, dataset, out, "yyyy-MM-dd", skip);
     }
 
-    public void exportToWorkbookExcel(List<String> headers, List<List<Object>> dataset, OutputStream out, short skip) {
+    public void exportToExcel(List<String> headers, List<List<Object>> dataset, OutputStream out, short skip) {
         exportObjectToExcel(Globals.SHEET_NAME, headers, dataset, out, "yyyy-MM-dd", skip);
     }
 
@@ -237,7 +245,7 @@ public class ExcelUtil<T> {
      * @param pattern Паттерн для замены
      */
 
-    public void exportToWorkbookExcel(String title, List<String> headers, Collection<T> dataset, OutputStream out, String pattern, short skip) {
+    public void exportToExcel(String title, List<String> headers, Collection<T> dataset, OutputStream out, String pattern, short skip) {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             XSSFSheet sheet = workbook.createSheet(title);
             sheet.setDefaultColumnWidth(DEFAULT_COLUMN_WIDTH);
@@ -256,6 +264,36 @@ public class ExcelUtil<T> {
         } catch (IOException e) {
             LOG.error("Error while exporting Excel: {}", e.getMessage());
             throw new RuntimeException("Error while exporting Excel", e);
+        }
+    }
+
+    public void exportObjectToExcel(String title, List<String> headers, List<List<Object>> dataset, OutputStream out, String pattern, short skip) {
+        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            XSSFSheet sheet = workbook.createSheet(title);
+            sheet.setDefaultColumnWidth(DEFAULT_COLUMN_WIDTH);
+
+            XSSFCellStyle headerStyle = createHeaderStyle(workbook);
+            XSSFCellStyle cellStyle = createCellStyle(workbook);
+
+            createHeaderRow(sheet, headers, headerStyle);
+
+            int rowNum = 0;
+            Iterator<List<Object>> iterator = dataset.iterator();
+            skipRows(iterator, skip);
+            while (iterator.hasNext()) {
+                List<Object> rowData = iterator.next();
+                XSSFRow row = sheet.createRow(++rowNum);
+                int colNum = 0;
+                for (Object value : rowData) {
+                    XSSFCell cell = row.createCell(colNum++);
+                    setCellValue(cell, value, cellStyle, pattern);
+                }
+            }
+
+            workbook.write(out);
+        } catch (IOException e) {
+            LOG.error("Error exporting object to Excel: {}", e.getMessage());
+            throw new RuntimeException("Error exporting object to Excel", e);
         }
     }
 
@@ -296,14 +334,16 @@ public class ExcelUtil<T> {
                 cell.setCellValue(header.get(i));
             }
             sheet.createFreezePane(0, 1);
-            sheet.setAutoFilter(new CellRangeAddress(0,0,0,header.size()-1));
+            sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, header.size() - 1));
         }
     }
 
-    private void skipRows(Iterator<T> iterator, short skip) {
+    private void skipRows(Iterator<?> iterator, int skip) {
         for (int i = 0; i < skip; i++) {
             if (iterator.hasNext()) {
                 iterator.next();
+            } else {
+                break;
             }
         }
     }
@@ -336,7 +376,6 @@ public class ExcelUtil<T> {
         return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 
-    // For ObjectToExcel
     private void setCellValue(XSSFCell cell, Object value, XSSFCellStyle cellStyle, String pattern) {
         cell.setCellStyle(cellStyle);
         if (value == null) {
@@ -372,38 +411,4 @@ public class ExcelUtil<T> {
         cellStyle.setBorderRight(BorderStyle.THIN);
         cellStyle.setBorderTop(BorderStyle.THIN);
     }
-
-
-    public void exportObjectToExcel(String title, List<String> headers, List<List<Object>> dataset, OutputStream out, String pattern, short skip) {
-        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-            XSSFSheet sheet = workbook.createSheet(title);
-            sheet.setDefaultColumnWidth(DEFAULT_COLUMN_WIDTH);
-
-            XSSFCellStyle headerStyle = createHeaderStyle(workbook);
-            XSSFCellStyle cellStyle = createCellStyle(workbook);
-
-            createHeaderRow(sheet, headers, headerStyle);
-
-            int rowNum = 0;
-            int skipCount = 0;
-            for (List<Object> rowData : dataset) {
-                if (skipCount < skip) {
-                    skipCount++;
-                    continue;
-                }
-
-                XSSFRow row = sheet.createRow(rowNum++);
-                int colNum = 0;
-                for (Object value : rowData) {
-                    XSSFCell cell = row.createCell(colNum++);
-                    setCellValue(cell, value, cellStyle, pattern);
-                }
-            }
-            workbook.write(out);
-        } catch (IOException e) {
-            LOG.error("Error exporting object to Excel: {}", e.getMessage());
-            throw new RuntimeException("Error exporting object to Excel", e);
-        }
-    }
-
 }

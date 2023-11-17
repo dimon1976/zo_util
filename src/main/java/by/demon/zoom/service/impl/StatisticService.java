@@ -46,7 +46,7 @@ public class StatisticService implements FileProcessingService {
         try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
             List<String> newHeader = addAdditionalColumnsToString(additionalParams[2], additionalParams[0], additionalParams[3]);
             short skip = 1;
-            excelUtil.exportToWorkbookExcel(newHeader, resultTest, out, skip);
+            excelUtil.exportToExcel(newHeader, resultTest, out, skip);
             excelUtil.download(file.getName(), filePath, response);
         } catch (IOException e) {
             LOG.error("Error exporting data to Excel: {}", e.getMessage(), e);

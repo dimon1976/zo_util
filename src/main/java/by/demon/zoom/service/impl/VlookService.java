@@ -101,7 +101,7 @@ public class VlookService implements FileProcessingService {
             mapTwo.forEach((keyTwo, value) -> mapOne.getOrDefault(keyTwo, Collections.emptySet())
                     .forEach(keyOne -> value.forEach(url -> result.add(new VlookBarDTO(keyOne, keyTwo, url)))));
 
-            excelUtil.exportToWorkbookExcel(header, result, outputStream, skip);
+            excelUtil.exportToExcel(header, result, outputStream, skip);
             excelUtil.download(VLOOK_RESULT, filePath, response);
             log.info("Data exported successfully to Excel: {}", filePath);
         } catch (IOException e) {
