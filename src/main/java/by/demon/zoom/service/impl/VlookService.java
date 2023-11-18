@@ -6,7 +6,7 @@ import by.demon.zoom.domain.vpr.UrlTo;
 import by.demon.zoom.domain.vpr.Urlfrom;
 import by.demon.zoom.dto.VlookBarDTO;
 import by.demon.zoom.service.FileProcessingService;
-import by.demon.zoom.util.ExcelUtil;
+import by.demon.zoom.util.FileDataReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.*;
 
-import static by.demon.zoom.util.ExcelUtil.readExcel;
+import static by.demon.zoom.util.FileDataReader.readExcel;
 import static by.demon.zoom.util.Globals.VLOOK_RESULT;
 
 @Service
@@ -25,11 +25,11 @@ public class VlookService implements FileProcessingService {
 
     private static final Logger log = LoggerFactory.getLogger(VlookService.class);
     private final List<String> header = Arrays.asList("ID", "BAR", "URL");
-    private final ExcelUtil<VlookBarDTO> excelUtil;
+    private final FileDataReader<VlookBarDTO> excelUtil;
     private final UrlToRepository urlToRepository;
     private final UrlFromRepository urlFromRepository;
 
-    public VlookService(ExcelUtil<VlookBarDTO> excelUtil, UrlToRepository urlToRepository, UrlFromRepository urlFromRepository) {
+    public VlookService(FileDataReader<VlookBarDTO> excelUtil, UrlToRepository urlToRepository, UrlFromRepository urlFromRepository) {
         this.excelUtil = excelUtil;
         this.urlToRepository = urlToRepository;
         this.urlFromRepository = urlFromRepository;

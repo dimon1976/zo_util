@@ -6,7 +6,7 @@ import by.demon.zoom.dto.MegatopDTO;
 import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DateUtils;
-import by.demon.zoom.util.ExcelUtil;
+import by.demon.zoom.util.FileDataReader;
 import by.demon.zoom.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static by.demon.zoom.util.ExcelUtil.readExcel;
+import static by.demon.zoom.util.FileDataReader.readExcel;
 
 @Service
 public class MegatopService implements FileProcessingService {
@@ -39,10 +39,10 @@ public class MegatopService implements FileProcessingService {
             "Ростовка дети", "Цвета", "Сезон", "Конкурент", "ID", "Категория", "Бренд", "Модель", "Артикул", "Цена", "Старая цена", "Ссылка на модель", "Статус");
     private final LocalDate beforeDate = LocalDate.of(2020, 8, 1);
     private final MegatopCsvRBeanRepository megatopCsvRBeanRepository;
-    private final ExcelUtil<MegatopDTO> excelUtil;
+    private final FileDataReader<MegatopDTO> excelUtil;
     private final Logger log = LoggerFactory.getLogger(MegatopService.class);
 
-    public MegatopService(MegatopCsvRBeanRepository megatopCsvRBeanRepository, ExcelUtil<MegatopDTO> excelUtil) {
+    public MegatopService(MegatopCsvRBeanRepository megatopCsvRBeanRepository, FileDataReader<MegatopDTO> excelUtil) {
         this.megatopCsvRBeanRepository = megatopCsvRBeanRepository;
         this.excelUtil = excelUtil;
     }

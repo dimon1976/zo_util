@@ -1,8 +1,8 @@
 package by.demon.zoom.service.impl;
 
 import by.demon.zoom.service.FileProcessingService;
-import by.demon.zoom.util.CsvUtil;
-import by.demon.zoom.util.ExcelUtil;
+import by.demon.zoom.util.CsvReader;
+import by.demon.zoom.util.FileDataReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -26,10 +26,10 @@ public class EdadealService implements FileProcessingService {
     private final List<String> header = Arrays.asList("Категория из файла", "Сайт", "ZMS ID", "Категория", "Бренд", "Модель", "Код производителя", "Цена", "Маркетинговое описание", "Маркетинговое описание 3",
             "Маркетинговое описание 4", "Статус", "Ссылка", "Старая цена", "Продавец", "Дата", "Позиция", "Ссылка на родителя");
 
-    private final ExcelUtil<Object> excelUtil;
+    private final FileDataReader<Object> fileDataReader;
 
-    public EdadealService(ExcelUtil<Object> excelUtil) {
-        this.excelUtil = excelUtil;
+    public EdadealService(FileDataReader<Object> excelUtil) {
+        this.fileDataReader = excelUtil;
     }
 
     @Override
@@ -39,17 +39,17 @@ public class EdadealService implements FileProcessingService {
         String extension = fileName.lastIndexOf(".") == -1 ? "" : fileName.substring(fileName.lastIndexOf(".") + 1);
         List<List<Object>> originalWb;
         if ("csv".equals(extension)) {
-            originalWb = CsvUtil.readFile(file);
+            originalWb = CsvReader.readCSV(file);
             fileName = fileName.lastIndexOf(".") == -1 ? "" : fileName.substring(0, fileName.lastIndexOf(".")) + SUFFIX_XLSX;
         } else {
-            originalWb = ExcelUtil.readExcel(file);
+            originalWb = FileDataReader.readExcel(file);
         }
         List<Integer> columns = Arrays.asList(0, 1, 2, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24);
         List<List<Object>> resultList = getResultList(originalWb, columns);
         try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
             short skip = 1;
-            excelUtil.exportToExcel(header, resultList, out, skip);
-            excelUtil.download(fileName, filePath, response);
+            fileDataReader.exportToExcel(header, resultList, out, skip);
+            fileDataReader.download(fileName, filePath, response);
         }
         LOG.info("Exported data to Excel: {}", filePath);
         return filePath;

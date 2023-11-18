@@ -1,8 +1,8 @@
 package by.demon.zoom.service.impl;
 
 import by.demon.zoom.service.FileProcessingService;
-import by.demon.zoom.util.CsvUtil;
-import by.demon.zoom.util.ExcelUtil;
+import by.demon.zoom.util.CsvReader;
+import by.demon.zoom.util.FileDataReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -30,16 +30,16 @@ public class StatisticService implements FileProcessingService {
             "Модель клиента", "Код производителя клиента", "Штрих-код клиента", "Статус клиента", "Цена конкурента",
             "Модель конкурента", "Код производителя конкурента", "ID конкурента", "Конкурент", "Конкурент вкл.");
 
-    private final ExcelUtil<Object> excelUtil;
+    private final FileDataReader<Object> excelUtil;
 
-    public StatisticService(ExcelUtil<Object> excelUtil) {
+    public StatisticService(FileDataReader<Object> excelUtil) {
         this.excelUtil = excelUtil;
     }
 
     public String export(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
         String fileName = file.getName();
         String extension = fileName.lastIndexOf(".") == -1 ? "" : fileName.substring(fileName.lastIndexOf(".") + 1);
-        List<List<Object>> originalWb = "csv".equals(extension) ? CsvUtil.readFile(file) : ExcelUtil.readExcel(file);
+        List<List<Object>> originalWb = "csv".equals(extension) ? CsvReader.readCSV(file) : FileDataReader.readExcel(file);
         List<Integer> columns = Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 19, 20, 22, 23, 24);
         List<Integer> newColumn = getColumnList(additionalParams[0], additionalParams[2], additionalParams[3], columns);
         List<List<Object>> resultTest = getResultList(originalWb, newColumn, additionalParams[1]);

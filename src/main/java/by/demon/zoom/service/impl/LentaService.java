@@ -7,7 +7,7 @@ import by.demon.zoom.dto.lenta.LentaReportDTO;
 import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DateUtils;
-import by.demon.zoom.util.ExcelUtil;
+import by.demon.zoom.util.FileDataReader;
 import by.demon.zoom.util.StringUtil;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
@@ -30,7 +30,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static by.demon.zoom.util.DateUtils.convertToLocalDateViaInstant;
-import static by.demon.zoom.util.ExcelUtil.readExcel;
+import static by.demon.zoom.util.FileDataReader.readExcel;
 
 @Service
 public class LentaService implements FileProcessingService {
@@ -55,7 +55,7 @@ public class LentaService implements FileProcessingService {
             LocalDate afterDate = convertToLocalDateViaInstant(date);
             Collection<LentaReportDTO> lentaReportDTO = getLentaReportDTOList(lentaList, afterDate);
             try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
-                ExcelUtil<LentaReportDTO> excelUtil = new ExcelUtil<>();
+                FileDataReader<LentaReportDTO> excelUtil = new FileDataReader<>();
                 short skip = 1;
                 excelUtil.exportToExcel(headerLentaReport, lentaReportDTO, out, skip);
                 excelUtil.download(file.getName(), filePath, response);
@@ -147,7 +147,7 @@ public class LentaService implements FileProcessingService {
 
                 Collection<LentaDTO> lentaDTOs = getLentaDTOList();
                 try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
-                    ExcelUtil<LentaDTO> excelUtil = new ExcelUtil<>();
+                    FileDataReader<LentaDTO> excelUtil = new FileDataReader<>();
                     excelUtil.exportToExcel(headerLentaTask, lentaDTOs, fileOutputStream, (short) 0);
                     excelUtil.download(file.getName(), filePath, response);
                 }
@@ -206,7 +206,7 @@ public class LentaService implements FileProcessingService {
                     counter++;
                 }
                 List<Object> linked = new LinkedList<>();
-                ExcelUtil.getRowList(row, linked);
+                FileDataReader.getRowList(row, linked);
                 if (countSheet == 0) {
                     data.put(linked.get(0).toString(), new Lenta());
                 }

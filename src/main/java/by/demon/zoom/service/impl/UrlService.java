@@ -2,7 +2,7 @@ package by.demon.zoom.service.impl;
 
 import by.demon.zoom.dto.UrlDTO;
 import by.demon.zoom.service.FileProcessingService;
-import by.demon.zoom.util.ExcelUtil;
+import by.demon.zoom.util.FileDataReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -17,16 +17,16 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static by.demon.zoom.util.ExcelUtil.readExcel;
+import static by.demon.zoom.util.FileDataReader.readExcel;
 
 @Service
 public class UrlService implements FileProcessingService {
 
     private static final Logger LOG = LoggerFactory.getLogger(UrlService.class);
     private static final List<String> HEADER = List.of("ID", "Ссылка конкурент");
-    private final ExcelUtil<UrlDTO> excelUtil;
+    private final FileDataReader<UrlDTO> excelUtil;
 
-    public UrlService(ExcelUtil<UrlDTO> excelUtil) {
+    public UrlService(FileDataReader<UrlDTO> excelUtil) {
         this.excelUtil = excelUtil;
     }
 
