@@ -14,14 +14,11 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * @param <T>
@@ -33,7 +30,6 @@ import java.util.regex.Pattern;
 public class ExcelUtil<T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(ExcelUtil.class);
-    private static final SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private static final String PATTERN_NUMBER = "0.#";
     private static final DecimalFormatSymbols symbols = new DecimalFormatSymbols();
     private static final short DEFAULT_COLUMN_WIDTH = 15;
@@ -114,19 +110,7 @@ public class ExcelUtil<T> {
     public static void getRowList(Row row, List<Object> linked) {
         for (int j = 0; j <= MAX_COLUMNS; j++) {
             Cell cell = row.getCell(j, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
-            if (cell.getCellType() == CellType.FORMULA) {
-                linked.add(cell.getCellFormula());
-            } else {
-                linked.add(getCellValue(cell));
-            }
-
-//            if (cell == null) {
-//                linked.add("");
-//            } else if (cell.getCellType() == CellType.FORMULA) {
-//                linked.add(cell.getCellFormula());
-//            } else {
-//                linked.add(getCellValue(cell));
-//            }
+            linked.add(getCellValue(cell));
         }
     }
 
@@ -152,78 +136,6 @@ public class ExcelUtil<T> {
         }
     }
 
-    public static Object getValueFormula(Cell cell) {
-        Object value;
-        switch (cell.getCachedFormulaResultType()) {
-            case STRING:
-                String temp = cell.getStringCellValue();
-                value = temp.substring(1, temp.length() - 1);
-                break;
-            case NUMERIC:
-                if (DateUtil.isCellDateFormatted(cell)) {
-                    value = ExcelUtil.SDF.format(DateUtil.getJavaDate(cell.getNumericCellValue()));
-                } else {
-                    value = String.valueOf(cell.getNumericCellValue());
-                    value = matchDoneBigDecimal(String.valueOf(value));
-                    value = convertNumByReg(String.valueOf(value));
-                }
-                break;
-            case BOOLEAN:
-                value = cell.getBooleanCellValue();
-                break;
-            case BLANK:
-                value = "";
-                break;
-            default:
-                value = cell.toString();
-        }
-        return value;
-    }
-
-    public static Object getValue(Cell cell) {
-        Object value;
-        switch (cell.getCellType()) {
-            case STRING:
-                value = cell.getStringCellValue();
-                break;
-            case NUMERIC:
-                if (DateUtil.isCellDateFormatted(cell)) {
-                    value = ExcelUtil.SDF.format(DateUtil.getJavaDate(cell.getNumericCellValue()));
-                } else {
-                    value = String.valueOf(cell.getNumericCellValue());
-                    value = matchDoneBigDecimal(String.valueOf(value));
-                    value = convertNumByReg(String.valueOf(value));
-                }
-                break;
-            case BOOLEAN:
-                value = cell.getBooleanCellValue();
-                break;
-            case BLANK:
-                value = "";
-                break;
-            default:
-                value = cell.toString();
-        }
-        return value;
-    }
-
-    public static String matchDoneBigDecimal(String bigDecimal) {
-        boolean flg = Pattern.matches("^-?\\d+(\\.\\d+)?(E-?\\d+)?$", bigDecimal);
-        if (flg) {
-            BigDecimal bd = new BigDecimal(bigDecimal);
-            bigDecimal = bd.toPlainString();
-        }
-        return bigDecimal;
-    }
-
-    public static String convertNumByReg(String number) {
-        Pattern compile = Pattern.compile("^(\\d+)(\\.0*)?$");
-        Matcher matcher = compile.matcher(number);
-        while (matcher.find()) {
-            number = matcher.group(1);
-        }
-        return number;
-    }
 
     private static List<List<Object>> readExcel2007(File file) throws IOException {
         return readExcel2007(new FileInputStream(file));
