@@ -1,7 +1,6 @@
 package by.demon.zoom.util;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.formula.functions.T;
 import org.apache.poi.xssf.usermodel.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,12 +16,11 @@ import static by.demon.zoom.util.WorkbookStyle.*;
 
 @Slf4j
 @Service
-public class DataToExcel {
+public class DataToExcel<T> {
 
 
     private static final Logger LOG = LoggerFactory.getLogger(DataToExcel.class);
     private static final short DEFAULT_COLUMN_WIDTH = 15;
-
 
 
 
@@ -42,7 +40,7 @@ public class DataToExcel {
      * @param pattern Паттерн для замены
      */
 
-    public void exportToExcel(String title, List<String> headers, Collection<T> dataset, OutputStream out, String pattern, short skip) {
+    private void exportToExcel(String title, List<String> headers, Collection<T> dataset, OutputStream out, String pattern, short skip) {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             XSSFSheet sheet = workbook.createSheet(title);
             sheet.setDefaultColumnWidth(DEFAULT_COLUMN_WIDTH);
@@ -64,7 +62,7 @@ public class DataToExcel {
         }
     }
 
-    public void exportObjectToExcel(String title, List<String> headers, List<List<Object>> dataset, OutputStream out, String pattern, short skip) {
+    private void exportObjectToExcel(String title, List<String> headers, List<List<Object>> dataset, OutputStream out, String pattern, short skip) {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             XSSFSheet sheet = workbook.createSheet(title);
             sheet.setDefaultColumnWidth(DEFAULT_COLUMN_WIDTH);

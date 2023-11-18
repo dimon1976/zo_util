@@ -1,8 +1,8 @@
 package by.demon.zoom.service.impl;
 
 import by.demon.zoom.service.FileProcessingService;
-import by.demon.zoom.util.CsvReader;
-import by.demon.zoom.util.FileDataReader;
+import by.demon.zoom.util.DataDownload;
+import by.demon.zoom.util.DataToExcel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -17,6 +17,8 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import static by.demon.zoom.util.FileDataReader.readDataFromFile;
+
 @Service
 public class EdadealService implements FileProcessingService {
 
@@ -26,10 +28,12 @@ public class EdadealService implements FileProcessingService {
     private final List<String> header = Arrays.asList("Категория из файла", "Сайт", "ZMS ID", "Категория", "Бренд", "Модель", "Код производителя", "Цена", "Маркетинговое описание", "Маркетинговое описание 3",
             "Маркетинговое описание 4", "Статус", "Ссылка", "Старая цена", "Продавец", "Дата", "Позиция", "Ссылка на родителя");
 
-    private final FileDataReader<Object> fileDataReader;
+    private final DataToExcel<Object> dataToExcel;
+    private final DataDownload dataDownload;
 
-    public EdadealService(FileDataReader<Object> excelUtil) {
-        this.fileDataReader = excelUtil;
+    public EdadealService(DataToExcel<Object> dataToExcel, DataDownload dataDownload) {
+        this.dataToExcel = dataToExcel;
+        this.dataDownload = dataDownload;
     }
 
     @Override
@@ -37,19 +41,13 @@ public class EdadealService implements FileProcessingService {
         LOG.info("Exporting data...");
         String fileName = file.getName();
         String extension = fileName.lastIndexOf(".") == -1 ? "" : fileName.substring(fileName.lastIndexOf(".") + 1);
-        List<List<Object>> originalWb;
-        if ("csv".equals(extension)) {
-            originalWb = CsvReader.readCSV(file);
-            fileName = fileName.lastIndexOf(".") == -1 ? "" : fileName.substring(0, fileName.lastIndexOf(".")) + SUFFIX_XLSX;
-        } else {
-            originalWb = FileDataReader.readExcel(file);
-        }
+        List<List<Object>> originalWb = readDataFromFile(file);
         List<Integer> columns = Arrays.asList(0, 1, 2, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24);
         List<List<Object>> resultList = getResultList(originalWb, columns);
         try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
             short skip = 1;
-            fileDataReader.exportToExcel(header, resultList, out, skip);
-            fileDataReader.download(fileName, filePath, response);
+            dataToExcel.exportToExcel(header, resultList, out, skip);
+            dataDownload.download(fileName, filePath, response);
         }
         LOG.info("Exported data to Excel: {}", filePath);
         return filePath;

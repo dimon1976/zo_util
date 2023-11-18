@@ -4,7 +4,8 @@ import by.demon.zoom.domain.Product;
 import by.demon.zoom.dto.SimpleDTO;
 import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.service.FileProcessingService;
-import by.demon.zoom.util.FileDataReader;
+import by.demon.zoom.util.DataDownload;
+import by.demon.zoom.util.DataToExcel;
 import by.demon.zoom.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,21 +22,23 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static by.demon.zoom.util.FileDataReader.readExcel;
+import static by.demon.zoom.util.ExcelReader.readExcel;
 
 @Service
 public class SimpleService implements FileProcessingService {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleService.class);
-    private final FileDataReader<SimpleDTO> excelUtil;
+    private final DataToExcel<SimpleDTO> dataToExcel;
+    private final DataDownload dataDownload;
 
     private final List<String> header = Arrays.asList("ID", "Категория 1", "Категория 2", "Категория 3", "Бренд", "Модель", "Цена Simplewine на дату парсинга", "Город", "Конкурент", "Время выкачки"
             , "Дата", "Цена конкурента регуляр (по карте)", "Цена конкурента без карты", "Цена конкурента промо/акция"
             , "Комментарий", "Наименование товара конкурента", "Год конкурента", "Аналог", "Адрес конкурента"
             , "Статус товара (В наличии/Под заказ/Нет в наличии)", "Промо (да/нет)", "Ссылка конкурент", "Ссылка Симпл", "Скриншот");
 
-    public SimpleService(FileDataReader<SimpleDTO> excelUtil) {
-        this.excelUtil = excelUtil;
+    public SimpleService(DataToExcel<SimpleDTO> dataToExcel, DataDownload dataDownload) {
+        this.dataToExcel = dataToExcel;
+        this.dataDownload = dataDownload;
     }
 
     public String export(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
@@ -45,8 +48,8 @@ public class SimpleService implements FileProcessingService {
         Collection<SimpleDTO> collect = getSimpleDTOList(productList);
         try (OutputStream out = Files.newOutputStream(of)) {
             short skipLines = 1;
-            excelUtil.exportToExcel(header, collect, out, skipLines);
-            excelUtil.download(file.getName(), filePath, response);
+            dataToExcel.exportToExcel(header, collect, out, skipLines);
+            dataDownload.download(file.getName(), filePath, response);
             LOG.info("Data exported successfully to Excel: {}", filePath);
         } catch (IOException e) {
             LOG.error("Error exporting data to Excel: {}", e.getMessage(), e);

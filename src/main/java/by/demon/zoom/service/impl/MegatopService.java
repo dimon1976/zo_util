@@ -5,8 +5,9 @@ import by.demon.zoom.domain.Megatop;
 import by.demon.zoom.dto.MegatopDTO;
 import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.service.FileProcessingService;
+import by.demon.zoom.util.DataDownload;
+import by.demon.zoom.util.DataToExcel;
 import by.demon.zoom.util.DateUtils;
-import by.demon.zoom.util.FileDataReader;
 import by.demon.zoom.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static by.demon.zoom.util.FileDataReader.readExcel;
+import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 
 @Service
 public class MegatopService implements FileProcessingService {
@@ -39,26 +40,27 @@ public class MegatopService implements FileProcessingService {
             "Ростовка дети", "Цвета", "Сезон", "Конкурент", "ID", "Категория", "Бренд", "Модель", "Артикул", "Цена", "Старая цена", "Ссылка на модель", "Статус");
     private final LocalDate beforeDate = LocalDate.of(2020, 8, 1);
     private final MegatopCsvRBeanRepository megatopCsvRBeanRepository;
-    private final FileDataReader<MegatopDTO> excelUtil;
+    private final DataToExcel<MegatopDTO> dataToExcel;
+    private final DataDownload dataDownload;
     private final Logger log = LoggerFactory.getLogger(MegatopService.class);
 
-    public MegatopService(MegatopCsvRBeanRepository megatopCsvRBeanRepository, FileDataReader<MegatopDTO> excelUtil) {
+    public MegatopService(MegatopCsvRBeanRepository megatopCsvRBeanRepository, DataToExcel<MegatopDTO> dataToExcel, DataDownload dataDownload) {
         this.megatopCsvRBeanRepository = megatopCsvRBeanRepository;
-        this.excelUtil = excelUtil;
+        this.dataToExcel = dataToExcel;
+        this.dataDownload = dataDownload;
     }
-
 
     public String export(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
         fileName = file.getName();
         Path of = Path.of(filePath);
-        List<List<Object>> lists = readExcel(file);
+        List<List<Object>> lists = readDataFromFile(file);
         Collection<Megatop> megatopArrayList = getMegatopList(lists);
         HashSet<MegatopDTO> collect = getMegatopDTOList(megatopArrayList);
         megatopCsvRBeanRepository.saveAll(megatopArrayList);
         try (OutputStream out = Files.newOutputStream(of)) {
             short skipLines = 1;
-            excelUtil.exportToExcel(header, collect, out, skipLines);
-            excelUtil.download(file.getName(), filePath, response);
+            dataToExcel.exportToExcel(header, collect, out, skipLines);
+            dataDownload.download(file.getName(), filePath, response);
             log.info("Data exported successfully to Excel: {}", filePath);
         } catch (IOException e) {
             log.error("Error exporting data to Excel: {}", e.getMessage(), e);

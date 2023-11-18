@@ -6,7 +6,8 @@ import by.demon.zoom.domain.vpr.UrlTo;
 import by.demon.zoom.domain.vpr.Urlfrom;
 import by.demon.zoom.dto.VlookBarDTO;
 import by.demon.zoom.service.FileProcessingService;
-import by.demon.zoom.util.FileDataReader;
+import by.demon.zoom.util.DataDownload;
+import by.demon.zoom.util.DataToExcel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -17,7 +18,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.*;
 
-import static by.demon.zoom.util.FileDataReader.readExcel;
+import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 import static by.demon.zoom.util.Globals.VLOOK_RESULT;
 
 @Service
@@ -25,19 +26,21 @@ public class VlookService implements FileProcessingService {
 
     private static final Logger log = LoggerFactory.getLogger(VlookService.class);
     private final List<String> header = Arrays.asList("ID", "BAR", "URL");
-    private final FileDataReader<VlookBarDTO> excelUtil;
+    private final DataToExcel<VlookBarDTO> dataToExcel;
+    private final DataDownload dataDownload;
     private final UrlToRepository urlToRepository;
     private final UrlFromRepository urlFromRepository;
 
-    public VlookService(FileDataReader<VlookBarDTO> excelUtil, UrlToRepository urlToRepository, UrlFromRepository urlFromRepository) {
-        this.excelUtil = excelUtil;
+    public VlookService(DataToExcel<VlookBarDTO> dataToExcel, DataDownload dataDownload, UrlToRepository urlToRepository, UrlFromRepository urlFromRepository) {
+        this.dataToExcel = dataToExcel;
+        this.dataDownload = dataDownload;
         this.urlToRepository = urlToRepository;
         this.urlFromRepository = urlFromRepository;
     }
 
     public String saveAll(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
         String fileName = file.getName();
-        List<List<Object>> list = readExcel(file);
+        List<List<Object>> list = readDataFromFile(file);
         if (additionalParams[0].equals("urlFrom")){
             Collection<Urlfrom> urlFromArrayList = convertListUrl(list, Urlfrom.class);
             urlFromRepository.saveAll(urlFromArrayList);
@@ -92,7 +95,7 @@ public class VlookService implements FileProcessingService {
         Map<String, Set<String>> mapTwo = new HashMap<>();
         List<VlookBarDTO> result = new ArrayList<>();
 
-        readExcel(file)
+        readDataFromFile(file)
                 .forEach(objects -> {
                     addMapOne(objects, mapOne);
                     addMapTwo(objects, mapTwo);
@@ -101,8 +104,8 @@ public class VlookService implements FileProcessingService {
             mapTwo.forEach((keyTwo, value) -> mapOne.getOrDefault(keyTwo, Collections.emptySet())
                     .forEach(keyOne -> value.forEach(url -> result.add(new VlookBarDTO(keyOne, keyTwo, url)))));
 
-            excelUtil.exportToExcel(header, result, outputStream, skip);
-            excelUtil.download(VLOOK_RESULT, filePath, response);
+            dataToExcel.exportToExcel(header, result, outputStream, skip);
+            dataDownload.download(VLOOK_RESULT, filePath, response);
             log.info("Data exported successfully to Excel: {}", filePath);
         } catch (IOException e) {
             log.error("Error exporting data to Excel: {}", e.getMessage(), e);

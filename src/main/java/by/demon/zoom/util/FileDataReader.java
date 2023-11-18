@@ -15,13 +15,12 @@ import static by.demon.zoom.util.CsvReader.readCSV;
 import static by.demon.zoom.util.ExcelReader.readExcel;
 
 /**
- * @param <T>
  * @version 1.0
  */
 
 @Slf4j
 @Service
-public class FileDataReader<T> {
+public class FileDataReader {
 
     private static final Logger LOG = LoggerFactory.getLogger(FileDataReader.class);
 
@@ -35,10 +34,11 @@ public class FileDataReader<T> {
             } else if (file.getName().endsWith(".xls") || file.getName().endsWith(".xlsx")) {
                 result = readExcel(file);
             } else {
+                LOG.info("Unsupported file format");
                 throw new UnsupportedOperationException("Unsupported file format");
             }
         } catch (IOException | CsvValidationException e) {
-            System.err.println("Error reading file: " + e.getMessage());
+            LOG.error("Error reading file: {}", e.getMessage());
         }
 
         return result;

@@ -6,8 +6,9 @@ import by.demon.zoom.dto.lenta.LentaDTO;
 import by.demon.zoom.dto.lenta.LentaReportDTO;
 import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.service.FileProcessingService;
+import by.demon.zoom.util.DataDownload;
+import by.demon.zoom.util.DataToExcel;
 import by.demon.zoom.util.DateUtils;
-import by.demon.zoom.util.FileDataReader;
 import by.demon.zoom.util.StringUtil;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
@@ -30,7 +31,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static by.demon.zoom.util.DateUtils.convertToLocalDateViaInstant;
-import static by.demon.zoom.util.FileDataReader.readExcel;
+import static by.demon.zoom.util.ExcelReader.processRow;
+import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 
 @Service
 public class LentaService implements FileProcessingService {
@@ -42,23 +44,27 @@ public class LentaService implements FileProcessingService {
     @Value("${out.path}")
     private String outPath;
     private int countSheet = 0;
+    private final DataDownload dataDownload;
     private final List<String> headerLentaTask = Arrays.asList("Id", "Наименование товара", "Вес", "Цена", "Москва, Нижний новгород", "Ростов-на-Дону", "Санкт-Петербург, Петрозаводск", "Новосибирск, Иркутск, Красноярск", "Екатеринбург", "Саратов, Уфа, Ульяновск", "Штрихкод");
     private final List<String> headerLentaReport = Arrays.asList("Город", "Товар", "Наименование товара", "Цена", "Сеть", "Акц. Цена 1", "Дата начала промо", "Дата окончания промо", "% скидки", "Механика акции", "Фото (ссылка)", "Доп.цена", "Модель", "Вес Едадил", "Вес Едадил, кг", "Вес Ленты", "Вес Ленты, кг", "Цена Едадил за КГ", "Пересчет к весу Ленты", "Доп. поле");
 
+    public LentaService( DataDownload dataDownload) {
+        this.dataDownload = dataDownload;
+    }
 
     public String exportReport(String filePath, File file, HttpServletResponse response, Date date) {
         try {
             LOG.info("Exporting report...");
 
-            List<List<Object>> list = readExcel(file);
+            List<List<Object>> list = readDataFromFile(file);
             Collection<Lenta> lentaList = getResultList(list);
             LocalDate afterDate = convertToLocalDateViaInstant(date);
             Collection<LentaReportDTO> lentaReportDTO = getLentaReportDTOList(lentaList, afterDate);
             try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
-                FileDataReader<LentaReportDTO> excelUtil = new FileDataReader<>();
+                DataToExcel<LentaReportDTO> dataToExcel = new DataToExcel<>();
                 short skip = 1;
-                excelUtil.exportToExcel(headerLentaReport, lentaReportDTO, out, skip);
-                excelUtil.download(file.getName(), filePath, response);
+                dataToExcel.exportToExcel(headerLentaReport, lentaReportDTO, out, skip);
+                dataDownload.download(file.getName(), filePath, response);
             }
             LOG.info("Report exported successfully: {}", filePath);
             return filePath;
@@ -147,9 +153,9 @@ public class LentaService implements FileProcessingService {
 
                 Collection<LentaDTO> lentaDTOs = getLentaDTOList();
                 try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
-                    FileDataReader<LentaDTO> excelUtil = new FileDataReader<>();
-                    excelUtil.exportToExcel(headerLentaTask, lentaDTOs, fileOutputStream, (short) 0);
-                    excelUtil.download(file.getName(), filePath, response);
+                    DataToExcel<LentaDTO> dataToExcel = new DataToExcel<>();
+                    dataToExcel.exportToExcel(headerLentaTask, lentaDTOs, fileOutputStream, (short) 0);
+                    dataDownload.download(file.getName(), filePath, response);
                 }
                 data = new HashMap<>();
 
@@ -206,7 +212,7 @@ public class LentaService implements FileProcessingService {
                     counter++;
                 }
                 List<Object> linked = new LinkedList<>();
-                FileDataReader.getRowList(row, linked);
+                processRow(row, linked);
                 if (countSheet == 0) {
                     data.put(linked.get(0).toString(), new Lenta());
                 }
@@ -216,7 +222,6 @@ public class LentaService implements FileProcessingService {
         } catch (Exception e) {
             LOG.error("Error processing sheet: {}", e.getMessage());
         }
-
     }
 
     // Обработка строки

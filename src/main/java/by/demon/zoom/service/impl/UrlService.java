@@ -2,7 +2,8 @@ package by.demon.zoom.service.impl;
 
 import by.demon.zoom.dto.UrlDTO;
 import by.demon.zoom.service.FileProcessingService;
-import by.demon.zoom.util.FileDataReader;
+import by.demon.zoom.util.DataDownload;
+import by.demon.zoom.util.DataToExcel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -17,31 +18,34 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static by.demon.zoom.util.FileDataReader.readExcel;
+import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 
 @Service
 public class UrlService implements FileProcessingService {
 
     private static final Logger LOG = LoggerFactory.getLogger(UrlService.class);
     private static final List<String> HEADER = List.of("ID", "Ссылка конкурент");
-    private final FileDataReader<UrlDTO> excelUtil;
+    private final DataDownload dataDownload;
+    private final DataToExcel<UrlDTO> dataToExcel;
 
-    public UrlService(FileDataReader<UrlDTO> excelUtil) {
-        this.excelUtil = excelUtil;
+    public UrlService(DataDownload dataDownload, DataToExcel<UrlDTO> dataToExcel) {
+        this.dataDownload = dataDownload;
+        this.dataToExcel = dataToExcel;
     }
+
 
     public String export(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
         LOG.info("Exporting data...");
 
         try {
-            List<List<Object>> excelData = readExcel(file);
+            List<List<Object>> excelData = readDataFromFile(file);
             Collection<UrlDTO> urlDTOList = getUrlDTOList(excelData);
             Path path = Path.of(filePath);
 
             try (OutputStream out = Files.newOutputStream(path)) {
                 short skipLines = 0;
-                excelUtil.exportToExcel(HEADER, urlDTOList, out, skipLines);
-                excelUtil.download(file.getName(), filePath, response);
+                dataToExcel.exportToExcel(HEADER, urlDTOList, out, skipLines);
+                dataDownload.download(file.getName(), filePath, response);
             }
 
             LOG.info("Data exported successfully");

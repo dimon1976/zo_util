@@ -21,6 +21,9 @@ public class DataDownload {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Filename is null");
             return;
         }
+        // Проверяем расширение файла и изменяем его, если необходимо на xlsx
+        filename = filename.toLowerCase().endsWith(".xlsx") ? filename : filename.substring(0, filename.lastIndexOf('.')) + ".xlsx";
+
         LOG.info("Downloading file: {}", filename);
         response.setHeader("Content-Disposition", "attachment;filename=" + new String(filename.getBytes(), StandardCharsets.ISO_8859_1));
         response.setContentType("application/vnd.ms-excel;charset=gb2312");

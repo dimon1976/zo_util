@@ -1,8 +1,8 @@
 package by.demon.zoom.service.impl;
 
 import by.demon.zoom.service.FileProcessingService;
-import by.demon.zoom.util.CsvReader;
-import by.demon.zoom.util.FileDataReader;
+import by.demon.zoom.util.DataDownload;
+import by.demon.zoom.util.DataToExcel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -20,6 +20,7 @@ import java.util.List;
 
 import static by.demon.zoom.mapper.MappingUtils.ifExistCompetitor;
 import static by.demon.zoom.mapper.MappingUtils.listUsers;
+import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 
 @Service
 public class StatisticService implements FileProcessingService {
@@ -30,24 +31,26 @@ public class StatisticService implements FileProcessingService {
             "Модель клиента", "Код производителя клиента", "Штрих-код клиента", "Статус клиента", "Цена конкурента",
             "Модель конкурента", "Код производителя конкурента", "ID конкурента", "Конкурент", "Конкурент вкл.");
 
-    private final FileDataReader<Object> excelUtil;
+    private final DataToExcel<Object> dataToExcel;
+    private final DataDownload dataDownload;
 
-    public StatisticService(FileDataReader<Object> excelUtil) {
-        this.excelUtil = excelUtil;
+    public StatisticService(DataToExcel<Object> dataToExcel, DataDownload dataDownload) {
+        this.dataToExcel = dataToExcel;
+        this.dataDownload = dataDownload;
     }
 
     public String export(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
         String fileName = file.getName();
         String extension = fileName.lastIndexOf(".") == -1 ? "" : fileName.substring(fileName.lastIndexOf(".") + 1);
-        List<List<Object>> originalWb = "csv".equals(extension) ? CsvReader.readCSV(file) : FileDataReader.readExcel(file);
+        List<List<Object>> originalWb = readDataFromFile(file);
         List<Integer> columns = Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 19, 20, 22, 23, 24);
         List<Integer> newColumn = getColumnList(additionalParams[0], additionalParams[2], additionalParams[3], columns);
         List<List<Object>> resultTest = getResultList(originalWb, newColumn, additionalParams[1]);
         try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
             List<String> newHeader = addAdditionalColumnsToString(additionalParams[2], additionalParams[0], additionalParams[3]);
             short skip = 1;
-            excelUtil.exportToExcel(newHeader, resultTest, out, skip);
-            excelUtil.download(file.getName(), filePath, response);
+            dataToExcel.exportToExcel(newHeader, resultTest, out, skip);
+            dataDownload.download(file.getName(), filePath, response);
         } catch (IOException e) {
             LOG.error("Error exporting data to Excel: {}", e.getMessage(), e);
             throw e;

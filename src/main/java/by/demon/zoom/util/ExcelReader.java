@@ -2,7 +2,10 @@ package by.demon.zoom.util;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.util.IOUtils;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
@@ -10,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,7 +47,7 @@ public class ExcelReader {
 
     private static List<List<Object>> readExcel2007(File file) throws IOException {
         List<List<Object>> result = new ArrayList<>();
-                // https://stackoverflow.com/a/75830526
+        // https://stackoverflow.com/a/75830526
         IOUtils.setByteArrayMaxOverride(1000000000);
         try (FileInputStream fis = new FileInputStream(file);
              Workbook workbook = new XSSFWorkbook(fis)) {
@@ -69,7 +73,7 @@ public class ExcelReader {
         }
     }
 
-    private static void processRow(Row row, List<Object> rowValues) {
+    public static void processRow(Row row, List<Object> rowValues) {
         int columnCount = Math.min(row.getLastCellNum(), MAX_COLUMNS);
         for (int colNum = 0; colNum < columnCount; colNum++) {
             Cell cell = row.getCell(colNum, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
@@ -78,15 +82,25 @@ public class ExcelReader {
     }
 
 
-    private static Object getCellValue(Cell cell) {
+    public static Object getCellValue(Cell cell) {
         switch (cell.getCellType()) {
             case STRING:
                 return cell.getStringCellValue();
             case NUMERIC:
-                if (DateUtil.isCellDateFormatted(cell)) {
-                    return cell.getDateCellValue();
+                /*
+                 if (DateUtil.isCellDateFormatted(cell)) {
+                 return cell.getDateCellValue();
+                 } else {
+                 return cell.getNumericCellValue();
+                 }
+                 */
+                double numericValue = cell.getNumericCellValue();
+                long longValue = (long) numericValue; // Проверяем, является ли значение целым числом
+                if (numericValue == longValue) {
+                    return longValue; // Возвращаем целочисленное значение
                 } else {
-                    return cell.getNumericCellValue();
+                    DecimalFormat decimalFormat = new DecimalFormat("#,###.#####"); // Форматирование числа с разделителем ","
+                    return decimalFormat.format(numericValue); // Возвращаем числовое значение с десятичной частью
                 }
             case BOOLEAN:
                 return cell.getBooleanCellValue();
@@ -96,28 +110,4 @@ public class ExcelReader {
                 return "";
         }
     }
-
-//
-//    public static Object getCellValue(Cell cell) {
-//        switch (cell.getCellType()) {
-//            case STRING:
-//                return cell.getStringCellValue();
-//            case NUMERIC:
-//                double numericValue = cell.getNumericCellValue();
-//                long longValue = (long) numericValue; // Проверяем, является ли значение целым числом
-//                if (numericValue == longValue) {
-//                    return longValue; // Возвращаем целочисленное значение
-//                } else {
-//                    DecimalFormat decimalFormat = new DecimalFormat("#,###.#####"); // Форматирование числа с разделителем ","
-//                    return decimalFormat.format(numericValue); // Возвращаем числовое значение с десятичной частью
-//                }
-//            case BOOLEAN:
-//                return cell.getBooleanCellValue();
-//            case FORMULA:
-//                return cell.getCellFormula();
-//            default:
-//                return "";
-//        }
-//    }
-
 }

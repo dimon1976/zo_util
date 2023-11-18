@@ -3,6 +3,7 @@ package by.demon.zoom.controller;
 import by.demon.zoom.domain.Lenta;
 import by.demon.zoom.service.*;
 import by.demon.zoom.service.impl.*;
+import by.demon.zoom.util.DataDownload;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -110,7 +111,7 @@ public class FileController {
             File transferTo = new File(filePath);
             try {
                 multipartFile.transferTo(transferTo);
-                LentaService lentaService = new LentaService();
+                LentaService lentaService = new LentaService(new DataDownload());
                 return lentaService.exportReport(filePath, transferTo, response, lenta.getAfterDate());
             } catch (IllegalStateException | IOException e) {
                 log.error("Error while uploading file: {}", e.getMessage());

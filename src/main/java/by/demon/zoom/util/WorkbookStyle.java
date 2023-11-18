@@ -1,7 +1,5 @@
 package by.demon.zoom.util;
 
-import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.formula.functions.T;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.*;
@@ -19,7 +17,6 @@ import java.util.Iterator;
 import java.util.List;
 
 
-@Slf4j
 @Service
 public class WorkbookStyle {
 
@@ -83,7 +80,7 @@ public class WorkbookStyle {
         }
     }
 
-    public static void populateDataRows(XSSFSheet sheet, Iterator<T> iterator, XSSFCellStyle cellStyle, String pattern) {
+    public static <T extends Object> void populateDataRows(XSSFSheet sheet, Iterator<T> iterator, XSSFCellStyle cellStyle, String pattern) {
         int rowIndex = 0;
         while (iterator.hasNext()) {
             T data = iterator.next();
@@ -100,7 +97,7 @@ public class WorkbookStyle {
                     Object value = getMethod.invoke(data);
                     setCellValue(cell, value, cellStyle, pattern);
                 } catch (Exception e) {
-                    log.error("Error while processing data row: {}", e.getMessage());
+                    LOG.error("Error while processing data row: {}", e.getMessage());
                     throw new RuntimeException("Error while processing data row", e);
                 }
             }
