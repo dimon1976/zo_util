@@ -17,23 +17,88 @@
                     <p>Megatop.by</p>
                 </blockquote>
                 <div class="col-12 col-sm-6">
-                    <form th:action="@{/excel/megatop}" th:method="post" enctype="multipart/form-data">
-                        <label for="megatopReport" class="form-label">Обработка отчета клиента megatop.by (kari, belwest, marko).</label>
-                        <div class="">
-<!--                            <br>-->
-                            <input type="file" class="form-control form-control-sm" name="file" id="megatopReport" aria-describedby="megatopHelp" multiple>
-                            <div id="megatopHelp" class="form-text">Удаляются дубли в отчетах. <br>
-                                В отчете kari удаляются старые записи (старше 01.08.2020)
-                            </div>
-                            <br>
-                            <button class="btn btn-primary">
-                                Загрузить
-                            </button>
-                        </div>
+                    <h2>Upload Files</h2>
+                    <!--                    <form th:action="@{/excel/megatop}" th:method="post" enctype="multipart/form-data">-->
+                    <!--                        <label for="megatopReport" class="form-label">Обработка отчета клиента megatop.by (kari,-->
+                    <!--                            belwest, marko).</label>-->
+                    <!--                        <div class="">-->
+                    <!--                            <select id="uploadLabel" name="uploadLabel" required>-->
+                    <!--                                <option th:each="label : ${recentLabels}" th:value="${label}"-->
+                    <!--                                        th:text="${label}"></option>-->
+                    <!--                                <option value="Custom">Custom</option>-->
+                    <!--                            </select>-->
+                    <!--                            <input type="text" id="customLabel" name="customLabel" placeholder="Enter custom label"-->
+                    <!--                                   style="display:none;">-->
+                    <!--                            <br>-->
+                    <!--                            <input type="file" class="form-control form-control-sm" name="file" id="megatopReport"-->
+                    <!--                                   aria-describedby="megatopHelp" multiple>-->
+                    <!--                            <div id="megatopHelp" class="form-text">Удаляются дубли в отчетах. <br>-->
+                    <!--                                В отчете kari удаляются старые записи (старше 01.08.2020)-->
+                    <!--                            </div>-->
+                    <!--                            <br>-->
+                    <!--                            <button class="btn btn-primary">-->
+                    <!--                                Загрузить-->
+                    <!--                            </button>-->
+                    <!--                        </div>-->
+                    <!--                    </form>-->
+                    <form th:action="@{/excel/megatop}" th:object="${fileForm}" method="post"
+                          enctype="multipart/form-data">
+                        <label for="label">Label:</label>
+                        <!-- Убираем атрибут th:readonly и используем сгенерированную метку -->
+                        <input type="text" id="label" name="label" th:field="*{label}" th:value="${generatedLabel}"/>
+
+                        <br/>
+
+                        <label for="files">Files:</label>
+                        <input type="file" th:field="*{files}" multiple id="files"/>
+
+                        <br/>
+
+                        <input type="submit" value="Upload"/>
+                        <br>
+                        <h2>Latest Labels:</h2>
+                        <!-- Изменяем id атрибута для избежания дублирования -->
+                        <select name="labelSelect" id="labelSelect" th:field="*{label}">
+                            <option th:each="label : ${latestLabels}" th:value="${label}" th:text="${label}"></option>
+                            <option th:value="${generatedLabel}" th:text="${generatedLabel}"></option>
+                        </select>
+                    </form>
+
+
+                    <h2>Download Data</h2>
+                    <form action="/data/download" method="post">
+                        <label for="downloadLabel">Download Label:</label>
+                        <select id="downloadLabel" name="downloadLabel" required>
+                            <option th:each="label : ${recentLabels}" th:value="${label}" th:text="${label}"></option>
+                            <option value="Custom">Custom</option>
+                        </select>
+                        <input type="text" id="customDownloadLabel" name="customDownloadLabel"
+                               placeholder="Enter custom label" style="display:none;">
+                        <br>
+                        <label for="format">Download Format:</label>
+                        <select id="format" name="format" required>
+                            <option value="excel">Excel</option>
+                            <option value="csv">CSV</option>
+                        </select>
+                        <br>
+                        <input type="submit" value="Download">
                     </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.getElementById('uploadLabel').addEventListener('change', function () {
+        const customLabelInput = document.getElementById('customLabel');
+        customLabelInput.style.display = this.value === 'Custom' ? 'inline' : 'none';
+    });
+
+
+    document.getElementById('downloadLabel').addEventListener('change', function () {
+        const customDownloadLabelInput = document.getElementById('customDownloadLabel');
+        customDownloadLabelInput.style.display = this.value === 'Custom' ? 'inline' : 'none';
+    });
+</script>
 </body>

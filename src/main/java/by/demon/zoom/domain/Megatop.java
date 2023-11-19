@@ -48,6 +48,7 @@ public class Megatop {
     private String concatUrlRostovChildren;
     private String fileName;
     private Timestamp dateTime;
+    private String label;
 
     @Override
     public boolean equals(Object o) {

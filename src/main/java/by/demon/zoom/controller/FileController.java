@@ -1,5 +1,6 @@
 package by.demon.zoom.controller;
 
+import by.demon.zoom.domain.FileForm;
 import by.demon.zoom.domain.Lenta;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.service.impl.*;
@@ -16,17 +17,22 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 @Controller
 @RequestMapping("/excel")
 public class FileController {
 
+
+    private static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("dd.MM.yyyy");
+    //    private List<String> recentLabels = new ArrayList<>();
+//    private String lastUploadLabel;
     private final Map<String, Object> processingServices = new HashMap<>();
     private final HttpServletResponse response;
+    private final MegatopService megatopService;
 
     @Value("${temp.path}")
     private String TEMP_PATH;
@@ -39,7 +45,8 @@ public class FileController {
             SimpleService simpleService,
             UrlService urlService,
             EdadealService edadealService,
-            HttpServletResponse response) {
+            HttpServletResponse response, MegatopService megatopService1) {
+        this.megatopService = megatopService1;
         this.processingServices.put("stat", statisticService);
         this.processingServices.put("vlook", vlookService);
         this.processingServices.put("megatop", megatopService);
@@ -69,9 +76,42 @@ public class FileController {
         return processFiles("vlook", multipartFile);
     }
 
+    //    @PostMapping("/megatop/upload")
+//    public @ResponseBody String uploadMegatop(@RequestParam("file") MultipartFile[] multipartFile,
+//                                             @RequestParam(value = "uploadLabel", defaultValue = "") String uploadLabel,
+//                                             RedirectAttributes redirectAttributes,
+//                                             Model model) {
+//        ArrayList<File> files = new ArrayList<>();
+//        if (multipartFile != null) {
+//            for (MultipartFile file : multipartFile) {
+//                String filePath = saveFileAndGetPath(file);
+//                File transferTo = new File(filePath);
+//                files.add(transferTo);
+//            }
+//        }
+//        return megatopService.export(files, uploadLabel);
+////        return processFiles("megatop", multipartFile, uploadLabel);
+//    }
     @PostMapping("/megatop")
-    public @ResponseBody String excelMegatop(@RequestParam("file") MultipartFile[] multipartFile) {
-        return processFiles("megatop", multipartFile);
+    public String handleFileUpload(@ModelAttribute FileForm fileForm) throws IOException {
+        String label = fileForm.getLabel();
+        ArrayList<File> files = new ArrayList<>();
+        if (fileForm.getFiles() != null) {
+            for (MultipartFile file : fileForm.getFiles()) {
+                String filePath = saveFileAndGetPath(file);
+                File transferTo = new File(filePath);
+                files.add(transferTo);
+            }
+        }
+        // Обработка файлов и сохранение в базу данных
+        megatopService.export(files, label);
+
+        // Перенаправление на страницу с выбором метки для выгрузки
+//        ModelAndView modelAndView = new ModelAndView("redirect:/excel/megatop");
+//        modelAndView.addObject("labels", megatopService.getLatestLabels());
+//        modelAndView.addObject("selectedLabel", label);
+
+        return "index";
     }
 
     @PostMapping("/simpleReport")
@@ -200,6 +240,12 @@ public class FileController {
 
     private String getOrgName(MultipartFile multipartFile) {
         return multipartFile.getOriginalFilename();
+    }
+
+    private String generateUniqueLabel() {
+        String datePart = DATE_FORMATTER.format(new Date());
+        String uniquePart = String.format("%09d", ThreadLocalRandom.current().nextLong(1000000000L));
+        return datePart + uniquePart;
     }
 }
 
