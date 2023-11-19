@@ -41,7 +41,6 @@ public class StatisticService implements FileProcessingService {
 
     public String export(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
         String fileName = file.getName();
-        String extension = fileName.lastIndexOf(".") == -1 ? "" : fileName.substring(fileName.lastIndexOf(".") + 1);
         List<List<Object>> originalWb = readDataFromFile(file);
         List<Integer> columns = Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 19, 20, 22, 23, 24);
         List<Integer> newColumn = getColumnList(additionalParams[0], additionalParams[2], additionalParams[3], columns);
@@ -50,7 +49,7 @@ public class StatisticService implements FileProcessingService {
             List<String> newHeader = addAdditionalColumnsToString(additionalParams[2], additionalParams[0], additionalParams[3]);
             short skip = 1;
             dataToExcel.exportToExcel(newHeader, resultTest, out, skip);
-            dataDownload.download(file.getName(), filePath, response);
+            dataDownload.download(fileName, filePath, response);
         } catch (IOException e) {
             LOG.error("Error exporting data to Excel: {}", e.getMessage(), e);
             throw e;

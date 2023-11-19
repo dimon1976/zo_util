@@ -24,7 +24,6 @@ public class EdadealService implements FileProcessingService {
 
     private static final Logger LOG = LoggerFactory.getLogger(EdadealService.class);
     private static final String EXCLUDE_STRING = "от ";
-    private static final String SUFFIX_XLSX = ".xlsx";
     private final List<String> header = Arrays.asList("Категория из файла", "Сайт", "ZMS ID", "Категория", "Бренд", "Модель", "Код производителя", "Цена", "Маркетинговое описание", "Маркетинговое описание 3",
             "Маркетинговое описание 4", "Статус", "Ссылка", "Старая цена", "Продавец", "Дата", "Позиция", "Ссылка на родителя");
 
@@ -40,7 +39,6 @@ public class EdadealService implements FileProcessingService {
     public String export(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
         LOG.info("Exporting data...");
         String fileName = file.getName();
-        String extension = fileName.lastIndexOf(".") == -1 ? "" : fileName.substring(fileName.lastIndexOf(".") + 1);
         List<List<Object>> originalWb = readDataFromFile(file);
         List<Integer> columns = Arrays.asList(0, 1, 2, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24);
         List<List<Object>> resultList = getResultList(originalWb, columns);

@@ -1,7 +1,6 @@
 package by.demon.zoom.util;
 
 import com.opencsv.exceptions.CsvValidationException;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -18,7 +17,6 @@ import static by.demon.zoom.util.ExcelReader.readExcel;
  * @version 1.0
  */
 
-@Slf4j
 @Service
 public class FileDataReader {
 

@@ -38,7 +38,7 @@ public class VlookService implements FileProcessingService {
         this.urlFromRepository = urlFromRepository;
     }
 
-    public String saveAll(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
+    public String saveAll(String filePath, File file, HttpServletResponse response, String... additionalParams) {
         String fileName = file.getName();
         List<List<Object>> list = readDataFromFile(file);
         if (additionalParams[0].equals("urlFrom")){
