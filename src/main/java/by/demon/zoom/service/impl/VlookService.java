@@ -1,9 +1,5 @@
 package by.demon.zoom.service.impl;
 
-import by.demon.zoom.dao.UrlFromRepository;
-import by.demon.zoom.dao.UrlToRepository;
-import by.demon.zoom.domain.vpr.UrlTo;
-import by.demon.zoom.domain.vpr.Urlfrom;
 import by.demon.zoom.dto.VlookBarDTO;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DataDownload;
@@ -28,65 +24,11 @@ public class VlookService implements FileProcessingService {
     private final List<String> header = Arrays.asList("ID", "BAR", "URL");
     private final DataToExcel<VlookBarDTO> dataToExcel;
     private final DataDownload dataDownload;
-    private final UrlToRepository urlToRepository;
-    private final UrlFromRepository urlFromRepository;
 
-    public VlookService(DataToExcel<VlookBarDTO> dataToExcel, DataDownload dataDownload, UrlToRepository urlToRepository, UrlFromRepository urlFromRepository) {
+
+    public VlookService(DataToExcel<VlookBarDTO> dataToExcel, DataDownload dataDownload) {
         this.dataToExcel = dataToExcel;
         this.dataDownload = dataDownload;
-        this.urlToRepository = urlToRepository;
-        this.urlFromRepository = urlFromRepository;
-    }
-
-    public String saveAll(String filePath, File file, HttpServletResponse response, String... additionalParams) {
-        String fileName = file.getName();
-        List<List<Object>> list = readDataFromFile(file);
-        if (additionalParams[0].equals("urlFrom")){
-            Collection<Urlfrom> urlFromArrayList = convertListUrl(list, Urlfrom.class);
-            urlFromRepository.saveAll(urlFromArrayList);
-            return fileName;
-        } else if (additionalParams[0].equals("urlTo")) {
-            Collection<UrlTo> urlToArrayList = convertListUrl(list, UrlTo.class);
-            urlToRepository.saveAll(urlToArrayList);
-        }
-        return fileName;
-    }
-
-
-    private <T> Collection<T> convertListUrl(List<List<Object>> list, Class<T> clazz) {
-        Collection<T> collection = new ArrayList<>();
-        for (List<Object> sublist : list) {
-            if (sublist.size() >= 3) {
-                String idFrom = (String) sublist.get(0);
-                String bar = (String) sublist.get(1);
-                String url = (String) sublist.get(2);
-                if (bar.length() >= 13) {
-                    for (String substring : bar.split(",")) {
-                        String filteredSubstring = substring.replaceAll("[^\\d]", "");
-                        if (filteredSubstring.length() == 13) {
-                            try {
-                                collection.add(clazz.getDeclaredConstructor(String.class, String.class, String.class)
-                                        .newInstance(idFrom, bar, url));
-                            } catch (Exception e) {
-                                log.error("Error occurred while creating Urlfrom object", e);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return collection;
-    }
-
-    public String deleteAll() {
-        try {
-            urlFromRepository.deleteAllInBatch();
-            urlToRepository.deleteAllInBatch();
-            log.info("Таблицы успешно очищены");
-        } catch (Exception e) {
-            log.error("Ошибка при очистке таблиц", e);
-        }
-        return ("Таблицы успешно очищены");
     }
 
     public String export(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {

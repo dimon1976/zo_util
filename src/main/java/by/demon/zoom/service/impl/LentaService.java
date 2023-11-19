@@ -271,15 +271,5 @@ public class LentaService implements FileProcessingService {
             return new ArrayList<>();
         }
     }
-
-    @Override
-    public String saveAll(String filePath, File transferTo, HttpServletResponse response, String... additionalParams) {
-        return null;
-    }
-
-    @Override
-    public String deleteAll() {
-        return null;
-    }
 }
 

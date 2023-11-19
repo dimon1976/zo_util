@@ -103,16 +103,6 @@ public class EdadealService implements FileProcessingService {
         return linked;
     }
 
-    @Override
-    public String saveAll(String filePath, File transferTo, HttpServletResponse response, String... additionalParams) {
-        return null;
-    }
-
-    @Override
-    public String deleteAll() {
-        return null;
-    }
-
     public static Boolean ifExistField(int i, List<Integer> listColumns) {
         LOG.debug("Checking if column {} exists in the list...", i);
         return listColumns.contains(i);

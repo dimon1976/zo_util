@@ -122,14 +122,5 @@ public class StatisticService implements FileProcessingService {
         return listColumns.contains(i);
     }
 
-    @Override
-    public String saveAll(String filePath, File transferTo, HttpServletResponse response, String... additionalParams) {
-        return null;
-    }
-
-    @Override
-    public String deleteAll() {
-        return null;
-    }
 }
 

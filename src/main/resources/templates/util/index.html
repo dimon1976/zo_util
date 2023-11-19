@@ -37,51 +37,6 @@
                 </div>
 
                 <div class="row">
-                    <form th:action="@{/excel/urlFrom}" th:method="post" enctype="multipart/form-data">
-                        <label for="urlFrom" class="form-label">From Импорт ID,BAR,URL в БД</label>
-                        <input type="file" class="form-control form-control-sm" name="file" id="urlFrom"
-                               aria-description="urlFromHelp">
-                        <div id="urlFromHelp" class="form-text">
-                            * Столбец A - Id клиента <br>
-                            * Столбец B - BAR. Все ненужные знаки игнорируются, некорректные ШК (!=13) игнорируются.<br>
-                            Допускается несколько ШК через запятую в одной ячейке<br>
-                            * Столбец C - URL<br></div>
-                        <br>
-                        <button class="btn btn-primary">
-                            Загрузить
-                        </button>
-                    </form>
-                </div>
-
-                <div class="row">
-                    <form th:action="@{/excel/urlTo}" th:method="post" enctype="multipart/form-data">
-                        <label for="urlTo" class="form-label">To Импорт ID,BAR,URL в БД</label>
-                        <input type="file" class="form-control form-control-sm" name="file" id="urlTo"
-                               aria-description="urlToHelp">
-                        <div id="urlToHelp" class="form-text">
-                            * Столбец A - Id клиента <br>
-                            * Столбец B - BAR. Все ненужные знаки игнорируются, некорректные ШК (!=13) игнорируются.<br>
-                            Допускается несколько ШК через запятую в одной ячейке<br>
-                            * Столбец C - URL<br></div>
-                        <br>
-                        <button class="btn btn-primary">
-                            Загрузить
-                        </button>
-                    </form>
-                </div>
-                <div class="row">
-                    <form th:action="@{/excel/deleteAll}" th:method="post">
-                        <div id="deleteAllHelp" class="form-text">
-                            * Полностью очишаем таблицы UrlFrom и UrlTo <br>
-                        </div>
-                        <br>
-                        <button class="btn btn-primary">
-                            Очистить
-                        </button>
-                    </form>
-                </div>
-
-                <div class="row">
                     <form th:action="@{/excel/stat/}" th:method="post" enctype="multipart/form-data">
                         <br>
                         <label for="fileStatistic" class="form-label">Обработка файла статистики</label>

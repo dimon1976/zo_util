@@ -65,17 +65,6 @@ public class UrlService implements FileProcessingService {
                         .map(cell -> new UrlDTO(row.get(0).toString(), cell)))
                 .collect(Collectors.toList());
     }
-
-    @Override
-    public String saveAll(String filePath, File transferTo, HttpServletResponse response, String... additionalParams) {
-        return null;
-    }
-
-    @Override
-    public String deleteAll() {
-        return null;
-    }
-
 }
 
 

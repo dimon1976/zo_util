@@ -34,8 +34,6 @@ public class FileController {
     public FileController(
             StatisticService statisticService,
             VlookService vlookService,
-            VlookService vlookServiceUrlFrom,
-            VlookService vlookServiceUrlTo,
             MegatopService megatopService,
             LentaService lentaService,
             SimpleService simpleService,
@@ -44,8 +42,6 @@ public class FileController {
             HttpServletResponse response) {
         this.processingServices.put("stat", statisticService);
         this.processingServices.put("vlook", vlookService);
-        this.processingServices.put("urlFrom", vlookServiceUrlFrom);
-        this.processingServices.put("urlTo", vlookServiceUrlTo);
         this.processingServices.put("megatop", megatopService);
         this.processingServices.put("lenta", lentaService);
         this.processingServices.put("simple", simpleService);
@@ -94,29 +90,12 @@ public class FileController {
         return processFiles("lenta", multipartFile);
     }
 
-    @PostMapping("/urlFrom")
-    public @ResponseBody String excelUrlFrom(@RequestParam("file") MultipartFile[] multipartFile) {
-        return processFiles("urlFrom", multipartFile);
-    }
-
-    @PostMapping("/urlTo")
-    public @ResponseBody String excelUrlTo(@RequestParam("file") MultipartFile[] multipartFile) {
-        return processFiles("urlTo", multipartFile);
-    }
-
-    @PostMapping("/deleteAll")
-    public @ResponseBody String excelDeleteAll() {
-        Object deleteAll = processingServices.get("vlook");
-        return ((FileProcessingService) deleteAll).deleteAll();
-    }
-
 
     @PostMapping("/lentaReport")
     public @ResponseBody String excelLentaReport(@ModelAttribute("lenta") Lenta lenta
             , @RequestParam("file") MultipartFile multipartFile) {
         if (ifExist(multipartFile)) {
             String filePath = saveFileAndGetPath(multipartFile);
-//            File transferTo = new File(filePath);
             try {
                 multipartFile.transferTo(new File(filePath));
                 LentaService lentaService = new LentaService(new DataDownload());
@@ -138,7 +117,7 @@ public class FileController {
         }
         for (MultipartFile file : multipartFile) {
             if (ifExist(file)) {
-                String processSingleFile = processSingleFile(action, additionalParams, file, processingService);
+                String processSingleFile = processSingleFile(additionalParams, file, processingService);
                 String filePath = getFilePath(file);
                 cleanupTempFile(new File(filePath));
                 if (processSingleFile != null) return processSingleFile;
@@ -148,20 +127,12 @@ public class FileController {
     }
 
     @Nullable
-    private String processSingleFile(String action, String[] additionalParams, MultipartFile file, FileProcessingService processingService) {
+    private String processSingleFile(String[] additionalParams, MultipartFile file, FileProcessingService processingService) {
         String filePath = saveFileAndGetPath(file);
         // Создаем директорию, если она не существует
         createTempDirectory();
-
         try {
-            // условие для выбора метода в сервисном классе
-            if (action.equals("urlFrom")) {
-                processingService.saveAll(filePath, new File(filePath), response, action);
-            } else if (action.equals("urlTo")) {
-                processingService.saveAll(filePath, new File(filePath), response, action);
-            } else {
-                processingService.export(filePath, new File(filePath), response, additionalParams);
-            }
+            processingService.export(filePath, new File(filePath), response, additionalParams);
         } catch (IllegalStateException | IOException e) {
             log.error("Error while uploading file: {}", e.getMessage());
             // Если обработка не удалась, файл остается на месте

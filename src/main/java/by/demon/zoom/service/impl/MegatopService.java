@@ -130,14 +130,4 @@ public class MegatopService implements FileProcessingService {
     private String getStringValue(List<Object> list, int index) {
         return (index >= 0 && index < list.size()) ? String.valueOf(list.get(index)) : "";
     }
-
-    @Override
-    public String saveAll(String filePath, File transferTo, HttpServletResponse response, String[] additionalParams) {
-        return null;
-    }
-
-    @Override
-    public String deleteAll() {
-        return null;
-    }
 }
