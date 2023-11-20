@@ -50,7 +50,7 @@ public class DataToExcel<T> {
      * @param skip    Количество строк для пропуска
      */
 
-    public void exportToExcel(List<String> headers, Collection<T> dataset, OutputStream out, short skip) {
+    public void exportToExcel(List<String> headers, Collection<T> dataset, OutputStream out, int skip) {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             XSSFSheet sheet = workbook.createSheet(Globals.SHEET_NAME);
             sheet.setDefaultColumnWidth(DEFAULT_COLUMN_WIDTH);
@@ -72,7 +72,7 @@ public class DataToExcel<T> {
         }
     }
 
-    private void exportObjectToExcel(List<String> headers, List<List<Object>> dataset, OutputStream out, short skip) {
+    private void exportObjectToExcel(List<String> headers, List<List<Object>> dataset, OutputStream out, int skip) {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             XSSFSheet sheet = workbook.createSheet(Globals.SHEET_NAME);
             sheet.setDefaultColumnWidth(DEFAULT_COLUMN_WIDTH);

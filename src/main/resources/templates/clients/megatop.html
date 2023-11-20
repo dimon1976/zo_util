@@ -41,14 +41,7 @@
                     <!--                            </button>-->
                     <!--                        </div>-->
                     <!--                    </form>-->
-                    <form th:action="@{/excel/megatop}" th:object="${fileForm}" method="post"
-                          enctype="multipart/form-data">
-                        <label for="label">Label:</label>
-                        <!-- Убираем атрибут th:readonly и используем сгенерированную метку -->
-                        <input type="text" id="label" name="label" th:field="*{label}" th:value="${generatedLabel}"/>
-
-                        <br/>
-
+                    <form th:action="@{/excel/megatop/upload}" th:object="${fileForm}" method="post" enctype="multipart/form-data">
                         <label for="files">Files:</label>
                         <input type="file" th:field="*{files}" multiple id="files"/>
 
@@ -59,17 +52,18 @@
                         <h2>Latest Labels:</h2>
                         <!-- Изменяем id атрибута для избежания дублирования -->
                         <select name="labelSelect" id="labelSelect" th:field="*{label}">
-                            <option th:each="label : ${latestLabels}" th:value="${label}" th:text="${label}"></option>
                             <option th:value="${generatedLabel}" th:text="${generatedLabel}"></option>
+                            <br>
+                            <option th:each="label : ${latestLabels}" th:value="${label}" th:text="${label}"></option>
                         </select>
                     </form>
 
 
                     <h2>Download Data</h2>
-                    <form action="/data/download" method="post">
+                    <form th:action="@{/excel/megatop/download}" method="post">
                         <label for="downloadLabel">Download Label:</label>
                         <select id="downloadLabel" name="downloadLabel" required>
-                            <option th:each="label : ${recentLabels}" th:value="${label}" th:text="${label}"></option>
+                            <option th:each="label : ${latestLabels}" th:value="${label}" th:text="${label}"></option>
                             <option value="Custom">Custom</option>
                         </select>
                         <input type="text" id="customDownloadLabel" name="customDownloadLabel"

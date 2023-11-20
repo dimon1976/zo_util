@@ -1,6 +1,6 @@
 package by.demon.zoom.service.impl;
 
-import by.demon.zoom.dao.MegatopCsvRBeanRepository;
+import by.demon.zoom.dao.MegatopRepository;
 import by.demon.zoom.domain.Megatop;
 import by.demon.zoom.dto.MegatopDTO;
 import by.demon.zoom.mapper.MappingUtils;
@@ -9,20 +9,23 @@ import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.DataToExcel;
 import by.demon.zoom.util.DateUtils;
 import by.demon.zoom.util.StringUtil;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
@@ -30,17 +33,18 @@ import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 @Service
 public class MegatopService implements FileProcessingService {
 
+    private static final Logger LOG = LoggerFactory.getLogger(MegatopService.class);
     private static final DateTimeFormatter MEGATOP_PATTERN = DateTimeFormatter.ofPattern("dd.MM.yyyy H:m");
     private final List<String> header = Arrays.asList("Категория 1", "Категория", "Высота каблука", "Коллекция", "Конструкция верх", "Материал верха", "Материал подкладки",
             "Ростовка дети", "Цвета", "Сезон", "Конкурент", "ID", "Категория", "Бренд", "Модель", "Артикул", "Цена", "Старая цена", "Ссылка на модель", "Статус");
     private final LocalDate beforeDate = LocalDate.of(2020, 8, 1);
-    private final MegatopCsvRBeanRepository megatopCsvRBeanRepository;
+    private final MegatopRepository megatopRepository;
     private final DataToExcel<MegatopDTO> dataToExcel;
     private final DataDownload dataDownload;
     private final Logger log = LoggerFactory.getLogger(MegatopService.class);
 
-    public MegatopService(MegatopCsvRBeanRepository megatopCsvRBeanRepository, DataToExcel<MegatopDTO> dataToExcel, DataDownload dataDownload) {
-        this.megatopCsvRBeanRepository = megatopCsvRBeanRepository;
+    public MegatopService(MegatopRepository megatopRepository, DataToExcel<MegatopDTO> dataToExcel, DataDownload dataDownload) {
+        this.megatopRepository = megatopRepository;
         this.dataToExcel = dataToExcel;
         this.dataDownload = dataDownload;
     }
@@ -49,10 +53,35 @@ public class MegatopService implements FileProcessingService {
         for (File file : files) {
             List<List<Object>> lists = readDataFromFile(file);
             Collection<Megatop> megatopArrayList = getMegatopList(lists, label, file);
-            megatopCsvRBeanRepository.saveAll(megatopArrayList);
+            megatopRepository.saveAll(megatopArrayList);
             log.info("File {} processed and saved successfully.", file.getName());
         }
         return "All files processed and saved successfully.";
+    }
+
+    public void exportToFile(String label, HttpServletResponse response) throws IOException {
+        List<Megatop> megatopByLabel = getMegatopByLabel(label);
+        HashSet<MegatopDTO> megatopDTOList = getMegatopDTOList(megatopByLabel);
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+//            short skipLines = 1;
+            dataToExcel.exportToExcel(header, megatopDTOList, out, 0);
+            byte[] data = out.toByteArray();
+            File tempFile = File.createTempFile("megatop"+LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")), ".xlsx", new File("C:/temp"));
+            String filePath = tempFile.getAbsolutePath();
+            try (FileOutputStream fileOutputStream = new FileOutputStream(tempFile)) {
+                fileOutputStream.write(data);
+            }
+            dataDownload.download(tempFile.getName(), filePath, response);
+            LOG.info("Data exported successfully to Excel: {}", tempFile.getName());
+        } catch (IOException e) {
+            LOG.error("Error exporting data to Excel: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+
+    private List<Megatop> getMegatopByLabel(String label) {
+        return megatopRepository.findByLabel(label);
     }
 
     private HashSet<MegatopDTO> getMegatopDTOList(Collection<Megatop> megatopList) {
@@ -129,9 +158,8 @@ public class MegatopService implements FileProcessingService {
 // Генерация уникальной метки
 
     public String generateLabel() {
-        String currentDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
-        String randomSuffix = RandomStringUtils.randomAlphanumeric(6);
-        return currentDate + "-" + randomSuffix;
+        //        String randomSuffix = RandomStringUtils.randomAlphanumeric(6);
+        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy:hh-mm-ss"));
     }
 
     private String getStringValue(List<Object> list, int index) {
@@ -145,18 +173,12 @@ public class MegatopService implements FileProcessingService {
 
     public List<String> getLatestLabels() {
         // Получаем последние 10 сохраненных меток из базы данных
-//        return megatopCsvRBeanRepository.findDistinctLabels().subList(0, Math.min(10, megatopCsvRBeanRepository.findDistinctLabels().size()));
-//        List<Megatop> megatopList = megatopCsvRBeanRepository.findDistinctByFileName();
-//        ArrayList<String> listLatestLabels = new ArrayList<>();
-//        for (Megatop megatop : megatopList) {
-//            listLatestLabels.add(megatop.getLabel());
-//        }
-//        return listLatestLabels;
-        return new ArrayList<>();
+        Pageable pageable = PageRequest.of(0, 10);
+        return megatopRepository.findTop10DistinctLabels(pageable);
     }
 
     public List<Megatop> getFilesByLabel(String label) {
         // Получаем файлы по метке из базы данных
-        return megatopCsvRBeanRepository.findByLabel(label);
+        return megatopRepository.findByLabel(label);
     }
 }

@@ -92,7 +92,7 @@ public class FileController {
 //        return megatopService.export(files, uploadLabel);
 ////        return processFiles("megatop", multipartFile, uploadLabel);
 //    }
-    @PostMapping("/megatop")
+    @PostMapping("/megatop/upload")
     public String handleFileUpload(@ModelAttribute FileForm fileForm) throws IOException {
         String label = fileForm.getLabel();
         ArrayList<File> files = new ArrayList<>();
@@ -105,12 +105,13 @@ public class FileController {
         }
         // Обработка файлов и сохранение в базу данных
         megatopService.export(files, label);
-
-        // Перенаправление на страницу с выбором метки для выгрузки
-//        ModelAndView modelAndView = new ModelAndView("redirect:/excel/megatop");
-//        modelAndView.addObject("labels", megatopService.getLatestLabels());
-//        modelAndView.addObject("selectedLabel", label);
-
+        return "redirect:/clients/megatop";
+    }
+    @PostMapping("/megatop/download")
+    public String downloadData(@RequestParam(value = "downloadLabel", required = false) String label,
+                               @RequestParam(value = "format", required = false) String format,
+                               HttpServletResponse response) throws IOException {
+        megatopService.exportToFile(label,response);
         return "index";
     }
 
