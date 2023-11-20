@@ -18,8 +18,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Controller
@@ -93,7 +95,7 @@ public class FileController {
 ////        return processFiles("megatop", multipartFile, uploadLabel);
 //    }
     @PostMapping("/megatop/upload")
-    public String handleFileUpload(@ModelAttribute FileForm fileForm) throws IOException {
+    public String handleFileUpload(@ModelAttribute FileForm fileForm) {
         String label = fileForm.getLabel();
         ArrayList<File> files = new ArrayList<>();
         if (fileForm.getFiles() != null) {
@@ -243,10 +245,5 @@ public class FileController {
         return multipartFile.getOriginalFilename();
     }
 
-    private String generateUniqueLabel() {
-        String datePart = DATE_FORMATTER.format(new Date());
-        String uniquePart = String.format("%09d", ThreadLocalRandom.current().nextLong(1000000000L));
-        return datePart + uniquePart;
-    }
 }
 

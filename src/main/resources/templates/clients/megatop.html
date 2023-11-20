@@ -53,7 +53,6 @@
                         <!-- Изменяем id атрибута для избежания дублирования -->
                         <select name="labelSelect" id="labelSelect" th:field="*{label}">
                             <option th:value="${generatedLabel}" th:text="${generatedLabel}"></option>
-                            <br>
                             <option th:each="label : ${latestLabels}" th:value="${label}" th:text="${label}"></option>
                         </select>
                     </form>
@@ -66,8 +65,6 @@
                             <option th:each="label : ${latestLabels}" th:value="${label}" th:text="${label}"></option>
                             <option value="Custom">Custom</option>
                         </select>
-                        <input type="text" id="customDownloadLabel" name="customDownloadLabel"
-                               placeholder="Enter custom label" style="display:none;">
                         <br>
                         <label for="format">Download Format:</label>
                         <select id="format" name="format" required>
