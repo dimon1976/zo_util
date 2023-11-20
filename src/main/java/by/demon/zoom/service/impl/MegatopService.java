@@ -16,7 +16,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -41,7 +44,6 @@ public class MegatopService implements FileProcessingService {
     private final MegatopRepository megatopRepository;
     private final DataToExcel<MegatopDTO> dataToExcel;
     private final DataDownload dataDownload;
-    private final Logger log = LoggerFactory.getLogger(MegatopService.class);
 
     public MegatopService(MegatopRepository megatopRepository, DataToExcel<MegatopDTO> dataToExcel, DataDownload dataDownload) {
         this.megatopRepository = megatopRepository;
@@ -54,23 +56,29 @@ public class MegatopService implements FileProcessingService {
             List<List<Object>> lists = readDataFromFile(file);
             Collection<Megatop> megatopArrayList = getMegatopList(lists, label, file);
             megatopRepository.saveAll(megatopArrayList);
-            log.info("File {} processed and saved successfully.", file.getName());
+            LOG.info("File {} processed and saved successfully.", file.getName());
         }
         return "All files processed and saved successfully.";
     }
 
     public void exportToFile(String label, HttpServletResponse response) throws IOException {
-        List<Megatop> megatopByLabel = getMegatopByLabel(label);
-        HashSet<MegatopDTO> megatopDTOList = getMegatopDTOList(megatopByLabel);
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-//            short skipLines = 1;
-            dataToExcel.exportToExcel(header, megatopDTOList, out, 0);
-            byte[] data = out.toByteArray();
-            File tempFile = File.createTempFile("megatop"+LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")), ".xlsx", new File("C:/temp"));
+        try {
+            List<Megatop> megatopByLabel = getMegatopByLabel(label);
+            HashSet<MegatopDTO> megatopDTOList = getMegatopDTOList(megatopByLabel);
+
+            // Создаем временный файл и записываем в него данные
+            String timestampLabel = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+            File tempFile = File.createTempFile("megatop-" + timestampLabel, ".xlsx", new File("C:/temp"));
             String filePath = tempFile.getAbsolutePath();
-            try (FileOutputStream fileOutputStream = new FileOutputStream(tempFile)) {
-                fileOutputStream.write(data);
+
+            // Экспортируем данные в Excel
+            try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                dataToExcel.exportToExcel(header, megatopDTOList, out, 0);
+                byte[] data = out.toByteArray();
+                Files.write(tempFile.toPath(), data);
             }
+
+            // Скачиваем файл
             dataDownload.download(tempFile.getName(), filePath, response);
             LOG.info("Data exported successfully to Excel: {}", tempFile.getName());
         } catch (IOException e) {
@@ -92,7 +100,6 @@ public class MegatopService implements FileProcessingService {
                 .map(MappingUtils::mapToMegatopDTO)
                 .collect(Collectors.toCollection(HashSet::new));
     }
-
 
     private Collection<Megatop> getMegatopList(List<List<Object>> lists, String label, File file) {
         return lists.stream()
@@ -132,33 +139,8 @@ public class MegatopService implements FileProcessingService {
         return megatop;
     }
 
-
-    //    }
-//        return filePath;
-//        }
-//            throw e;
-//            log.error("Error exporting data to Excel: {}", e.getMessage(), e);
-//        } catch (IOException e) {
-//            dataDownload.download(file.getName(), filePath, response);
-//            log.info("Data exported successfully to Excel: {}", filePath);
-//            dataToExcel.exportToExcel(header, collect, out, skipLines);
-//            short skipLines = 1;
-//        try (OutputStream out = Files.newOutputStream(of)) {
-//        HashSet<MegatopDTO> collect = getMegatopDTOList(megatopArrayList);
-//        megatopCsvRBeanRepository.saveAll(megatopArrayList);
-//        Collection<Megatop> megatopArrayList = getMegatopList(lists);
-//
-//        List<List<Object>> lists = readDataFromFile(file);
-//
-//        Path of = Path.of(filePath);
-//        fileName = file.getName();
-//    public String export(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
-
-
-// Генерация уникальной метки
-
+    // Генерация уникальной метки
     public String generateLabel() {
-        //        String randomSuffix = RandomStringUtils.randomAlphanumeric(6);
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy:hh-mm-ss"));
     }
 
@@ -175,10 +157,5 @@ public class MegatopService implements FileProcessingService {
         // Получаем последние 10 сохраненных меток из базы данных
         Pageable pageable = PageRequest.of(0, 10);
         return megatopRepository.findTop10DistinctLabels(pageable);
-    }
-
-    public List<Megatop> getFilesByLabel(String label) {
-        // Получаем файлы по метке из базы данных
-        return megatopRepository.findByLabel(label);
     }
 }
