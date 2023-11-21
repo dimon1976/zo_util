@@ -11,6 +11,7 @@ import by.demon.zoom.util.DateUtils;
 import by.demon.zoom.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -35,6 +37,9 @@ import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 
 @Service
 public class MegatopService implements FileProcessingService {
+
+    @Value("${temp.path}")
+    private String TEMP_PATH;
 
     private static final Logger LOG = LoggerFactory.getLogger(MegatopService.class);
     private static final DateTimeFormatter MEGATOP_PATTERN = DateTimeFormatter.ofPattern("dd.MM.yyyy H:m");
@@ -67,26 +72,24 @@ public class MegatopService implements FileProcessingService {
             HashSet<MegatopDTO> megatopDTOList = getMegatopDTOList(megatopByLabel);
 
             // Создаем временный файл и записываем в него данные
-            String timestampLabel = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
-            File tempFile = File.createTempFile("megatop-" + timestampLabel, ".xlsx", new File("C:/temp"));
-            String filePath = tempFile.getAbsolutePath();
+            String timestampLabel = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss"));
+            Path path = Path.of(TEMP_PATH, "report-megatop-" + timestampLabel + ".xlsx");
 
             // Экспортируем данные в Excel
             try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
                 dataToExcel.exportToExcel(header, megatopDTOList, out, 0);
                 byte[] data = out.toByteArray();
-                Files.write(tempFile.toPath(), data);
+                Files.write(path, data);
             }
 
             // Скачиваем файл
-            dataDownload.download(tempFile.getName(), filePath, response);
-            LOG.info("Data exported successfully to Excel: {}", tempFile.getName());
+            dataDownload.download(path.getFileName().toString(), path.toString(), response);
+            LOG.info("Data exported successfully to Excel: {}", path.getFileName().toString());
         } catch (IOException e) {
             LOG.error("Error exporting data to Excel: {}", e.getMessage(), e);
             throw e;
         }
     }
-
 
     private List<Megatop> getMegatopByLabel(String label) {
         return megatopRepository.findByLabel(label);

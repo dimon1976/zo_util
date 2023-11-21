@@ -17,7 +17,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,10 +27,6 @@ import java.util.Objects;
 @RequestMapping("/excel")
 public class FileController {
 
-
-    private static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("dd.MM.yyyy");
-    //    private List<String> recentLabels = new ArrayList<>();
-//    private String lastUploadLabel;
     private final Map<String, Object> processingServices = new HashMap<>();
     private final HttpServletResponse response;
     private final MegatopService megatopService;
@@ -78,24 +73,8 @@ public class FileController {
         return processFiles("vlook", multipartFile);
     }
 
-    //    @PostMapping("/megatop/upload")
-//    public @ResponseBody String uploadMegatop(@RequestParam("file") MultipartFile[] multipartFile,
-//                                             @RequestParam(value = "uploadLabel", defaultValue = "") String uploadLabel,
-//                                             RedirectAttributes redirectAttributes,
-//                                             Model model) {
-//        ArrayList<File> files = new ArrayList<>();
-//        if (multipartFile != null) {
-//            for (MultipartFile file : multipartFile) {
-//                String filePath = saveFileAndGetPath(file);
-//                File transferTo = new File(filePath);
-//                files.add(transferTo);
-//            }
-//        }
-//        return megatopService.export(files, uploadLabel);
-////        return processFiles("megatop", multipartFile, uploadLabel);
-//    }
     @PostMapping("/megatop/upload")
-    public String handleFileUpload(@ModelAttribute FileForm fileForm) {
+    public @ResponseBody String handleFileUpload(@ModelAttribute FileForm fileForm) {
         String label = fileForm.getLabel();
         ArrayList<File> files = new ArrayList<>();
         if (fileForm.getFiles() != null) {
@@ -107,10 +86,12 @@ public class FileController {
         }
         // Обработка файлов и сохранение в базу данных
         megatopService.export(files, label);
-        return "redirect:/clients/megatop";
+        return "index";
     }
+
+
     @PostMapping("/megatop/download")
-    public String downloadData(@RequestParam(value = "downloadLabel", required = false) String label,
+    public @ResponseBody String downloadData(@RequestParam(value = "downloadLabel", required = false) String label,
                                @RequestParam(value = "format", required = false) String format,
                                HttpServletResponse response) throws IOException {
         megatopService.exportToFile(label,response);
