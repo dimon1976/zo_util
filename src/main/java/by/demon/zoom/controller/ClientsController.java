@@ -4,6 +4,7 @@ import by.demon.zoom.domain.Edadeal;
 import by.demon.zoom.domain.FileForm;
 import by.demon.zoom.domain.Lenta;
 import by.demon.zoom.service.impl.MegatopService;
+import by.demon.zoom.util.MethodPerformance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -32,7 +33,9 @@ public class ClientsController {
     @GetMapping("/megatop")
     public String megatop(Model model) {
         model.addAttribute("fileForm", new FileForm());
+        Long start = MethodPerformance.start();
         model.addAttribute("latestLabels", megatopService.getLatestLabels());
+        MethodPerformance.finish(start,"выборки из базы");
         model.addAttribute("generatedLabel", megatopService.generateLabel());
         return "/clients/megatop";
     }
