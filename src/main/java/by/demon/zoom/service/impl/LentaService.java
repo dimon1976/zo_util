@@ -48,7 +48,7 @@ public class LentaService implements FileProcessingService {
     private final List<String> headerLentaTask = Arrays.asList("Id", "Наименование товара", "Вес", "Цена", "Москва, Нижний новгород", "Ростов-на-Дону", "Санкт-Петербург, Петрозаводск", "Новосибирск, Иркутск, Красноярск", "Екатеринбург", "Саратов, Уфа, Ульяновск", "Штрихкод");
     private final List<String> headerLentaReport = Arrays.asList("Город", "Товар", "Наименование товара", "Цена", "Сеть", "Акц. Цена 1", "Дата начала промо", "Дата окончания промо", "% скидки", "Механика акции", "Фото (ссылка)", "Доп.цена", "Модель", "Вес Едадил", "Вес Едадил, кг", "Вес Ленты", "Вес Ленты, кг", "Цена Едадил за КГ", "Пересчет к весу Ленты", "Доп. поле");
 
-    public LentaService( DataDownload dataDownload) {
+    public LentaService(DataDownload dataDownload) {
         this.dataDownload = dataDownload;
     }
 
@@ -139,7 +139,7 @@ public class LentaService implements FileProcessingService {
     }
 
     // Обработка задания от ленты
-    public String export(String filePath, File fileName, HttpServletResponse response, String... additionalParams) throws IOException {
+    public String readFile(String filePath, File fileName, HttpServletResponse response, String... additionalParams) throws IOException {
         LOG.info("Exporting data...");
         try (Workbook workbook = loadWorkbook(fileName)) {
             for (Sheet sheet : workbook) {

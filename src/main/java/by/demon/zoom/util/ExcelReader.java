@@ -90,13 +90,6 @@ public class ExcelReader {
             case STRING:
                 return cell.getStringCellValue();
             case NUMERIC:
-                /*
-                 if (DateUtil.isCellDateFormatted(cell)) {
-                 return cell.getDateCellValue();
-                 } else {
-                 return cell.getNumericCellValue();
-                 }
-                 */
                 double numericValue = cell.getNumericCellValue();
                 long longValue = (long) numericValue; // Проверяем, является ли значение целым числом
                 if (numericValue == longValue) {

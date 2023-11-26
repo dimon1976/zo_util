@@ -34,7 +34,7 @@ public class UrlService implements FileProcessingService {
     }
 
 
-    public String export(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
+    public String readFile(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
         LOG.info("Exporting data...");
 
         try {

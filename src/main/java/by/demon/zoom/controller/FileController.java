@@ -42,7 +42,10 @@ public class FileController {
             SimpleService simpleService,
             UrlService urlService,
             EdadealService edadealService,
-            HttpServletResponse response, MegatopService megatopService1) {
+            HttpServletResponse response,
+            MegatopService megatopService1,
+            AvService avService,
+            HandbookService handbookService) {
         this.megatopService = megatopService1;
         this.processingServices.put("stat", statisticService);
         this.processingServices.put("vlook", vlookService);
@@ -51,6 +54,8 @@ public class FileController {
         this.processingServices.put("simple", simpleService);
         this.processingServices.put("getUrl", urlService);
         this.processingServices.put("edadeal", edadealService);
+        this.processingServices.put("avService", avService);
+        this.processingServices.put("handbook", handbookService);
         this.response = response;
     }
 
@@ -74,7 +79,7 @@ public class FileController {
     }
 
     @PostMapping("/megatop/upload")
-    public @ResponseBody String handleFileUpload(@ModelAttribute FileForm fileForm) {
+    public @ResponseBody String handleFileUpload(@ModelAttribute FileForm fileForm) throws IOException {
         String label = fileForm.getLabel();
         ArrayList<File> files = new ArrayList<>();
         if (fileForm.getFiles() != null) {
@@ -85,17 +90,16 @@ public class FileController {
             }
         }
         // Обработка файлов и сохранение в базу данных
-        megatopService.export(files, label);
-        return "index";
+       return megatopService.export(files, label);
     }
 
 
     @PostMapping("/megatop/download")
     public @ResponseBody String downloadData(@RequestParam(value = "downloadLabel", required = false) String label,
-                               @RequestParam(value = "format", required = false) String format,
-                               HttpServletResponse response) throws IOException {
-        megatopService.exportToFile(label,response);
-        return "index";
+                                             @RequestParam(value = "format", required = false) String format,
+                                             HttpServletResponse response) throws IOException {
+//        megatopService.downloadFile(response, label, format);
+        return download("megatop", response, label, format);
     }
 
     @PostMapping("/simpleReport")
@@ -103,6 +107,27 @@ public class FileController {
         return processFiles("simple", multipartFile);
     }
 
+    @PostMapping("/av/task")
+    public @ResponseBody String avTask(@RequestParam("file") MultipartFile[] multipartFile) {
+        return processFiles("avService", multipartFile, "task");
+    }
+
+    @PostMapping("/av/report")
+    public @ResponseBody String avReport(@RequestParam("file") MultipartFile[] multipartFile) {
+        return processFiles("avService", multipartFile, "report");
+    }
+
+    @PostMapping("/av/handbook")
+    public @ResponseBody String avHandbook(@RequestParam("file") MultipartFile[] multipartFile) {
+        return processFiles("handbook", multipartFile);
+    }
+
+    @PostMapping("/av/download")
+    public @ResponseBody String avDownload(@RequestParam(value = "task_no", required = false) String task_no,
+                                           HttpServletResponse response,
+                                           @RequestParam(value = "format", required = false) String format) throws IOException {
+        return download("avService", response, "download", task_no);
+    }
 
     @PostMapping("/edadeal")
     public @ResponseBody String excelEdadeal(@RequestParam("file") MultipartFile[] multipartFile) {
@@ -116,8 +141,9 @@ public class FileController {
 
 
     @PostMapping("/lentaReport")
-    public @ResponseBody String excelLentaReport(@ModelAttribute("lenta") Lenta lenta
-            , @RequestParam("file") MultipartFile multipartFile) {
+    public @ResponseBody String excelLentaReport(@ModelAttribute("lenta") Lenta lenta,
+                                                 @RequestParam("file") MultipartFile multipartFile,
+                                                 @RequestParam(value = "format", required = false) String format) {
         if (ifExist(multipartFile)) {
             String filePath = saveFileAndGetPath(multipartFile);
             try {
@@ -126,12 +152,24 @@ public class FileController {
                 return lentaService.exportReport(filePath, new File(filePath), response, lenta.getAfterDate());
             } catch (IllegalStateException | IOException e) {
                 log.error("Error while uploading file: {}", e.getMessage());
-                return "File uploaded failed: " + getOrgName(multipartFile);
             }
         }
         return "/clients/lenta";
     }
 
+    private String download(String action, HttpServletResponse response, String... additionalParams) throws IOException {
+        FileProcessingService processingService = (FileProcessingService) processingServices.get(action);
+        String processSingleFile = "";
+        if (processingService == null) {
+            log.warn("Unsupported action: {}", action);
+            return ("Unsupported action: {}" + action);
+        } else {
+            File tempFile = File.createTempFile("text", ".csv", new File(TEMP_PATH + "/"));
+            processingService.readFile("", tempFile, response, additionalParams);
+        }
+
+        return processSingleFile;
+    }
 
     private String processFiles(String action, MultipartFile[] multipartFile, String... additionalParams) {
         FileProcessingService processingService = (FileProcessingService) processingServices.get(action);
@@ -153,16 +191,17 @@ public class FileController {
     @Nullable
     private String processSingleFile(String[] additionalParams, MultipartFile file, FileProcessingService processingService) {
         String filePath = saveFileAndGetPath(file);
+        String processSingleFile;
         // Создаем директорию, если она не существует
         createTempDirectory();
         try {
-            processingService.export(filePath, new File(filePath), response, additionalParams);
+            processSingleFile = processingService.readFile(filePath, new File(filePath), response, additionalParams);
         } catch (IllegalStateException | IOException e) {
             log.error("Error while uploading file: {}", e.getMessage());
             // Если обработка не удалась, файл остается на месте
             return "File uploaded failed: " + getOrgName(file);
         }
-        return null;
+        return processSingleFile;
     }
 
     private String saveFileAndGetPath(MultipartFile file) {

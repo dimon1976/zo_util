@@ -2,61 +2,10 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Lenta</title>
+    <title>Megatop</title>
 </head>
 <body>
 <div th:replace="/include/_header :: content"></div>
-<!--<div class="container">-->
-<!--    <div class="row">-->
-<!--        <div class="col-sm-3">-->
-<!--            <div th:replace="/include/sidebar :: sidebar"></div>-->
-<!--        </div>-->
-<!--        <div class="col-sm-9">-->
-<!--            <div class="row">-->
-<!--                <blockquote class="blockquote">-->
-<!--                    <p>Megatop.by</p>-->
-<!--                </blockquote>-->
-<!--                <div class="col-12 col-sm-6">-->
-<!--                    <h2>Upload Files</h2>-->
-<!--                    <form th:action="@{/excel/megatop/upload}" th:object="${fileForm}" method="post"-->
-<!--                          enctype="multipart/form-data">-->
-<!--                        <label for="files">Files:</label>-->
-<!--                        <input type="file" th:field="*{files}" multiple id="files"/>-->
-
-<!--                        <br/>-->
-
-<!--                        <input type="submit" value="Upload"/>-->
-<!--                        <br>-->
-<!--                        <h2>Latest Labels:</h2>-->
-<!--                        &lt;!&ndash; Изменяем id атрибута для избежания дублирования &ndash;&gt;-->
-<!--                        <select name="labelSelect" id="labelSelect" th:field="*{label}">-->
-<!--                            <option th:value="${generatedLabel}" th:text="${generatedLabel}"></option>-->
-<!--                            <option th:each="label : ${latestLabels}" th:value="${label}" th:text="${label}"></option>-->
-<!--                        </select>-->
-<!--                    </form>-->
-
-
-<!--                    <h2>Download Data</h2>-->
-<!--                    <form th:action="@{/excel/megatop/download}" method="post">-->
-<!--                        <label for="downloadLabel">Download Label:</label>-->
-<!--                        <select id="downloadLabel" name="downloadLabel" required>-->
-<!--                            <option th:each="label : ${latestLabels}" th:value="${label}" th:text="${label}"></option>-->
-<!--                            <option value="Custom">Custom</option>-->
-<!--                        </select>-->
-<!--                        <br>-->
-<!--                        <label for="format">Download Format:</label>-->
-<!--                        <select id="format" name="format" required>-->
-<!--                            <option value="excel">Excel</option>-->
-<!--                            <option value="csv">CSV</option>-->
-<!--                        </select>-->
-<!--                        <br>-->
-<!--                        <input type="submit" value="Download">-->
-<!--                    </form>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
-<!--</div>-->
 <div class="container">
     <div class="row">
         <div class="col-sm-3">
@@ -93,7 +42,6 @@
                             <label for="downloadLabel" class="form-label">Download Label:</label>
                             <select id="downloadLabel" name="downloadLabel" class="form-select" required>
                                 <option th:each="label : ${latestLabels}" th:value="${label}" th:text="${label}"></option>
-                                <option value="Custom">Custom</option>
                             </select>
                         </div>
 

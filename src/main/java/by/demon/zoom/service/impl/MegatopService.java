@@ -56,9 +56,16 @@ public class MegatopService implements FileProcessingService {
         this.dataDownload = dataDownload;
     }
 
-    public String export(List<File> files, String label) {
+    public String export(List<File> files, String label) throws IOException {
         for (File file : files) {
             List<List<Object>> lists = readDataFromFile(file);
+            try {
+                Files.deleteIfExists(file.toPath());
+                LOG.info("File {} remove successfully.", file.getAbsolutePath());
+            } catch (IOException e) {
+                LOG.error("File {} remove failed.", file.getAbsolutePath());
+                throw new IOException("File {} remove failed.");
+            }
             Collection<Megatop> megatopArrayList = getMegatopList(lists, label, file);
             megatopRepository.saveAll(megatopArrayList);
             LOG.info("File {} processed and saved successfully.", file.getName());
@@ -66,9 +73,9 @@ public class MegatopService implements FileProcessingService {
         return "All files processed and saved successfully.";
     }
 
-    public void exportToFile(String label, HttpServletResponse response) throws IOException {
+    public void download(HttpServletResponse response, String... additionalParameters) throws IOException {
         try {
-            List<Megatop> megatopByLabel = getMegatopByLabel(label);
+            List<Megatop> megatopByLabel = getMegatopByLabel(additionalParameters[0]);
             HashSet<MegatopDTO> megatopDTOList = getMegatopDTOList(megatopByLabel);
 
             // Создаем временный файл и записываем в него данные
@@ -152,7 +159,7 @@ public class MegatopService implements FileProcessingService {
     }
 
     @Override
-    public String export(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
+    public String readFile(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
         return null;
     }
 

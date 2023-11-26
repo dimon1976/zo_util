@@ -39,7 +39,7 @@ public class StatisticService implements FileProcessingService {
         this.dataDownload = dataDownload;
     }
 
-    public String export(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
+    public String readFile(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
         String fileName = file.getName();
         List<List<Object>> originalWb = readDataFromFile(file);
         List<Integer> columns = Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 19, 20, 22, 23, 24);

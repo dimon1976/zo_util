@@ -36,7 +36,7 @@ public class EdadealService implements FileProcessingService {
     }
 
     @Override
-    public String export(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
+    public String readFile(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
         LOG.info("Exporting data...");
         String fileName = file.getName();
         List<List<Object>> originalWb = readDataFromFile(file);

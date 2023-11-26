@@ -31,7 +31,7 @@ public class VlookService implements FileProcessingService {
         this.dataDownload = dataDownload;
     }
 
-    public String export(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
+    public String readFile(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
         short skip = 0;
         Map<String, Set<String>> mapOne = new HashMap<>();
         Map<String, Set<String>> mapTwo = new HashMap<>();

@@ -41,7 +41,7 @@ public class SimpleService implements FileProcessingService {
         this.dataDownload = dataDownload;
     }
 
-    public String export(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
+    public String readFile(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
         Path of = Path.of(filePath);
         List<List<Object>> lists = readExcel(file);
         Collection<Product> productList = getProductList(lists);
