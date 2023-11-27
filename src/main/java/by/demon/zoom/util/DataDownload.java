@@ -19,30 +19,6 @@ public class DataDownload {
     private static final Logger LOG = LoggerFactory.getLogger(DataDownload.class);
 
     public void download(String filename, InputStream is, HttpServletResponse response) throws IOException {
-//        if (filename == null) {
-//            LOG.error("Filename is null. Unable to proceed with download.");
-//            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Filename is null");
-//            return;
-//        }
-//        // Проверяем расширение файла и изменяем его, если необходимо на xlsx
-//        filename = filename.toLowerCase().endsWith(".xlsx") ? filename : filename.substring(0, filename.lastIndexOf('.')) + ".xlsx";
-//
-//        LOG.info("Downloading file: {}", filename);
-//        response.setHeader("Content-Disposition", "attachment;filename=" + new String(filename.getBytes(), StandardCharsets.ISO_8859_1));
-//        response.setContentType("application/vnd.ms-excel;charset=gb2312");
-//        try (InputStream fis = new BufferedInputStream(is);
-//             OutputStream toClient = new BufferedOutputStream(response.getOutputStream())) {
-//
-//            byte[] buffer = new byte[4096];
-//            int bytesRead;
-//            while ((bytesRead = fis.read(buffer)) != -1) {
-//                toClient.write(buffer, 0, bytesRead);
-//            }
-//            toClient.flush(); // Flush the output stream after writing all the data
-//        } catch (IOException ex) {
-//            LOG.error("Error during file download: {}", ex.getMessage());
-//            throw ex;
-//        }
         if (filename == null) {
             handleInvalidFilename(response);
             return;
@@ -64,37 +40,14 @@ public class DataDownload {
     }
 
     public void download(List<String> data, File file, HttpServletResponse response, String parameter) throws IOException {
-//        try {
-//            response.setContentType("text/csv");
-//            response.setCharacterEncoding("Windows-1251");
-//            response.setHeader("Content-Disposition", "attachment; filename=" + file.getName());
-//
-//            try (OutputStream outputStream = response.getOutputStream();
-//                 Writer writer = new OutputStreamWriter(outputStream, "Windows-1251");
-//                 CSVWriter csvWriter = new CSVWriter(writer, ';',
-//                         CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER,
-//                         CSVWriter.DEFAULT_LINE_END)) {
-//
-//                for (String line : data) {
-//                    String[] values = line.split(";");
-//                    csvWriter.writeNext(values);
-//                }
-//                outputStream.flush();
-//            }
-//        } catch (IOException e) {
-//            // Handle the exception according to your needs
-//            e.printStackTrace();
-//        }
-//
-//        // Удаление файла после передачи данных
-//        Files.deleteIfExists(file.toPath());
         try {
             setResponseHeaders(response, file.getName(), "text/csv;charset=Windows-1251");
 
             try (OutputStream outputStream = response.getOutputStream();
                  Writer writer = new OutputStreamWriter(outputStream, "Windows-1251");
                  CSVWriter csvWriter = new CSVWriter(writer, ';',
-                         CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                         CSVWriter.DEFAULT_QUOTE_CHARACTER,
+                         CSVWriter.DEFAULT_ESCAPE_CHARACTER,
                          CSVWriter.DEFAULT_LINE_END)) {
 
                 writeCsvData(csvWriter, data);

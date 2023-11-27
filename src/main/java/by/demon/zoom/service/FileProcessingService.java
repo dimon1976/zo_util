@@ -7,4 +7,6 @@ import java.io.IOException;
 public interface FileProcessingService {
 
     String readFile(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException;
+
+    String download(File tempFile, HttpServletResponse response, String... additionalParams) throws IOException;
 }

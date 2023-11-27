@@ -168,6 +168,11 @@ public class LentaService implements FileProcessingService {
         }
     }
 
+    @Override
+    public String download(File tempFile, HttpServletResponse response, String... additionalParams) throws IOException {
+        return null;
+    }
+
 
     private Workbook loadWorkbook(File filename) {
         LOG.info("Loading workbook...");

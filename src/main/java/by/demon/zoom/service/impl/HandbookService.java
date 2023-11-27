@@ -65,4 +65,9 @@ public class HandbookService implements FileProcessingService {
     private String getStringValue(List<Object> list, int index) {
         return (index >= 0 && index < list.size()) ? String.valueOf(list.get(index)) : "";
     }
+
+    @Override
+    public String download(File tempFile, HttpServletResponse response, String... additionalParams) throws IOException {
+        return null;
+    }
 }

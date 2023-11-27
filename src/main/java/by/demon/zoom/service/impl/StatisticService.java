@@ -58,6 +58,11 @@ public class StatisticService implements FileProcessingService {
         return filePath;
     }
 
+    @Override
+    public String download(File tempFile, HttpServletResponse response, String... additionalParams) throws IOException {
+        return null;
+    }
+
 
     private static List<Integer> getColumnList(String showSource, String showCompetitorUrl, String showDateAdd, List<Integer> source) {
         List<Integer> targetList = new ArrayList<>(source);

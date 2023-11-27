@@ -56,6 +56,11 @@ public class UrlService implements FileProcessingService {
         }
     }
 
+    @Override
+    public String download(File tempFile, HttpServletResponse response, String... additionalParams) throws IOException {
+        return null;
+    }
+
     private Collection<UrlDTO> getUrlDTOList(List<List<Object>> excelData) {
         return excelData.stream()
                 .flatMap(row -> row.stream()

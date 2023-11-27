@@ -90,7 +90,7 @@ public class FileController {
             }
         }
         // Обработка файлов и сохранение в базу данных
-       return megatopService.export(files, label);
+        return megatopService.export(files, label);
     }
 
 
@@ -124,9 +124,12 @@ public class FileController {
 
     @PostMapping("/av/download")
     public @ResponseBody String avDownload(@RequestParam(value = "task_no", required = false) String task_no,
-                                           HttpServletResponse response,
-                                           @RequestParam(value = "format", required = false) String format) throws IOException {
-        return download("avService", response, "download", task_no);
+                                           @RequestParam(value = "report_no", required = false) String report_no,
+                                           @RequestParam(value = "format", required = false) String format,
+                                           @RequestParam(value = "retailerNetwork", required = false) String retailerNetwork,
+                                           HttpServletResponse response) throws IOException {
+
+        return download("avService", response, task_no, report_no, retailerNetwork);
     }
 
     @PostMapping("/edadeal")
@@ -164,8 +167,8 @@ public class FileController {
             log.warn("Unsupported action: {}", action);
             return ("Unsupported action: {}" + action);
         } else {
-            File tempFile = File.createTempFile("text", ".csv", new File(TEMP_PATH + "/"));
-            processingService.readFile("", tempFile, response, additionalParams);
+            File tempFile = File.createTempFile("temp", ".csv", new File(TEMP_PATH + "/"));
+            processingService.download(tempFile, response, additionalParams);
         }
 
         return processSingleFile;

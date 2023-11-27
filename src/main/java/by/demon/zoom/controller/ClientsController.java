@@ -46,7 +46,9 @@ public class ClientsController {
 
     @GetMapping("/av")
     public String av(Model model) {
-        model.addAttribute("tasks", avService.getLatestTasks());
+        model.addAttribute("reports", avService.getLatestReport());
+        model.addAttribute("tasks", avService.getLatestTask());
+        model.addAttribute("retailNetworks", avService.getRetailNetwork());
         return "/clients/av";
     }
 }

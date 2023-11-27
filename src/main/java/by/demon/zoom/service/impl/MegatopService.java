@@ -163,6 +163,11 @@ public class MegatopService implements FileProcessingService {
         return null;
     }
 
+    @Override
+    public String download(File tempFile, HttpServletResponse response, String... additionalParams) throws IOException {
+        return null;
+    }
+
     public List<String> getLatestLabels() {
         // Получаем последние 10 сохраненных меток из базы данных
         Pageable pageable = PageRequest.of(0, 10);

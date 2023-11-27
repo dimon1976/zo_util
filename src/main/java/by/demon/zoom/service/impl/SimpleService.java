@@ -58,6 +58,11 @@ public class SimpleService implements FileProcessingService {
         return filePath;
     }
 
+    @Override
+    public String download(File tempFile, HttpServletResponse response, String... additionalParams) throws IOException {
+        return null;
+    }
+
 
     private Collection<SimpleDTO> getSimpleDTOList(Collection<Product> simpleArrayList) {
         return simpleArrayList.stream()

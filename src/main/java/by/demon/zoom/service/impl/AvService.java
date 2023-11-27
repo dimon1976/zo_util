@@ -2,11 +2,13 @@ package by.demon.zoom.service.impl;
 
 import by.demon.zoom.dao.AvReportRepository;
 import by.demon.zoom.dao.AvTaskRepository;
+import by.demon.zoom.dao.HandbookRepository;
 import by.demon.zoom.domain.CsvRow;
 import by.demon.zoom.domain.av.CsvDataEntity;
 import by.demon.zoom.domain.av.CsvReportEntity;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DataDownload;
+import by.demon.zoom.util.MethodPerformance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
@@ -29,37 +31,44 @@ public class AvService implements FileProcessingService {
     private final static Logger LOG = LoggerFactory.getLogger(AvService.class);
     private final AvTaskRepository avTaskRepository;
     private final AvReportRepository avReportRepository;
+    private final HandbookRepository handbookRepository;
     private final DataDownload dataDownload;
 
-    public AvService(AvTaskRepository avTaskRepository, AvReportRepository avReportRepository, DataDownload dataDownload) {
+    public AvService(AvTaskRepository avTaskRepository, AvReportRepository avReportRepository, HandbookRepository handbookRepository, DataDownload dataDownload) {
         this.avTaskRepository = avTaskRepository;
         this.avReportRepository = avReportRepository;
+        this.handbookRepository = handbookRepository;
         this.dataDownload = dataDownload;
     }
 
     @Override
     public String readFile(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
         List<List<Object>> lists = readDataFromFile(file);
-
         switch (additionalParams[0]) {
             case "task":
                 Collection<CsvDataEntity> taskArrayList = getTaskList(lists);
+                Long start = MethodPerformance.start();
                 avTaskRepository.saveAll(taskArrayList);
+                MethodPerformance.finish(start, "Сохранение в БД задачи");
                 break;
             case "report":
                 Collection<CsvReportEntity> reportArrayList = getReportList(lists);
                 avReportRepository.saveAll(reportArrayList);
-                break;
-            case "download":
-                List<CsvReportEntity> allByJobNumber = avReportRepository.findAllByJobNumber(additionalParams[1]);
-                List<String> strings = convert(allByJobNumber);
-                dataDownload.download(strings, file, response, "");
                 break;
             default:
                 return "Invalid additional parameter.";
         }
         LOG.info("File {} processed and saved successfully.", file.getName());
         return "File processed and saved successfully.";
+    }
+
+    @Override
+    public String download(File tempFile, HttpServletResponse response, String... additionalParams) throws IOException {
+        List<CsvReportEntity> allByJobNumber = avReportRepository.findAllByJobNumber(additionalParams[1]);
+        List<String> strings = convert(allByJobNumber);
+//        List<CsvDataEntity> dataEntities = avTaskRepository.findByJobNumberAndRetailerCode("TASK-00003539", "ЯНДЕКС_М_ОНЛ");
+        dataDownload.download(strings, tempFile, response, "");
+        return null;
     }
 
     private Collection<CsvDataEntity> getTaskList(List<List<Object>> lists) {
@@ -134,15 +143,22 @@ public class AvService implements FileProcessingService {
     }
 
 
-
-
     private String getStringValue(List<Object> list, int index) {
         return (index >= 0 && index < list.size()) ? String.valueOf(list.get(index)) : "";
     }
 
-    public List<String> getLatestTasks() {
+    public List<String> getLatestReport() {
         // Получаем последние 10 сохраненных заданий из базы данных
         Pageable pageable = PageRequest.of(0, 10);
         return avReportRepository.findDistinctTopByJobNumber(pageable);
+    }
+    public List<String> getLatestTask() {
+        // Получаем последние 10 сохраненных заданий из базы данных
+        Pageable pageable = PageRequest.of(0, 10);
+        return avTaskRepository.findDistinctTopByJobNumber(pageable);
+    }
+
+    public List<String> getRetailNetwork(){
+        return handbookRepository.findDistinctByRetailNetwork();
     }
 }

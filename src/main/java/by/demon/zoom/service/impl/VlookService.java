@@ -57,6 +57,11 @@ public class VlookService implements FileProcessingService {
         return filePath;
     }
 
+    @Override
+    public String download(File tempFile, HttpServletResponse response, String... additionalParams) throws IOException {
+        return null;
+    }
+
     private void addMapOne(List<Object> list, Map<String, Set<String>> mapOne) {
         if (list.size() >= 2) {
             String id = String.valueOf(list.get(0));

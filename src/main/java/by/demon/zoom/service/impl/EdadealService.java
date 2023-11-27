@@ -38,17 +38,22 @@ public class EdadealService implements FileProcessingService {
     @Override
     public String readFile(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
         LOG.info("Exporting data...");
-        String fileName = file.getName();
         List<List<Object>> originalWb = readDataFromFile(file);
         List<Integer> columns = Arrays.asList(0, 1, 2, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24);
         List<List<Object>> resultList = getResultList(originalWb, columns);
         try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
             short skip = 1;
             dataToExcel.exportToExcel(header, resultList, out, skip);
-            dataDownload.download(fileName, filePath, response);
+            download(file,response,additionalParams);
         }
         LOG.info("Exported data to Excel: {}", filePath);
         return filePath;
+    }
+
+    @Override
+    public String download(File tempFile, HttpServletResponse response, String... additionalParams) throws IOException {
+        dataDownload.download(tempFile.getName(), tempFile.getAbsolutePath(), response);
+        return "";
     }
 
 
