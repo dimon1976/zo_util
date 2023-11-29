@@ -8,11 +8,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,24 +35,23 @@ public class EdadealService implements FileProcessingService {
     }
 
     @Override
-    public String readFile(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
+    public String readFile(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
         LOG.info("Exporting data...");
-        List<List<Object>> originalWb = readDataFromFile(file);
+        List<List<Object>> originalWb = readDataFromFile(path.toFile());
         List<Integer> columns = Arrays.asList(0, 1, 2, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24);
         List<List<Object>> resultList = getResultList(originalWb, columns);
-        try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
+        try (OutputStream out = Files.newOutputStream(path)) {
             short skip = 1;
             dataToExcel.exportToExcel(header, resultList, out, skip);
-            download(file,response,additionalParams);
+//            download(file, response, additionalParams);
         }
-        LOG.info("Exported data to Excel: {}", filePath);
-        return filePath;
+        LOG.info("Exported data to Excel: {}", path.toAbsolutePath());
+        return path.toAbsolutePath().toString();
     }
 
     @Override
-    public String download(File tempFile, HttpServletResponse response, String... additionalParams) throws IOException {
-        dataDownload.download(tempFile.getName(), tempFile.getAbsolutePath(), response);
-        return "";
+    public void download(HttpServletResponse response,Path path, String format, String... additionalParams) throws IOException {
+
     }
 
 

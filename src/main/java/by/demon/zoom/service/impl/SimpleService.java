@@ -6,13 +6,14 @@ import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.DataToExcel;
+import by.demon.zoom.util.Globals;
 import by.demon.zoom.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -41,26 +42,30 @@ public class SimpleService implements FileProcessingService {
         this.dataDownload = dataDownload;
     }
 
-    public String readFile(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
-        Path of = Path.of(filePath);
-        List<List<Object>> lists = readExcel(file);
+    public String readFile(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
+        List<List<Object>> lists = readExcel(path.toFile());
         Collection<Product> productList = getProductList(lists);
         Collection<SimpleDTO> collect = getSimpleDTOList(productList);
-        try (OutputStream out = Files.newOutputStream(of)) {
+        try (OutputStream out = Files.newOutputStream(path)) {
             short skipLines = 1;
             dataToExcel.exportToExcel(header, collect, out, skipLines);
-            dataDownload.download(file.getName(), filePath, response);
-            LOG.info("Data exported successfully to Excel: {}", filePath);
+            download(response, path, Globals.SUFFIX_XLSX);
+            LOG.info("Data exported successfully to Excel: {}", path.toAbsolutePath());
         } catch (IOException e) {
             LOG.error("Error exporting data to Excel: {}", e.getMessage(), e);
             throw e;
         }
-        return filePath;
+        return path.toAbsolutePath().toString();
     }
 
     @Override
-    public String download(File tempFile, HttpServletResponse response, String... additionalParams) throws IOException {
-        return null;
+    public void download(HttpServletResponse response, Path path, String format, String... additionalParams) throws IOException {
+        try (FileInputStream is = new FileInputStream(path.toAbsolutePath().toString())) {
+            dataDownload.downloadExcel(path, is, response);
+        } catch (IOException e) {
+            LOG.error("Error download data : {}", e.getMessage());
+            throw e;
+        }
     }
 
 
@@ -85,14 +90,14 @@ public class SimpleService implements FileProcessingService {
         product.setCategory3(getStringValue(str, 3));
         product.setBrand(getStringValue(str, 4));
         product.setModel(getStringValue(str, 5));
-        product.setPrice(StringUtil.cleanAndReplace(getStringValue(str, 6),"."));
+        product.setPrice(StringUtil.cleanAndReplace(getStringValue(str, 6), "."));
         product.setCity(getStringValue(str, 7));
         product.setCompetitor(getStringValue(str, 8));
         product.setTime(getStringValue(str, 9));
         product.setDate(getStringValue(str, 10));
-        product.setCompetitorPrice(StringUtil.cleanAndReplace(getStringValue(str, 11),"."));
-        product.setCompetitorOldPrice(StringUtil.cleanAndReplace(getStringValue(str, 12),"."));
-        product.setCompetitorActionPrice(StringUtil.cleanAndReplace(getStringValue(str, 13),"."));
+        product.setCompetitorPrice(StringUtil.cleanAndReplace(getStringValue(str, 11), "."));
+        product.setCompetitorOldPrice(StringUtil.cleanAndReplace(getStringValue(str, 12), "."));
+        product.setCompetitorActionPrice(StringUtil.cleanAndReplace(getStringValue(str, 13), "."));
         product.setComment(getStringValue(str, 14));
         product.setCompetitorModel(getStringValue(str, 15));
         product.setYearCompetitor(getStringValue(str, 16));

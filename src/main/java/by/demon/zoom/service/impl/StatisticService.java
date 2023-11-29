@@ -8,11 +8,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -39,28 +38,27 @@ public class StatisticService implements FileProcessingService {
         this.dataDownload = dataDownload;
     }
 
-    public String readFile(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
-        String fileName = file.getName();
-        List<List<Object>> originalWb = readDataFromFile(file);
+    public String readFile(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
+        List<List<Object>> originalWb = readDataFromFile(path.toFile());
         List<Integer> columns = Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 19, 20, 22, 23, 24);
         List<Integer> newColumn = getColumnList(additionalParams[0], additionalParams[2], additionalParams[3], columns);
         List<List<Object>> resultTest = getResultList(originalWb, newColumn, additionalParams[1]);
-        try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
+        try (OutputStream out = Files.newOutputStream(path)) {
             List<String> newHeader = addAdditionalColumnsToString(additionalParams[2], additionalParams[0], additionalParams[3]);
             short skip = 1;
             dataToExcel.exportToExcel(newHeader, resultTest, out, skip);
-            dataDownload.download(fileName, filePath, response);
+//            dataDownload.download(fileName, filePath, response);
         } catch (IOException e) {
             LOG.error("Error exporting data to Excel: {}", e.getMessage(), e);
             throw e;
         }
-        LOG.info("Data exported successfully to Excel: {}", filePath);
-        return filePath;
+        LOG.info("Data exported successfully to Excel: {}", path.toAbsolutePath());
+        return path.toAbsolutePath().toString();
     }
 
     @Override
-    public String download(File tempFile, HttpServletResponse response, String... additionalParams) throws IOException {
-        return null;
+    public void download(HttpServletResponse response,Path path,  String format, String... additionalParams) throws IOException {
+
     }
 
 
@@ -95,7 +93,6 @@ public class StatisticService implements FileProcessingService {
         }
         return updatedHeader;
     }
-
 
 
     private static List<List<Object>> getResultList(List<List<Object>> list, List<Integer> columnList, String sourceReplace) {

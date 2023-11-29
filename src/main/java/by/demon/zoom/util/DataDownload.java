@@ -10,7 +10,12 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+
+import static by.demon.zoom.util.Globals.TEMP_PATH;
 
 @Slf4j
 @Service
@@ -18,16 +23,14 @@ public class DataDownload {
 
     private static final Logger LOG = LoggerFactory.getLogger(DataDownload.class);
 
-    public void download(String filename, InputStream is, HttpServletResponse response) throws IOException {
-        if (filename == null) {
+    public void downloadExcel(Path path, InputStream is, HttpServletResponse response) throws IOException {
+        if (path.getFileName() == null) {
             handleInvalidFilename(response);
             return;
         }
 
-        filename = ensureXlsxExtension(filename);
-
-        LOG.info("Downloading file: {}", filename);
-        setResponseHeaders(response, filename, "application/vnd.ms-excel;charset=gb2312");
+        LOG.info("Downloading file: {}", path.getFileName());
+        setResponseHeaders(response, path.getFileName().toString(), "application/vnd.ms-excel;charset=gb2312");
 
         try (InputStream fis = new BufferedInputStream(is);
              OutputStream toClient = new BufferedOutputStream(response.getOutputStream())) {
@@ -39,9 +42,9 @@ public class DataDownload {
 
     }
 
-    public void download(List<String> data, File file, HttpServletResponse response, String parameter) throws IOException {
+    public void downloadCsv(Path path, List<String> data, HttpServletResponse response) throws IOException {
         try {
-            setResponseHeaders(response, file.getName(), "text/csv;charset=Windows-1251");
+            setResponseHeaders(response, path.getFileName().toString(), "text/csv;charset=Windows-1251");
 
             try (OutputStream outputStream = response.getOutputStream();
                  Writer writer = new OutputStreamWriter(outputStream, "Windows-1251");
@@ -56,25 +59,13 @@ public class DataDownload {
         } catch (IOException e) {
             handleDownloadError(e);
         }
-        deleteFile(file);
+        deleteFile(path);
     }
 
-
-    public void download(String filename, String path, HttpServletResponse response) throws IOException {
-        download(filename, new FileInputStream(path), response);
-    }
-
-    public void download(List<String> data, File file, HttpServletResponse response) throws IOException {
-        download(data, file, response, "");
-    }
 
     private void handleInvalidFilename(HttpServletResponse response) throws IOException {
         LOG.error("Filename is null");
         response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Filename is null");
-    }
-
-    private String ensureXlsxExtension(String filename) {
-        return filename.toLowerCase().endsWith(".xlsx") ? filename : filename.substring(0, filename.lastIndexOf('.')) + ".xlsx";
     }
 
     private void setResponseHeaders(HttpServletResponse response, String filename, String contentType) {
@@ -103,7 +94,31 @@ public class DataDownload {
         throw ex;
     }
 
-    private void deleteFile(File file) throws IOException {
-        Files.deleteIfExists(file.toPath());
+    private void deleteFile(Path path) throws IOException {
+        Files.deleteIfExists(path);
+    }
+
+    public static Path getPath(String fileName, String suffix) {
+        // Создаем временный файл и записываем в него данные
+        String timestampLabel = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss"));
+        return Path.of(TEMP_PATH, fileName + "-" + timestampLabel + suffix);
+    }
+
+    public static void cleanupTempFile(Path path) {
+        if (path.toFile().delete()) {
+            log.info("File removed successfully: {}", path.getFileName());
+        } else {
+            log.error("Failed to remove file: {}", path.getFileName());
+        }
+    }
+
+    public static String setSuffix(String format) {
+        if (format.equalsIgnoreCase("Excel")) {
+            return Globals.SUFFIX_XLSX;
+        } else if (format.equalsIgnoreCase("CSV")) {
+            return Globals.SUFFIX_CSV;
+        }
+        LOG.error("Wrong format - {}", format);
+        return "";
     }
 }

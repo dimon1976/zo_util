@@ -73,14 +73,12 @@ public class MegatopService implements FileProcessingService {
         return "All files processed and saved successfully.";
     }
 
-    public void download(HttpServletResponse response, String... additionalParameters) throws IOException {
+    @Override
+    public void download(HttpServletResponse response,Path path, String format, String... additionalParameters) throws IOException {
         try {
             List<Megatop> megatopByLabel = getMegatopByLabel(additionalParameters[0]);
             HashSet<MegatopDTO> megatopDTOList = getMegatopDTOList(megatopByLabel);
-
-            // Создаем временный файл и записываем в него данные
-            String timestampLabel = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss"));
-            Path path = Path.of(TEMP_PATH, "report-megatop-" + timestampLabel + ".xlsx");
+//            Path path = DataDownload.getPath("report-megatop", format);
 
             // Экспортируем данные в Excel
             try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -90,7 +88,8 @@ public class MegatopService implements FileProcessingService {
             }
 
             // Скачиваем файл
-            dataDownload.download(path.getFileName().toString(), path.toString(), response);
+//            dataDownload.download(path.getFileName().toString(), path.toString(), response);
+            DataDownload.cleanupTempFile(path);
             LOG.info("Data exported successfully to Excel: {}", path.getFileName().toString());
         } catch (IOException e) {
             LOG.error("Error exporting data to Excel: {}", e.getMessage(), e);
@@ -159,14 +158,14 @@ public class MegatopService implements FileProcessingService {
     }
 
     @Override
-    public String readFile(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
+    public String readFile(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
         return null;
     }
 
-    @Override
-    public String download(File tempFile, HttpServletResponse response, String... additionalParams) throws IOException {
-        return null;
-    }
+
+//    public String download(File tempFile, HttpServletResponse response, String... additionalParams) throws IOException {
+//        return null;
+//    }
 
     public List<String> getLatestLabels() {
         // Получаем последние 10 сохраненных меток из базы данных

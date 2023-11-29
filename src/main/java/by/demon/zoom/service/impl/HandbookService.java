@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -30,15 +30,15 @@ public class HandbookService implements FileProcessingService {
 
 
     @Override
-    public String readFile(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
+    public String readFile(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
 
-        List<List<Object>> lists = readDataFromFile(file);
+        List<List<Object>> lists = readDataFromFile(path.toFile());
         Collection<Handbook> handbookArrayList = getObjectList(lists);
         handbookRepository.deleteAll();
         LOG.info("Successful clearing of the handbook table");
         handbookRepository.saveAll(handbookArrayList);
 
-        LOG.info("File {} processed and saved successfully.", file.getName());
+        LOG.info("File {} processed and saved successfully.", path.getFileName());
         return "File processed and saved successfully.";
     }
 
@@ -67,7 +67,6 @@ public class HandbookService implements FileProcessingService {
     }
 
     @Override
-    public String download(File tempFile, HttpServletResponse response, String... additionalParams) throws IOException {
-        return null;
+    public void download(HttpServletResponse response,Path path, String format, String... additionalParams) throws IOException {
     }
 }

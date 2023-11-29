@@ -16,8 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,8 +42,8 @@ public class AvService implements FileProcessingService {
     }
 
     @Override
-    public String readFile(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
-        List<List<Object>> lists = readDataFromFile(file);
+    public String readFile(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
+        List<List<Object>> lists = readDataFromFile(path.toFile());
         switch (additionalParams[0]) {
             case "task":
                 Collection<CsvDataEntity> taskArrayList = getTaskList(lists);
@@ -58,17 +58,17 @@ public class AvService implements FileProcessingService {
             default:
                 return "Invalid additional parameter.";
         }
-        LOG.info("File {} processed and saved successfully.", file.getName());
+        LOG.info("File {} processed and saved successfully.", path.getFileName());
         return "File processed and saved successfully.";
     }
 
     @Override
-    public String download(File tempFile, HttpServletResponse response, String... additionalParams) throws IOException {
+    public void download(HttpServletResponse response,Path path,  String format, String... additionalParams) throws IOException {
         List<CsvReportEntity> allByJobNumber = avReportRepository.findAllByJobNumber(additionalParams[1]);
         List<String> strings = convert(allByJobNumber);
 //        List<CsvDataEntity> dataEntities = avTaskRepository.findByJobNumberAndRetailerCode("TASK-00003539", "ЯНДЕКС_М_ОНЛ");
-        dataDownload.download(strings, tempFile, response, "");
-        return null;
+
+//        dataDownload.download(strings, path.toFile(), response, "");
     }
 
     private Collection<CsvDataEntity> getTaskList(List<List<Object>> lists) {
@@ -152,13 +152,14 @@ public class AvService implements FileProcessingService {
         Pageable pageable = PageRequest.of(0, 10);
         return avReportRepository.findDistinctTopByJobNumber(pageable);
     }
+
     public List<String> getLatestTask() {
         // Получаем последние 10 сохраненных заданий из базы данных
         Pageable pageable = PageRequest.of(0, 10);
         return avTaskRepository.findDistinctTopByJobNumber(pageable);
     }
 
-    public List<String> getRetailNetwork(){
+    public List<String> getRetailNetwork() {
         return handbookRepository.findDistinctByRetailNetwork();
     }
 }

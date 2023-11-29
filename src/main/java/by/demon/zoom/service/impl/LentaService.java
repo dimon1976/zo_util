@@ -64,7 +64,7 @@ public class LentaService implements FileProcessingService {
                 DataToExcel<LentaReportDTO> dataToExcel = new DataToExcel<>();
                 short skip = 1;
                 dataToExcel.exportToExcel(headerLentaReport, lentaReportDTO, out, skip);
-                dataDownload.download(file.getName(), filePath, response);
+//                dataDownload.download(file.getName(), filePath, response);
             }
             LOG.info("Report exported successfully: {}", filePath);
             return filePath;
@@ -155,7 +155,7 @@ public class LentaService implements FileProcessingService {
                 try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
                     DataToExcel<LentaDTO> dataToExcel = new DataToExcel<>();
                     dataToExcel.exportToExcel(headerLentaTask, lentaDTOs, fileOutputStream, (short) 0);
-                    dataDownload.download(file.getName(), filePath, response);
+//                    dataDownload.download(file.getName(), filePath, response);
                 }
                 data = new HashMap<>();
 
@@ -169,10 +169,14 @@ public class LentaService implements FileProcessingService {
     }
 
     @Override
-    public String download(File tempFile, HttpServletResponse response, String... additionalParams) throws IOException {
+    public String readFile(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
         return null;
     }
 
+    @Override
+    public void download(HttpServletResponse response,Path path,  String format, String... additionalParams) throws IOException {
+
+    }
 
     private Workbook loadWorkbook(File filename) {
         LOG.info("Loading workbook...");

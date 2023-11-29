@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -34,18 +33,17 @@ public class UrlService implements FileProcessingService {
     }
 
 
-    public String readFile(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
+    public String readFile(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
         LOG.info("Exporting data...");
 
         try {
-            List<List<Object>> excelData = readDataFromFile(file);
+            List<List<Object>> excelData = readDataFromFile(path.toFile());
             Collection<UrlDTO> urlDTOList = getUrlDTOList(excelData);
-            Path path = Path.of(filePath);
 
             try (OutputStream out = Files.newOutputStream(path)) {
                 short skipLines = 0;
                 dataToExcel.exportToExcel(HEADER, urlDTOList, out, skipLines);
-                dataDownload.download(file.getName(), filePath, response);
+//                dataDownload.download(file.getName(), filePath, response);
             }
 
             LOG.info("Data exported successfully");
@@ -57,8 +55,8 @@ public class UrlService implements FileProcessingService {
     }
 
     @Override
-    public String download(File tempFile, HttpServletResponse response, String... additionalParams) throws IOException {
-        return null;
+    public void download(HttpServletResponse response,Path path,  String format, String... additionalParams) throws IOException {
+
     }
 
     private Collection<UrlDTO> getUrlDTOList(List<List<Object>> excelData) {

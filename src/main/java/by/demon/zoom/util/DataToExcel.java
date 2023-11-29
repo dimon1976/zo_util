@@ -35,10 +35,6 @@ public class DataToExcel<T> {
         symbols.setDecimalSeparator(',');
     }
 
-//    public void exportToExcel(List<String> headers, Collection<T> dataset, OutputStream out, short skip) {
-//        exportToExcel(headers, dataset, out, skip);
-//    }
-
     public void exportToExcel(List<String> headers, List<List<Object>> dataset, OutputStream out, short skip) {
         exportObjectToExcel(headers, dataset, out, skip);
     }
