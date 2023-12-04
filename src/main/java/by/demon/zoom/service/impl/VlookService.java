@@ -48,7 +48,7 @@ public class VlookService implements FileProcessingService {
                     .forEach(keyOne -> value.forEach(url -> result.add(new VlookBarDTO(keyOne, keyTwo, url)))));
 
             dataToExcel.exportToExcel(header, result, outputStream, skip);
-            download(response,path, Globals.SUFFIX_XLSX);
+            download(response, path, Globals.SUFFIX_XLSX);
             log.info("Data exported successfully to Excel: {}", path.getFileName());
         } catch (IOException e) {
             log.error("Error exporting data to Excel: {}", e.getMessage(), e);
@@ -59,10 +59,11 @@ public class VlookService implements FileProcessingService {
     }
 
     @Override
-    public void download(HttpServletResponse response,Path path, String format, String... additionalParams) throws IOException {
+    public void download(HttpServletResponse response, Path path, String format, String... additionalParams) throws IOException {
 //        Path path = DataDownload.getPath("vlook-result", DataDownload.setSuffix(format));
-        FileInputStream is = new FileInputStream(path.toAbsolutePath().toString());
-        dataDownload.downloadExcel(path, is, response);
+        try (FileInputStream is = new FileInputStream(path.toAbsolutePath().toString())) {
+            dataDownload.downloadExcel(path, is, response);
+        }
     }
 
     private void addMapOne(List<Object> list, Map<String, Set<String>> mapOne) {

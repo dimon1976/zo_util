@@ -3,12 +3,15 @@ package by.demon.zoom.service.impl;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.DataToExcel;
+import by.demon.zoom.util.Globals;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,7 +50,7 @@ public class StatisticService implements FileProcessingService {
             List<String> newHeader = addAdditionalColumnsToString(additionalParams[2], additionalParams[0], additionalParams[3]);
             short skip = 1;
             dataToExcel.exportToExcel(newHeader, resultTest, out, skip);
-//            dataDownload.download(fileName, filePath, response);
+            download(response, path, Globals.SUFFIX_XLSX, additionalParams);
         } catch (IOException e) {
             LOG.error("Error exporting data to Excel: {}", e.getMessage(), e);
             throw e;
@@ -57,8 +60,10 @@ public class StatisticService implements FileProcessingService {
     }
 
     @Override
-    public void download(HttpServletResponse response,Path path,  String format, String... additionalParams) throws IOException {
-
+    public void download(HttpServletResponse response, Path path, String format, String... additionalParams) throws IOException {
+        try (InputStream is = new FileInputStream(path.toAbsolutePath().toString())) {
+            dataDownload.downloadExcel(path, is, response);
+        }
     }
 
 

@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -74,23 +75,21 @@ public class MegatopService implements FileProcessingService {
     }
 
     @Override
-    public void download(HttpServletResponse response,Path path, String format, String... additionalParameters) throws IOException {
+    public void download(HttpServletResponse response, Path path, String format, String... additionalParameters) throws IOException {
         try {
             List<Megatop> megatopByLabel = getMegatopByLabel(additionalParameters[0]);
             HashSet<MegatopDTO> megatopDTOList = getMegatopDTOList(megatopByLabel);
-//            Path path = DataDownload.getPath("report-megatop", format);
-
             // Экспортируем данные в Excel
-            try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+                 FileInputStream is = new FileInputStream(path.toAbsolutePath().toString())) {
                 dataToExcel.exportToExcel(header, megatopDTOList, out, 0);
                 byte[] data = out.toByteArray();
                 Files.write(path, data);
+                // Скачиваем файл
+                dataDownload.downloadExcel(path, is, response);
+                DataDownload.cleanupTempFile(path);
+                LOG.info("Data exported successfully to Excel: {}", path.getFileName().toString());
             }
-
-            // Скачиваем файл
-//            dataDownload.download(path.getFileName().toString(), path.toString(), response);
-            DataDownload.cleanupTempFile(path);
-            LOG.info("Data exported successfully to Excel: {}", path.getFileName().toString());
         } catch (IOException e) {
             LOG.error("Error exporting data to Excel: {}", e.getMessage(), e);
             throw e;
