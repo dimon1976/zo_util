@@ -16,17 +16,16 @@
             <div class="row">
                 <div class="col-12 col-sm-6">
                     <h4>Upload Files</h4>
-                    <form th:action="@{/excel/megatop/upload}" th:object="${fileForm}" method="post"
+                    <form th:action="@{/excel/megatop/upload}"  method="post"
                           enctype="multipart/form-data" class="mb-3">
                         <div class="mb-3">
                             <label for="files" class="form-label">Files:</label>
-                            <input type="file" class="form-control" th:field="*{files}" multiple id="files"/>
+                            <input type="file" class="form-control" name="file" multiple id="files"/>
                         </div>
 
                         <div class="mb-3">
                             <label for="labelSelect" class="form-label">Latest Labels:</label>
-                            <select name="labelSelect" id="labelSelect" class="form-select">
-<!--                                th:field="*{label}"-->
+                            <select name="label" id="labelSelect" class="form-select">
                                 <option th:value="${generatedLabel}" th:text="${generatedLabel}"></option>
                                 <option th:each="label : ${latestLabels}" th:value="${label}" th:text="${label}"></option>
                             </select>

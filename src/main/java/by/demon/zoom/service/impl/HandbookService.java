@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -29,9 +30,7 @@ public class HandbookService implements FileProcessingService {
         this.handbookRepository = handbookRepository;
     }
 
-
-    @Override
-    public String readFile(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
+    public String readFiles(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
 
         List<List<Object>> lists = readDataFromFile(path.toFile());
         Collection<Handbook> handbookArrayList = getObjectList(lists);
@@ -72,12 +71,17 @@ public class HandbookService implements FileProcessingService {
     }
 
     @Override
+    public Collection<T> readFiles(List<File> files, String... additionalParams) throws IOException {
+        return null;
+    }
+
+    @Override
     public void save(Collection<T> collection) {
 
     }
 
     @Override
-    public Collection<T> getData() {
+    public Collection<T> listAll() {
         return null;
     }
 }

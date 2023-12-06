@@ -10,15 +10,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 
 @Service
 public class UrlService implements FileProcessingService {
@@ -34,25 +31,26 @@ public class UrlService implements FileProcessingService {
     }
 
 
-    public String readFile(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
+    public Collection readFiles(List<File> files, String... additionalParams) throws IOException {
         LOG.info("Exporting data...");
 
-        try {
-            List<List<Object>> excelData = readDataFromFile(path.toFile());
-            Collection<UrlDTO> urlDTOList = getUrlDTOList(excelData);
-
-            try (OutputStream out = Files.newOutputStream(path)) {
-                short skipLines = 0;
-                dataToExcel.exportToExcel(HEADER, urlDTOList, out, skipLines);
-//                dataDownload.download(file.getName(), filePath, response);
-            }
-
-            LOG.info("Data exported successfully");
-            return "export successful";
-        } catch (IOException e) {
-            LOG.error("Error exporting data: {}", e.getMessage());
-            return "Error exporting data";
-        }
+//        try {
+//            List<List<Object>> excelData = readDataFromFile(path.toFile());
+//            Collection<UrlDTO> urlDTOList = getUrlDTOList(excelData);
+//
+//            try (OutputStream out = Files.newOutputStream(path)) {
+//                short skipLines = 0;
+//                dataToExcel.exportToExcel(HEADER, urlDTOList, out, skipLines);
+////                dataDownload.download(file.getName(), filePath, response);
+//            }
+//
+//            LOG.info("Data exported successfully");
+//            return "export successful";
+//        } catch (IOException e) {
+//            LOG.error("Error exporting data: {}", e.getMessage());
+//            return "Error exporting data";
+//        }
+        return null;
     }
 
     @Override
@@ -66,7 +64,7 @@ public class UrlService implements FileProcessingService {
     }
 
     @Override
-    public Collection<T> getData() {
+    public Collection<T> listAll() {
         return null;
     }
 

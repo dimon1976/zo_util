@@ -169,14 +169,15 @@ public class LentaService implements FileProcessingService {
         }
     }
 
-    @Override
-    public String readFile(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
-        return null;
-    }
 
     @Override
     public void download(HttpServletResponse response,Path path,  String format, String... additionalParams) throws IOException {
 
+    }
+
+    @Override
+    public Collection<T> readFiles(List<File> files, String... additionalParams) throws IOException {
+        return null;
     }
 
     @Override
@@ -185,7 +186,7 @@ public class LentaService implements FileProcessingService {
     }
 
     @Override
-    public Collection<T> getData() {
+    public Collection<T> listAll() {
         return null;
     }
 

@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -37,8 +38,7 @@ public class EdadealService implements FileProcessingService {
         this.dataDownload = dataDownload;
     }
 
-    @Override
-    public String readFile(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
+    public String readFiles(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
         LOG.info("Exporting data...");
         List<List<Object>> originalWb = readDataFromFile(path.toFile());
         List<Integer> columns = Arrays.asList(0, 1, 2, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24);
@@ -59,12 +59,17 @@ public class EdadealService implements FileProcessingService {
     }
 
     @Override
+    public Collection<T> readFiles(List<File> files, String... additionalParams) throws IOException {
+        return null;
+    }
+
+    @Override
     public void save(Collection<T> collection) {
 
     }
 
     @Override
-    public Collection<T> getData() {
+    public Collection<T> listAll() {
         return null;
     }
 

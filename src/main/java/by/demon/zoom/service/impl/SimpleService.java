@@ -6,7 +6,6 @@ import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.DataToExcel;
-import by.demon.zoom.util.Globals;
 import by.demon.zoom.util.StringUtil;
 import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
@@ -14,17 +13,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static by.demon.zoom.util.ExcelReader.readExcel;
 
 @Service
 public class SimpleService implements FileProcessingService {
@@ -43,20 +39,21 @@ public class SimpleService implements FileProcessingService {
         this.dataDownload = dataDownload;
     }
 
-    public String readFile(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
-        List<List<Object>> lists = readExcel(path.toFile());
-        Collection<Product> productList = getProductList(lists);
-        Collection<SimpleDTO> collect = getSimpleDTOList(productList);
-        try (OutputStream out = Files.newOutputStream(path)) {
-            short skipLines = 1;
-            dataToExcel.exportToExcel(header, collect, out, skipLines);
-            download(response, path, Globals.SUFFIX_XLSX);
-            LOG.info("Data exported successfully to Excel: {}", path.toAbsolutePath());
-        } catch (IOException e) {
-            LOG.error("Error exporting data to Excel: {}", e.getMessage(), e);
-            throw e;
-        }
-        return path.toAbsolutePath().toString();
+    public Collection readFiles(List<File> files, String... additionalParams) throws IOException {
+//        List<List<Object>> lists = readExcel(path.toFile());
+//        Collection<Product> productList = getProductList(lists);
+//        Collection<SimpleDTO> collect = getSimpleDTOList(productList);
+//        try (OutputStream out = Files.newOutputStream(path)) {
+//            short skipLines = 1;
+//            dataToExcel.exportToExcel(header, collect, out, skipLines);
+//            download(response, path, Globals.SUFFIX_XLSX);
+//            LOG.info("Data exported successfully to Excel: {}", path.toAbsolutePath());
+//        } catch (IOException e) {
+//            LOG.error("Error exporting data to Excel: {}", e.getMessage(), e);
+//            throw e;
+//        }
+//        return path.toAbsolutePath().toString();
+        return null;
     }
 
     @Override
@@ -75,7 +72,7 @@ public class SimpleService implements FileProcessingService {
     }
 
     @Override
-    public Collection<T> getData() {
+    public Collection<T> listAll() {
         return null;
     }
 

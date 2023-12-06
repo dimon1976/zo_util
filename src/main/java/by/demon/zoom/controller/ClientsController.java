@@ -1,6 +1,5 @@
 package by.demon.zoom.controller;
 
-import by.demon.zoom.domain.FileForm;
 import by.demon.zoom.domain.Lenta;
 import by.demon.zoom.service.impl.AvService;
 import by.demon.zoom.service.impl.MegatopService;
@@ -31,7 +30,7 @@ public class ClientsController {
 
     @GetMapping("/megatop")
     public String megatop(Model model) {
-        model.addAttribute("fileForm", new FileForm());
+//        model.addAttribute("fileForm", new FileForm());
         model.addAttribute("latestLabels", megatopService.getLatestLabels());
         model.addAttribute("generatedLabel", megatopService.generateLabel());
         return "/clients/megatop";

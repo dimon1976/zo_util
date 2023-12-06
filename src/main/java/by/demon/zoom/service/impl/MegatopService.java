@@ -12,7 +12,6 @@ import by.demon.zoom.util.StringUtil;
 import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -29,19 +28,13 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 
 @Service
 public class MegatopService implements FileProcessingService {
-
-    @Value("${temp.path}")
-    private String TEMP_PATH;
 
     private static final Logger LOG = LoggerFactory.getLogger(MegatopService.class);
     private static final DateTimeFormatter MEGATOP_PATTERN = DateTimeFormatter.ofPattern("dd.MM.yyyy H:m");
@@ -58,22 +51,22 @@ public class MegatopService implements FileProcessingService {
         this.dataDownload = dataDownload;
     }
 
-    public String export(List<File> files, String label) throws IOException {
-        for (File file : files) {
-            List<List<Object>> lists = readDataFromFile(file);
-            try {
-                Files.deleteIfExists(file.toPath());
-                LOG.info("File {} remove successfully.", file.getAbsolutePath());
-            } catch (IOException e) {
-                LOG.error("File {} remove failed.", file.getAbsolutePath());
-                throw new IOException("File {} remove failed.");
-            }
-            Collection<Megatop> megatopArrayList = getMegatopList(lists, label, file);
-            megatopRepository.saveAll(megatopArrayList);
-            LOG.info("File {} processed and saved successfully.", file.getName());
-        }
-        return "All files processed and saved successfully.";
-    }
+//    public String export(List<File> files, String label) throws IOException {
+//        for (File file : files) {
+//            List<List<Object>> lists = readDataFromFile(file);
+//            try {
+//                Files.deleteIfExists(file.toPath());
+//                LOG.info("File {} remove successfully.", file.getAbsolutePath());
+//            } catch (IOException e) {
+//                LOG.error("File {} remove failed.", file.getAbsolutePath());
+//                throw new IOException("File {} remove failed.");
+//            }
+//            Collection<Megatop> megatopArrayList = getMegatopList(lists, label, file);
+//            megatopRepository.saveAll(megatopArrayList);
+//            LOG.info("File {} processed and saved successfully.", file.getName());
+//        }
+//        return "All files processed and saved successfully.";
+//    }
 
     @Override
     public void download(HttpServletResponse response, Path path, String format, String... additionalParameters) throws IOException {
@@ -98,12 +91,32 @@ public class MegatopService implements FileProcessingService {
     }
 
     @Override
+    public Collection readFiles(List<File> files, String... additionalParams) throws IOException {
+        Collection<Megatop> megatopArrayList = new ArrayList<>();
+        for (File file : files) {
+            List<List<Object>> lists = readDataFromFile(file);
+            try {
+                Files.deleteIfExists(file.toPath());
+                LOG.info("File {} remove successfully.", file.getAbsolutePath());
+            } catch (IOException e) {
+                LOG.error("File {} remove failed.", file.getAbsolutePath());
+                throw new IOException("File {} remove failed.");
+            }
+            megatopArrayList = getMegatopList(lists, additionalParams[0], file);
+            megatopRepository.saveAll(megatopArrayList);
+            LOG.info("File {} processed and saved successfully.", file.getName());
+        }
+        LOG.info("All files processed and saved successfully.");
+        return megatopArrayList;
+    }
+
+    @Override
     public void save(Collection<T> collection) {
 
     }
 
     @Override
-    public Collection<T> getData() {
+    public Collection<T> listAll() {
         return null;
     }
 
@@ -165,11 +178,6 @@ public class MegatopService implements FileProcessingService {
 
     private String getStringValue(List<Object> list, int index) {
         return (index >= 0 && index < list.size()) ? String.valueOf(list.get(index)) : "";
-    }
-
-    @Override
-    public String readFile(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
-        return null;
     }
 
 

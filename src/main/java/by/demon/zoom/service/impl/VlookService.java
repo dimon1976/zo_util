@@ -4,15 +4,14 @@ import by.demon.zoom.dto.VlookBarDTO;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.DataToExcel;
-import by.demon.zoom.util.Globals;
 import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
@@ -34,35 +33,38 @@ public class VlookService implements FileProcessingService {
     }
 
     @Override
-    public String readFile(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
-        short skip = 0;
+    public Collection readFiles(List<File> files, String... additionalParams) {
         Map<String, Set<String>> mapOne = new HashMap<>();
         Map<String, Set<String>> mapTwo = new HashMap<>();
         List<VlookBarDTO> result = new ArrayList<>();
+        for (File file : files) {
+            readDataFromFile(file)
+                    .forEach(objects -> {
+                        addMapOne(objects, mapOne);
+                        addMapTwo(objects, mapTwo);
+                    });
 
-        readDataFromFile(path.toFile())
-                .forEach(objects -> {
-                    addMapOne(objects, mapOne);
-                    addMapTwo(objects, mapTwo);
-                });
-        try (FileOutputStream outputStream = new FileOutputStream(path.toFile())) {
             mapTwo.forEach((keyTwo, value) -> mapOne.getOrDefault(keyTwo, Collections.emptySet())
                     .forEach(keyOne -> value.forEach(url -> result.add(new VlookBarDTO(keyOne, keyTwo, url)))));
 
-            dataToExcel.exportToExcel(header, result, outputStream, skip);
-            download(response, path, Globals.SUFFIX_XLSX);
-            log.info("Data exported successfully to Excel: {}", path.getFileName());
-        } catch (IOException e) {
-            log.error("Error exporting data to Excel: {}", e.getMessage(), e);
-            throw e;
         }
 
-        return path.toAbsolutePath().toString();
+//            dataToExcel.exportToExcel(header, result, outputStream, skip);
+//            download(response, path, Globals.SUFFIX_XLSX);
+        return result;
+//        log.info("Data exported successfully to Excel: {}", path.getFileName());
     }
+//        catch (IOException e) {
+//            log.error("Error exporting data to Excel: {}", e.getMessage(), e);
+//            throw e;
+//        }
+
+//        return path.toAbsolutePath().toString();
+//}
 
     @Override
     public void download(HttpServletResponse response, Path path, String format, String... additionalParams) throws IOException {
-        Path path1 = DataDownload.getPath("vlook-result", DataDownload.setSuffix(format));
+//        Path path1 = DataDownload.getPath("vlook-result", DataDownload.setSuffix(format));
         try (FileInputStream is = new FileInputStream(path.toAbsolutePath().toString())) {
             dataDownload.downloadExcel(path, is, response);
         }
@@ -74,7 +76,7 @@ public class VlookService implements FileProcessingService {
     }
 
     @Override
-    public Collection<T> getData() {
+    public Collection<T> listAll() {
         return null;
     }
 

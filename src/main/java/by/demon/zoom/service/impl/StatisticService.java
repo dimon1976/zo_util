@@ -3,24 +3,21 @@ package by.demon.zoom.service.impl;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.DataToExcel;
-import by.demon.zoom.util.Globals;
 import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
 import static by.demon.zoom.mapper.MappingUtils.ifExistCompetitor;
 import static by.demon.zoom.mapper.MappingUtils.listUsers;
-import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 
 @Service
 public class StatisticService implements FileProcessingService {
@@ -39,22 +36,23 @@ public class StatisticService implements FileProcessingService {
         this.dataDownload = dataDownload;
     }
 
-    public String readFile(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
-        List<List<Object>> originalWb = readDataFromFile(path.toFile());
-        List<Integer> columns = Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 19, 20, 22, 23, 24);
-        List<Integer> newColumn = getColumnList(additionalParams[0], additionalParams[2], additionalParams[3], columns);
-        List<List<Object>> resultTest = getResultList(originalWb, newColumn, additionalParams[1]);
-        try (OutputStream out = Files.newOutputStream(path)) {
-            List<String> newHeader = addAdditionalColumnsToString(additionalParams[2], additionalParams[0], additionalParams[3]);
-            short skip = 1;
-            dataToExcel.exportToExcel(newHeader, resultTest, out, skip);
-            download(response, path, Globals.SUFFIX_XLSX, additionalParams);
-        } catch (IOException e) {
-            LOG.error("Error exporting data to Excel: {}", e.getMessage(), e);
-            throw e;
-        }
-        LOG.info("Data exported successfully to Excel: {}", path.toAbsolutePath());
-        return path.toAbsolutePath().toString();
+    public Collection readFiles(List<File> files, String... additionalParams) throws IOException {
+//        List<List<Object>> originalWb = readDataFromFile(path.toFile());
+//        List<Integer> columns = Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 19, 20, 22, 23, 24);
+//        List<Integer> newColumn = getColumnList(additionalParams[0], additionalParams[2], additionalParams[3], columns);
+//        List<List<Object>> resultTest = getResultList(originalWb, newColumn, additionalParams[1]);
+//        try (OutputStream out = Files.newOutputStream(path)) {
+//            List<String> newHeader = addAdditionalColumnsToString(additionalParams[2], additionalParams[0], additionalParams[3]);
+//            short skip = 1;
+//            dataToExcel.exportToExcel(newHeader, resultTest, out, skip);
+//            download(response, path, Globals.SUFFIX_XLSX, additionalParams);
+//        } catch (IOException e) {
+//            LOG.error("Error exporting data to Excel: {}", e.getMessage(), e);
+//            throw e;
+//        }
+//        LOG.info("Data exported successfully to Excel: {}", path.toAbsolutePath());
+//        return path.toAbsolutePath().toString();
+        return null;
     }
 
     @Override
@@ -70,7 +68,7 @@ public class StatisticService implements FileProcessingService {
     }
 
     @Override
-    public Collection<T> getData() {
+    public Collection<T> listAll() {
         return null;
     }
 

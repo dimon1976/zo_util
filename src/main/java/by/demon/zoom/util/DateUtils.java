@@ -1,8 +1,5 @@
 package by.demon.zoom.util;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -25,12 +22,6 @@ public class DateUtils {
     public static LocalDate getLocalDate(String date, DateTimeFormatter pattern) {
         return LocalDate.parse(date, pattern);
     }
-
-    public static Date getDate(String date, String pattern) throws ParseException {
-        DateFormat dateFormat = new SimpleDateFormat(pattern);
-        return dateFormat.parse(date);
-    }
-
 
     public static String format(Date date) {
         return format(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"));

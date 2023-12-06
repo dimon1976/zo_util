@@ -1,13 +1,11 @@
 package by.demon.zoom.controller;
 
-import by.demon.zoom.domain.FileForm;
 import by.demon.zoom.domain.Lenta;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.service.impl.*;
 import by.demon.zoom.util.DataDownload;
-import by.demon.zoom.util.DateUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.Nullable;
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -19,11 +17,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Slf4j
 @Controller
@@ -64,7 +58,8 @@ public class FileController {
 
     @PostMapping("/getUrl/")
     public @ResponseBody String getUrl(@RequestParam("file") MultipartFile[] multipartFile) {
-        return readFiles("getUrl", multipartFile);
+//        return readFiles("getUrl", multipartFile);
+        return "";
     }
 
     @PostMapping("/stat/")
@@ -74,28 +69,37 @@ public class FileController {
                                                   @RequestParam(value = "showCompetitorUrl", required = false) String showCompetitorUrl,
                                                   @RequestParam(value = "showDateAdd", required = false) String showDateAdd) {
         String[] additionalParam = new String[]{showSource, sourceReplace, showCompetitorUrl, showDateAdd};
-        return readFiles("stat", multipartFile, additionalParam);
+//        return readFiles("stat", multipartFile, additionalParam);
+        return "";
     }
 
     @PostMapping("/vlook")
-    public @ResponseBody String excelVlook(@RequestParam("file") MultipartFile[] multipartFile) {
-        return readFiles("vlook", multipartFile);
+    public @ResponseBody String excelVlook(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
+        Collection<T> collection = readFiles("vlook", multipartFile);
+
+        return "";
     }
 
     @PostMapping("/megatop/upload")
-    public @ResponseBody String handleFileUpload(@ModelAttribute FileForm fileForm,
-                                                 @RequestParam(value = "label", required = false) String label) throws IOException {
+    public @ResponseBody String handleFileUpload(
+//            @ModelAttribute FileForm fileForm,
+            @RequestParam("file") MultipartFile[] multipartFile,
+            @RequestParam(value = "label", required = false) String label) throws IOException {
+
 //        String label = fileForm.getLabel();
-        ArrayList<File> files = new ArrayList<>();
-        if (fileForm.getFiles() != null) {
-            for (MultipartFile file : fileForm.getFiles()) {
-                Path filePath = saveFileAndGetPath(file);
-                File transferTo = new File(filePath.toAbsolutePath().toString());
-                files.add(transferTo);
-            }
-        }
+//        ArrayList<File> files = new ArrayList<>();
+//        if (fileForm.getFiles() != null) {
+//            for (MultipartFile file : fileForm.getFiles()) {
+//                Path filePath = saveFileAndGetPath(file);
+//                File transferTo = new File(filePath.toAbsolutePath().toString());
+//                files.add(transferTo);
+//            }
+//        }
         // Обработка файлов и сохранение в базу данных
-        return megatopService.export(files, label);
+//        return megatopService.export(files, label);
+        String[] additionalParam = new String[]{label};
+        Collection<T> collection = readFiles("megatop", multipartFile, additionalParam);
+        return "";
     }
 
 
@@ -109,22 +113,26 @@ public class FileController {
 
     @PostMapping("/simpleReport")
     public @ResponseBody String excelSimpleReport(@RequestParam("file") MultipartFile[] multipartFile) {
-        return readFiles("simple", multipartFile);
+//        return readFiles("simple", multipartFile);
+        return "";
     }
 
     @PostMapping("/av/task")
     public @ResponseBody String avTask(@RequestParam("file") MultipartFile[] multipartFile) {
-        return readFiles("avService", multipartFile, "task");
+//        return readFiles("avService", multipartFile, "task");
+        return "";
     }
 
     @PostMapping("/av/report")
     public @ResponseBody String avReport(@RequestParam("file") MultipartFile[] multipartFile) {
-        return readFiles("avService", multipartFile, "report");
+//        return readFiles("avService", multipartFile, "report");
+        return "";
     }
 
     @PostMapping("/av/handbook")
     public @ResponseBody String avHandbook(@RequestParam("file") MultipartFile[] multipartFile) {
-        return readFiles("handbook", multipartFile);
+//        return readFiles("handbook", multipartFile);
+        return "";
     }
 
     @PostMapping("/av/download")
@@ -139,67 +147,65 @@ public class FileController {
 
     @PostMapping("/edadeal")
     public @ResponseBody String excelEdadeal(@RequestParam("file") MultipartFile[] multipartFile) {
-        return readFiles("edadeal", multipartFile);
+//        return readFiles("edadeal", multipartFile);
+        return "";
     }
 
     @PostMapping("/lenta")
     public @ResponseBody String excelLentaTask(@RequestParam("file") MultipartFile[] multipartFile) {
-        return readFiles("lenta", multipartFile);
+//        return readFiles("lenta", multipartFile);
+        return "";
     }
 
 
     @PostMapping("/lentaReport")
     public @ResponseBody String excelLentaReport(@ModelAttribute("lenta") Lenta lenta,
-                                                 @RequestParam("file") MultipartFile multipartFile,
-                                                 @RequestParam(value = "format", required = false) String format,
-                                                 @RequestParam(value = "afterDate", required = false) String afterDate) {
+                                                 @RequestParam("file") MultipartFile multipartFile) {
         if (ifExist(multipartFile)) {
             Path filePath = saveFileAndGetPath(multipartFile);
             try {
                 multipartFile.transferTo(new File(filePath.toAbsolutePath().toString()));
                 LentaService lentaService = new LentaService(new DataDownload());
-                return lentaService.exportReport(filePath.toAbsolutePath().toString(), new File(filePath.toAbsolutePath().toString()), response, DateUtils.getDate(afterDate, afterDate));
+                return lentaService.exportReport(filePath.toAbsolutePath().toString(), new File(filePath.toAbsolutePath().toString()), response, lenta.getAfterDate());
             } catch (IllegalStateException | IOException e) {
                 log.error("Error while uploading file: {}", e.getMessage());
-            } catch (ParseException e) {
-                throw new RuntimeException(e);
             }
         }
         return "/clients/lenta";
     }
 
-    private String readFiles(String action, MultipartFile[] multipartFile, String... additionalParams) {
+
+    private Collection<T> readFiles(String action, MultipartFile[] multipartFile, String... additionalParams) throws IOException {
         FileProcessingService processingService = (FileProcessingService) processingServices.get(action);
         if (processingService == null) {
             log.warn("Unsupported action: {}", action);
-            return ("Unsupported action: {}" + action);
+            return null;
         }
+        ArrayList<File> files = new ArrayList<>();
         for (MultipartFile file : multipartFile) {
             if (ifExist(file)) {
-                String processSingleFile = processSingleFile(additionalParams, file, processingService);
-                Path filePath = getFilePath(file);
-                cleanupTempFile(new File(filePath.toAbsolutePath().toString()));
-                if (processSingleFile != null) return processSingleFile;
+                Path path = saveFileAndGetPath(file);
+                files.add(path.toFile());
             }
         }
-        return "index";
+        return processingService.readFiles(files, additionalParams);
     }
 
-    @Nullable
-    private String processSingleFile(String[] additionalParams, MultipartFile file, FileProcessingService processingService) {
-        Path filePath = saveFileAndGetPath(file);
-        String processSingleFile;
-        // Создаем директорию, если она не существует
-        createTempDirectory();
-        try {
-            processSingleFile = processingService.readFile(filePath, response, additionalParams);
-        } catch (IllegalStateException | IOException e) {
-            log.error("Error while uploading file: {}", e.getMessage());
-            // Если обработка не удалась, файл остается на месте
-            return "File uploaded failed: " + getOrgName(file);
-        }
-        return processSingleFile;
-    }
+//    @Nullable
+//    private String processSingleFile(String[] additionalParams, MultipartFile file, FileProcessingService processingService) {
+//        Path filePath = saveFileAndGetPath(file);
+//        String processSingleFile;
+//        // Создаем директорию, если она не существует
+//        createTempDirectory();
+//        try {
+////            processSingleFile = processingService.readFiles(filePath, response, additionalParams);
+//        } catch (IllegalStateException | IOException e) {
+//            log.error("Error while uploading file: {}", e.getMessage());
+//            // Если обработка не удалась, файл остается на месте
+//            return "File uploaded failed: " + getOrgName(file);
+//        }
+//        return processSingleFile;
+//    }
 
     private String download(String action, HttpServletResponse response, String format, String... additionalParams) throws IOException {
         FileProcessingService processingService = (FileProcessingService) processingServices.get(action);
@@ -223,7 +229,7 @@ public class FileController {
 
             try (OutputStream os = new FileOutputStream(transferTo)) {
                 os.write(file.getBytes());
-                log.info("File uploaded successfully: {}", getOrgName(file));
+                log.info("File uploaded successfully: {}", file.getOriginalFilename());
                 return filePath;
             } catch (IOException e) {
                 log.error("Error saving file: {}", e.getMessage());
@@ -263,17 +269,13 @@ public class FileController {
     }
 
     private Path getFilePath(MultipartFile multipartFile) {
-        String orgName = getOrgName(multipartFile);
+        String orgName = multipartFile.getOriginalFilename();
         String extension = getExtension(orgName);
         return Path.of(TEMP_PATH + "/" + orgName.replace("." + extension, "-" + "out." + extension));
     }
 
     private String getExtension(String orgName) {
         return orgName.lastIndexOf(".") == -1 ? "" : orgName.substring(orgName.lastIndexOf(".") + 1);
-    }
-
-    private String getOrgName(MultipartFile multipartFile) {
-        return multipartFile.getOriginalFilename();
     }
 
 }

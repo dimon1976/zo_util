@@ -31,8 +31,7 @@
                     </form>
                 </div>
                 <div class="col-12 col-sm-6">
-                    <form th:action="@{/excel/lentaReport}" th:method="post"  enctype="multipart/form-data">
-<!--                        th:object="${lenta}"-->
+                    <form th:action="@{/excel/lentaReport}" th:method="post" th:object="${lenta}" enctype="multipart/form-data">
                         <h4>Обработка отчета клиента Lenta</h4>
                         <div class="mb-3">
                             <label for="lentaReport" class="form-label">Выберите файл отчета:</label>
@@ -40,7 +39,7 @@
                         </div>
                         <div class="input-group mb-3">
                             <span class="input-group-text"> Удалить акции старше </span>
-                            <input type="date" class="form-control" th:name="${afterDate}" th:attr="data-date-pattern=${'yyyy-MM-dd'}"/>
+                            <input type="date" class="form-control" th:field="${lenta.afterDate}"/>
                         </div>
                         <div class="row">
                             <div class="col-12">
@@ -58,8 +57,8 @@
                         <h4>Обработка выгрузки Едадила</h4>
                         <div class="mb-3">
                             <label for="edadeal" class="form-label">Выберите файл выгрузки:</label>
-                            <input type="file" class="form-control" name="file" id="edadeal" placeholder="file" aria-describedby="edadelAria">
-                            <div id="edadelAria" class="form-text">Удалить все строки содержащие цены "от" и склеить продавец + модель в ID
+                            <input type="file" class="form-control" name="file" id="edadeal" placeholder="file" aria-describedby="edadealAria">
+                            <div id="edadealAria" class="form-text">Удалить все строки содержащие цены "от" и склеить продавец + модель в ID
                             </div>
                         </div>
                         <div class="row">
