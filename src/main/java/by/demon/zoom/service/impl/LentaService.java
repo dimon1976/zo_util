@@ -11,6 +11,7 @@ import by.demon.zoom.util.DataToExcel;
 import by.demon.zoom.util.DateUtils;
 import by.demon.zoom.util.StringUtil;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.formula.functions.T;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -123,7 +124,7 @@ public class LentaService implements FileProcessingService {
             HashSet<LentaReportDTO> lentaReportDTOs = new HashSet<>();
             for (Lenta lenta : lentaList) {
                 if (!lenta.getDateToPromo().isEmpty()) {
-                    if (DateUtils.getDate(lenta.getDateToPromo(), LENTA_PATTERN).isAfter(afterDate)) {
+                    if (DateUtils.getLocalDate(lenta.getDateToPromo(), LENTA_PATTERN).isAfter(afterDate)) {
                         LentaReportDTO lentaReportDTO = MappingUtils.mapToLentaReportDTO(lenta);
                         lentaReportDTOs.add(lentaReportDTO);
                     }
@@ -176,6 +177,16 @@ public class LentaService implements FileProcessingService {
     @Override
     public void download(HttpServletResponse response,Path path,  String format, String... additionalParams) throws IOException {
 
+    }
+
+    @Override
+    public void save(Collection<T> collection) {
+
+    }
+
+    @Override
+    public Collection<T> getData() {
+        return null;
     }
 
     private Workbook loadWorkbook(File filename) {

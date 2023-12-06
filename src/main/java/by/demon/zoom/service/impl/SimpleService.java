@@ -8,6 +8,7 @@ import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.DataToExcel;
 import by.demon.zoom.util.Globals;
 import by.demon.zoom.util.StringUtil;
+import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -66,6 +67,16 @@ public class SimpleService implements FileProcessingService {
             LOG.error("Error download data : {}", e.getMessage());
             throw e;
         }
+    }
+
+    @Override
+    public void save(Collection<T> collection) {
+
+    }
+
+    @Override
+    public Collection<T> getData() {
+        return null;
     }
 
 

@@ -9,6 +9,7 @@ import by.demon.zoom.domain.av.CsvReportEntity;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.MethodPerformance;
+import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
@@ -63,12 +64,22 @@ public class AvService implements FileProcessingService {
     }
 
     @Override
-    public void download(HttpServletResponse response,Path path,  String format, String... additionalParams) throws IOException {
+    public void download(HttpServletResponse response, Path path, String format, String... additionalParams) throws IOException {
         List<CsvReportEntity> allByJobNumber = avReportRepository.findAllByJobNumber(additionalParams[1]);
         List<String> strings = convert(allByJobNumber);
 //        List<CsvDataEntity> dataEntities = avTaskRepository.findByJobNumberAndRetailerCode("TASK-00003539", "ЯНДЕКС_М_ОНЛ");
 
 //        dataDownload.download(strings, path.toFile(), response, "");
+    }
+
+    @Override
+    public void save(Collection<T> collection) {
+
+    }
+
+    @Override
+    public Collection<T> getData() {
+        return null;
     }
 
     private Collection<CsvDataEntity> getTaskList(List<List<Object>> lists) {

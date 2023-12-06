@@ -3,6 +3,7 @@ package by.demon.zoom.service.impl;
 import by.demon.zoom.dao.HandbookRepository;
 import by.demon.zoom.domain.av.Handbook;
 import by.demon.zoom.service.FileProcessingService;
+import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -68,5 +69,15 @@ public class HandbookService implements FileProcessingService {
 
     @Override
     public void download(HttpServletResponse response,Path path, String format, String... additionalParams) throws IOException {
+    }
+
+    @Override
+    public void save(Collection<T> collection) {
+
+    }
+
+    @Override
+    public Collection<T> getData() {
+        return null;
     }
 }

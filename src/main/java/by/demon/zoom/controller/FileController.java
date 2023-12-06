@@ -5,6 +5,7 @@ import by.demon.zoom.domain.Lenta;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.service.impl.*;
 import by.demon.zoom.util.DataDownload;
+import by.demon.zoom.util.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +19,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -62,7 +64,7 @@ public class FileController {
 
     @PostMapping("/getUrl/")
     public @ResponseBody String getUrl(@RequestParam("file") MultipartFile[] multipartFile) {
-        return processFiles("getUrl", multipartFile);
+        return readFiles("getUrl", multipartFile);
     }
 
     @PostMapping("/stat/")
@@ -72,17 +74,18 @@ public class FileController {
                                                   @RequestParam(value = "showCompetitorUrl", required = false) String showCompetitorUrl,
                                                   @RequestParam(value = "showDateAdd", required = false) String showDateAdd) {
         String[] additionalParam = new String[]{showSource, sourceReplace, showCompetitorUrl, showDateAdd};
-        return processFiles("stat", multipartFile, additionalParam);
+        return readFiles("stat", multipartFile, additionalParam);
     }
 
     @PostMapping("/vlook")
     public @ResponseBody String excelVlook(@RequestParam("file") MultipartFile[] multipartFile) {
-        return processFiles("vlook", multipartFile);
+        return readFiles("vlook", multipartFile);
     }
 
     @PostMapping("/megatop/upload")
-    public @ResponseBody String handleFileUpload(@ModelAttribute FileForm fileForm) throws IOException {
-        String label = fileForm.getLabel();
+    public @ResponseBody String handleFileUpload(@ModelAttribute FileForm fileForm,
+                                                 @RequestParam(value = "label", required = false) String label) throws IOException {
+//        String label = fileForm.getLabel();
         ArrayList<File> files = new ArrayList<>();
         if (fileForm.getFiles() != null) {
             for (MultipartFile file : fileForm.getFiles()) {
@@ -106,22 +109,22 @@ public class FileController {
 
     @PostMapping("/simpleReport")
     public @ResponseBody String excelSimpleReport(@RequestParam("file") MultipartFile[] multipartFile) {
-        return processFiles("simple", multipartFile);
+        return readFiles("simple", multipartFile);
     }
 
     @PostMapping("/av/task")
     public @ResponseBody String avTask(@RequestParam("file") MultipartFile[] multipartFile) {
-        return processFiles("avService", multipartFile, "task");
+        return readFiles("avService", multipartFile, "task");
     }
 
     @PostMapping("/av/report")
     public @ResponseBody String avReport(@RequestParam("file") MultipartFile[] multipartFile) {
-        return processFiles("avService", multipartFile, "report");
+        return readFiles("avService", multipartFile, "report");
     }
 
     @PostMapping("/av/handbook")
     public @ResponseBody String avHandbook(@RequestParam("file") MultipartFile[] multipartFile) {
-        return processFiles("handbook", multipartFile);
+        return readFiles("handbook", multipartFile);
     }
 
     @PostMapping("/av/download")
@@ -136,47 +139,36 @@ public class FileController {
 
     @PostMapping("/edadeal")
     public @ResponseBody String excelEdadeal(@RequestParam("file") MultipartFile[] multipartFile) {
-        return processFiles("edadeal", multipartFile);
+        return readFiles("edadeal", multipartFile);
     }
 
     @PostMapping("/lenta")
     public @ResponseBody String excelLentaTask(@RequestParam("file") MultipartFile[] multipartFile) {
-        return processFiles("lenta", multipartFile);
+        return readFiles("lenta", multipartFile);
     }
 
 
     @PostMapping("/lentaReport")
     public @ResponseBody String excelLentaReport(@ModelAttribute("lenta") Lenta lenta,
                                                  @RequestParam("file") MultipartFile multipartFile,
-                                                 @RequestParam(value = "format", required = false) String format) {
+                                                 @RequestParam(value = "format", required = false) String format,
+                                                 @RequestParam(value = "afterDate", required = false) String afterDate) {
         if (ifExist(multipartFile)) {
             Path filePath = saveFileAndGetPath(multipartFile);
             try {
                 multipartFile.transferTo(new File(filePath.toAbsolutePath().toString()));
                 LentaService lentaService = new LentaService(new DataDownload());
-                return lentaService.exportReport(filePath.toAbsolutePath().toString(), new File(filePath.toAbsolutePath().toString()), response, lenta.getAfterDate());
+                return lentaService.exportReport(filePath.toAbsolutePath().toString(), new File(filePath.toAbsolutePath().toString()), response, DateUtils.getDate(afterDate, afterDate));
             } catch (IllegalStateException | IOException e) {
                 log.error("Error while uploading file: {}", e.getMessage());
+            } catch (ParseException e) {
+                throw new RuntimeException(e);
             }
         }
         return "/clients/lenta";
     }
 
-    private String download(String action, HttpServletResponse response, String format, String... additionalParams) throws IOException {
-        FileProcessingService processingService = (FileProcessingService) processingServices.get(action);
-        String processSingleFile = "";
-        if (processingService == null) {
-            log.warn("Unsupported action: {}", action);
-            return ("Unsupported action: {}" + action);
-        } else {
-            Path path = DataDownload.getPath("data", format);
-            processingService.download(response,path, format, additionalParams);
-        }
-
-        return processSingleFile;
-    }
-
-    private String processFiles(String action, MultipartFile[] multipartFile, String... additionalParams) {
+    private String readFiles(String action, MultipartFile[] multipartFile, String... additionalParams) {
         FileProcessingService processingService = (FileProcessingService) processingServices.get(action);
         if (processingService == null) {
             log.warn("Unsupported action: {}", action);
@@ -206,6 +198,20 @@ public class FileController {
             // Если обработка не удалась, файл остается на месте
             return "File uploaded failed: " + getOrgName(file);
         }
+        return processSingleFile;
+    }
+
+    private String download(String action, HttpServletResponse response, String format, String... additionalParams) throws IOException {
+        FileProcessingService processingService = (FileProcessingService) processingServices.get(action);
+        String processSingleFile = "";
+        if (processingService == null) {
+            log.warn("Unsupported action: {}", action);
+            return ("Unsupported action: {}" + action);
+        } else {
+            Path path = DataDownload.getPath("data", format);
+            processingService.download(response, path, format, additionalParams);
+        }
+
         return processSingleFile;
     }
 

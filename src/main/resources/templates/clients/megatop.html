@@ -25,7 +25,8 @@
 
                         <div class="mb-3">
                             <label for="labelSelect" class="form-label">Latest Labels:</label>
-                            <select name="labelSelect" id="labelSelect" class="form-select" th:field="*{label}">
+                            <select name="labelSelect" id="labelSelect" class="form-select">
+<!--                                th:field="*{label}"-->
                                 <option th:value="${generatedLabel}" th:text="${generatedLabel}"></option>
                                 <option th:each="label : ${latestLabels}" th:value="${label}" th:text="${label}"></option>
                             </select>

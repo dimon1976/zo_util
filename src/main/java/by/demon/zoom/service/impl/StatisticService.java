@@ -4,6 +4,7 @@ import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.DataToExcel;
 import by.demon.zoom.util.Globals;
+import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -15,10 +16,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 import static by.demon.zoom.mapper.MappingUtils.ifExistCompetitor;
 import static by.demon.zoom.mapper.MappingUtils.listUsers;
@@ -64,6 +62,16 @@ public class StatisticService implements FileProcessingService {
         try (InputStream is = new FileInputStream(path.toAbsolutePath().toString())) {
             dataDownload.downloadExcel(path, is, response);
         }
+    }
+
+    @Override
+    public void save(Collection<T> collection) {
+
+    }
+
+    @Override
+    public Collection<T> getData() {
+        return null;
     }
 
 

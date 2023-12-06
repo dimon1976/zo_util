@@ -5,6 +5,7 @@ import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.DataToExcel;
 import by.demon.zoom.util.Globals;
+import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,7 @@ public class VlookService implements FileProcessingService {
         this.dataDownload = dataDownload;
     }
 
+    @Override
     public String readFile(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
         short skip = 0;
         Map<String, Set<String>> mapOne = new HashMap<>();
@@ -60,10 +62,20 @@ public class VlookService implements FileProcessingService {
 
     @Override
     public void download(HttpServletResponse response, Path path, String format, String... additionalParams) throws IOException {
-//        Path path = DataDownload.getPath("vlook-result", DataDownload.setSuffix(format));
+        Path path1 = DataDownload.getPath("vlook-result", DataDownload.setSuffix(format));
         try (FileInputStream is = new FileInputStream(path.toAbsolutePath().toString())) {
             dataDownload.downloadExcel(path, is, response);
         }
+    }
+
+    @Override
+    public void save(Collection<T> collection) {
+
+    }
+
+    @Override
+    public Collection<T> getData() {
+        return null;
     }
 
     private void addMapOne(List<Object> list, Map<String, Set<String>> mapOne) {

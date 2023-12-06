@@ -9,6 +9,7 @@ import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.DataToExcel;
 import by.demon.zoom.util.DateUtils;
 import by.demon.zoom.util.StringUtil;
+import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -94,6 +95,16 @@ public class MegatopService implements FileProcessingService {
             LOG.error("Error exporting data to Excel: {}", e.getMessage(), e);
             throw e;
         }
+    }
+
+    @Override
+    public void save(Collection<T> collection) {
+
+    }
+
+    @Override
+    public Collection<T> getData() {
+        return null;
     }
 
     private List<Megatop> getMegatopByLabel(String label) {

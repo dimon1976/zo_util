@@ -3,16 +3,19 @@ package by.demon.zoom.service.impl;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.DataToExcel;
+import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -40,18 +43,29 @@ public class EdadealService implements FileProcessingService {
         List<List<Object>> originalWb = readDataFromFile(path.toFile());
         List<Integer> columns = Arrays.asList(0, 1, 2, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24);
         List<List<Object>> resultList = getResultList(originalWb, columns);
-        try (OutputStream out = Files.newOutputStream(path)) {
+        try (OutputStream out = Files.newOutputStream(path);
+             FileInputStream is = new FileInputStream(path.toAbsolutePath().toString())) {
             short skip = 1;
             dataToExcel.exportToExcel(header, resultList, out, skip);
-//            download(file, response, additionalParams);
+            dataDownload.downloadExcel(path, is, response);
         }
         LOG.info("Exported data to Excel: {}", path.toAbsolutePath());
         return path.toAbsolutePath().toString();
     }
 
     @Override
-    public void download(HttpServletResponse response,Path path, String format, String... additionalParams) throws IOException {
+    public void download(HttpServletResponse response, Path path, String format, String... additionalParams) throws IOException {
 
+    }
+
+    @Override
+    public void save(Collection<T> collection) {
+
+    }
+
+    @Override
+    public Collection<T> getData() {
+        return null;
     }
 
 

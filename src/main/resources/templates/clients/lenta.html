@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Lenta</title>
-    <link href="../../static/css/global.css" rel="stylesheet">
 </head>
 <body>
 <div th:replace="/include/_header :: content"></div>
@@ -32,7 +31,8 @@
                     </form>
                 </div>
                 <div class="col-12 col-sm-6">
-                    <form th:action="@{/excel/lentaReport}" th:method="post" th:object="${lenta}" enctype="multipart/form-data">
+                    <form th:action="@{/excel/lentaReport}" th:method="post"  enctype="multipart/form-data">
+<!--                        th:object="${lenta}"-->
                         <h4>Обработка отчета клиента Lenta</h4>
                         <div class="mb-3">
                             <label for="lentaReport" class="form-label">Выберите файл отчета:</label>
@@ -40,7 +40,7 @@
                         </div>
                         <div class="input-group mb-3">
                             <span class="input-group-text"> Удалить акции старше </span>
-                            <input type="date" class="form-control" th:field="${lenta.afterDate}" />
+                            <input type="date" class="form-control" th:name="${afterDate}" th:attr="data-date-pattern=${'yyyy-MM-dd'}"/>
                         </div>
                         <div class="row">
                             <div class="col-12">
@@ -54,7 +54,7 @@
             </div>
             <div class="row mt-3">
                 <div class="col-12">
-                    <form th:action="@{/excel/edadeal}" th:method="post" th:object="${edadeal}" enctype="multipart/form-data">
+                    <form th:action="@{/excel/edadeal}" th:method="post" enctype="multipart/form-data">
                         <h4>Обработка выгрузки Едадила</h4>
                         <div class="mb-3">
                             <label for="edadeal" class="form-label">Выберите файл выгрузки:</label>

@@ -4,6 +4,7 @@ import by.demon.zoom.dto.UrlDTO;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.DataToExcel;
+import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -57,6 +58,16 @@ public class UrlService implements FileProcessingService {
     @Override
     public void download(HttpServletResponse response,Path path,  String format, String... additionalParams) throws IOException {
 
+    }
+
+    @Override
+    public void save(Collection<T> collection) {
+
+    }
+
+    @Override
+    public Collection<T> getData() {
+        return null;
     }
 
     private Collection<UrlDTO> getUrlDTOList(List<List<Object>> excelData) {

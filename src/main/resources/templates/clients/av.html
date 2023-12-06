@@ -3,86 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>AV.ru</title>
-    <link href="../../static/css/global.css" rel="stylesheet">
 </head>
 <body>
 <div th:replace="/include/_header :: content"></div>
-<!--<div class="container">-->
-<!--    <div class="row">-->
-<!--        <div class="col-sm-3">-->
-<!--            <div th:replace="/include/sidebar :: sidebar"></div>-->
-<!--        </div>-->
-<!--        <div class="col-sm-9">-->
-<!--            <h2 class="display-4 mb-4">Azbukavkusa</h2>-->
-<!--            <div class="row">-->
-<!--                <div class="col-12 col-sm-6">-->
-<!--                    <form th:action="@{/excel/av/task}" th:method="post" enctype="multipart/form-data">-->
-<!--                        <h4>Обработка задания</h4>-->
-<!--                        <div class="mb-3">-->
-<!--                            <label for="AvTask" class="form-label">Выберите файл:</label>-->
-<!--                            <input type="file" class="form-control" name="file" id="AvTask">-->
-<!--                        </div>-->
-<!--                        <div class="row">-->
-<!--                            <div class="col-12">-->
-<!--                                <button class="btn btn-primary">-->
-<!--                                    Загрузить-->
-<!--                                </button>-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                    </form>-->
-<!--                </div>-->
-<!--                <div class="col-12 col-sm-6">-->
-<!--                    <form th:action="@{/excel/av/handbook}" th:method="post" enctype="multipart/form-data">-->
-<!--                        <h4>Загрузка справочника</h4>-->
-<!--                        <div class="mb-3">-->
-<!--                            <label for="handbook" class="form-label">Выберите файл:</label>-->
-<!--                            <input type="file" class="form-control" name="file" id="handbook">-->
-<!--                        </div>-->
-<!--                        <div class="row">-->
-<!--                            <div class="col-12">-->
-<!--                                <button class="btn btn-primary">-->
-<!--                                    Загрузить-->
-<!--                                </button>-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                    </form>-->
-<!--                </div>-->
-<!--            </div>-->
-
-<!--            <div class="row mt-3">-->
-<!--                <div class="col-12">-->
-<!--                    <form th:action="@{/excel/av/report}" th:method="post" enctype="multipart/form-data">-->
-<!--                        <h4>Обработка отчета</h4>-->
-<!--                        <div class="mb-3">-->
-<!--                            <label for="AvReport" class="form-label">Выберите файл:</label>-->
-<!--                            <input type="file" class="form-control" name="file" id="AvReport">-->
-<!--                        </div>-->
-<!--                        <div class="row">-->
-<!--                            <div class="col-12">-->
-<!--                                <button type="submit" class="btn btn-primary">-->
-<!--                                    Загрузить-->
-<!--                                </button>-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                    </form>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--            <div class="col-12 col-sm-6">-->
-<!--                <h4>Download Data</h4>-->
-<!--                <form th:action="@{/excel/av/download}" method="post" class="mb-3">-->
-<!--                    <div class="mb-3">-->
-<!--                        <label for="task_no" class="form-label">Download report:</label>-->
-<!--                        <select id="task_no" name="task_no" class="form-select" required>-->
-<!--                            <option th:each="task_no : ${tasks}" th:value="${task_no}" th:text="${task_no}"></option>-->
-<!--                        </select>-->
-<!--                    </div>-->
-<!--                    <input type="submit" class="btn btn-primary" value="Download">-->
-<!--                </form>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
-<!--</div>-->
-
 <div class="container">
     <div class="row">
         <!-- Левая колонка -->
