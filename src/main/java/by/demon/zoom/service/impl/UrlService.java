@@ -2,71 +2,50 @@ package by.demon.zoom.service.impl;
 
 import by.demon.zoom.dto.UrlDTO;
 import by.demon.zoom.service.FileProcessingService;
-import by.demon.zoom.util.DataDownload;
-import by.demon.zoom.util.DataToExcel;
-import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static by.demon.zoom.util.FileDataReader.readDataFromFile;
+
 @Service
-public class UrlService implements FileProcessingService {
+public class UrlService implements FileProcessingService<UrlDTO> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(UrlService.class);
+    private static final Logger log = LoggerFactory.getLogger(UrlService.class);
     private static final List<String> HEADER = List.of("ID", "Ссылка конкурент");
-    private final DataDownload dataDownload;
-    private final DataToExcel<UrlDTO> dataToExcel;
 
-    public UrlService(DataDownload dataDownload, DataToExcel<UrlDTO> dataToExcel) {
-        this.dataDownload = dataDownload;
-        this.dataToExcel = dataToExcel;
+
+    public Collection<UrlDTO> readFiles(List<File> files, String... additionalParams) {
+        Collection<UrlDTO> allUrlDTOs = new ArrayList<>(); // Создаем переменную для сохранения всех DTO
+
+        for (File file : files) {
+            try {
+                List<List<Object>> excelData = readDataFromFile(file);
+                Collection<UrlDTO> urlDTOList = getUrlDTOList(excelData);
+                allUrlDTOs.addAll(urlDTOList); // Добавляем DTO из текущего файла в общую переменную
+                log.info("File {} successfully read", file.getName());
+            } catch (IOException e) {
+                log.error("Error reading data from file: {}", file.getAbsolutePath(), e);
+            } catch (Exception e) {
+                log.error("Error processing file: {}", file.getAbsolutePath(), e);
+            } finally {
+                if (file.exists()) {
+                    if (!file.delete()) {
+                        log.warn("Failed to delete file: {}", file.getAbsolutePath());
+                    }
+                }
+            }
+        }
+        return allUrlDTOs; // Возвращаем список всех DTO
     }
 
-
-    public Collection readFiles(List<File> files, String... additionalParams) throws IOException {
-        LOG.info("Exporting data...");
-
-//        try {
-//            List<List<Object>> excelData = readDataFromFile(path.toFile());
-//            Collection<UrlDTO> urlDTOList = getUrlDTOList(excelData);
-//
-//            try (OutputStream out = Files.newOutputStream(path)) {
-//                short skipLines = 0;
-//                dataToExcel.exportToExcel(HEADER, urlDTOList, out, skipLines);
-////                dataDownload.download(file.getName(), filePath, response);
-//            }
-//
-//            LOG.info("Data exported successfully");
-//            return "export successful";
-//        } catch (IOException e) {
-//            LOG.error("Error exporting data: {}", e.getMessage());
-//            return "Error exporting data";
-//        }
-        return null;
-    }
-
-    @Override
-    public void download(HttpServletResponse response,Path path,  String format, String... additionalParams) throws IOException {
-
-    }
-
-    @Override
-    public void save(Collection<T> collection) {
-
-    }
-
-    @Override
-    public Collection<T> listAll() {
-        return null;
-    }
 
     private Collection<UrlDTO> getUrlDTOList(List<List<Object>> excelData) {
         return excelData.stream()

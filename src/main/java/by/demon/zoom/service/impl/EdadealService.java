@@ -23,7 +23,7 @@ import java.util.List;
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 
 @Service
-public class EdadealService implements FileProcessingService {
+public class EdadealService implements FileProcessingService<T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(EdadealService.class);
     private static final String EXCLUDE_STRING = "от ";

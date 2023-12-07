@@ -4,76 +4,57 @@ import by.demon.zoom.domain.Product;
 import by.demon.zoom.dto.SimpleDTO;
 import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.service.FileProcessingService;
-import by.demon.zoom.util.DataDownload;
-import by.demon.zoom.util.DataToExcel;
 import by.demon.zoom.util.StringUtil;
-import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Service
-public class SimpleService implements FileProcessingService {
+import static by.demon.zoom.util.ExcelReader.readExcel;
 
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleService.class);
-    private final DataToExcel<SimpleDTO> dataToExcel;
-    private final DataDownload dataDownload;
+@Service
+public class SimpleService implements FileProcessingService<SimpleDTO> {
+
+    private static final Logger log = LoggerFactory.getLogger(SimpleService.class);
 
     private final List<String> header = Arrays.asList("ID", "Категория 1", "Категория 2", "Категория 3", "Бренд", "Модель", "Цена Simplewine на дату парсинга", "Город", "Конкурент", "Время выкачки"
             , "Дата", "Цена конкурента регуляр (по карте)", "Цена конкурента без карты", "Цена конкурента промо/акция"
             , "Комментарий", "Наименование товара конкурента", "Год конкурента", "Аналог", "Адрес конкурента"
             , "Статус товара (В наличии/Под заказ/Нет в наличии)", "Промо (да/нет)", "Ссылка конкурент", "Ссылка Симпл", "Скриншот");
 
-    public SimpleService(DataToExcel<SimpleDTO> dataToExcel, DataDownload dataDownload) {
-        this.dataToExcel = dataToExcel;
-        this.dataDownload = dataDownload;
-    }
 
-    public Collection readFiles(List<File> files, String... additionalParams) throws IOException {
-//        List<List<Object>> lists = readExcel(path.toFile());
-//        Collection<Product> productList = getProductList(lists);
-//        Collection<SimpleDTO> collect = getSimpleDTOList(productList);
-//        try (OutputStream out = Files.newOutputStream(path)) {
-//            short skipLines = 1;
-//            dataToExcel.exportToExcel(header, collect, out, skipLines);
-//            download(response, path, Globals.SUFFIX_XLSX);
-//            LOG.info("Data exported successfully to Excel: {}", path.toAbsolutePath());
-//        } catch (IOException e) {
-//            LOG.error("Error exporting data to Excel: {}", e.getMessage(), e);
-//            throw e;
-//        }
-//        return path.toAbsolutePath().toString();
-        return null;
-    }
+    public Collection<SimpleDTO> readFiles(List<File> files, String... additionalParams) throws IOException {
+        Collection<SimpleDTO> allUrlDTOs = new ArrayList<>(); // Создаем переменную для сохранения всех DTO
+        for (File file : files) {
+            try {
+                List<List<Object>> lists = readExcel(file);
+                Collection<Product> productList = getProductList(lists);
+                Collection<SimpleDTO> collect = getSimpleDTOList(productList);
+                allUrlDTOs.addAll(collect);
+                log.info("File {} successfully read", file.getName());
 
-    @Override
-    public void download(HttpServletResponse response, Path path, String format, String... additionalParams) throws IOException {
-        try (FileInputStream is = new FileInputStream(path.toAbsolutePath().toString())) {
-            dataDownload.downloadExcel(path, is, response);
-        } catch (IOException e) {
-            LOG.error("Error download data : {}", e.getMessage());
-            throw e;
+            } catch (IOException e) {
+                log.error("Error reading data from file: {}", file.getAbsolutePath(), e);
+
+            } catch (Exception e) {
+                log.error("Error processing file: {}", file.getAbsolutePath(), e);
+
+            } finally {
+                if (file.exists()) {
+                    if (!file.delete()) {
+                        log.warn("Failed to delete file: {}", file.getAbsolutePath());
+                    }
+                }
+            }
         }
-    }
-
-    @Override
-    public void save(Collection<T> collection) {
-
-    }
-
-    @Override
-    public Collection<T> listAll() {
-        return null;
+        return allUrlDTOs;
     }
 
 

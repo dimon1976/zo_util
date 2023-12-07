@@ -23,7 +23,7 @@ public class FileDataReader {
     private static final Logger LOG = LoggerFactory.getLogger(FileDataReader.class);
 
 
-    public static List<List<Object>> readDataFromFile(File file) {
+    public static List<List<Object>> readDataFromFile(File file) throws IOException {
         List<List<Object>> result = new ArrayList<>();
 
         try {

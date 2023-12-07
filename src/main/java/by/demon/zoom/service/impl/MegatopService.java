@@ -9,7 +9,6 @@ import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.DataToExcel;
 import by.demon.zoom.util.DateUtils;
 import by.demon.zoom.util.StringUtil;
-import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
@@ -34,9 +33,9 @@ import java.util.stream.Collectors;
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 
 @Service
-public class MegatopService implements FileProcessingService {
+public class MegatopService implements FileProcessingService<Megatop> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MegatopService.class);
+    private static final Logger log = LoggerFactory.getLogger(MegatopService.class);
     private static final DateTimeFormatter MEGATOP_PATTERN = DateTimeFormatter.ofPattern("dd.MM.yyyy H:m");
     private final List<String> header = Arrays.asList("Категория 1", "Категория", "Высота каблука", "Коллекция", "Конструкция верх", "Материал верха", "Материал подкладки",
             "Ростовка дети", "Цвета", "Сезон", "Конкурент", "ID", "Категория", "Бренд", "Модель", "Артикул", "Цена", "Старая цена", "Ссылка на модель", "Статус");
@@ -51,24 +50,7 @@ public class MegatopService implements FileProcessingService {
         this.dataDownload = dataDownload;
     }
 
-//    public String export(List<File> files, String label) throws IOException {
-//        for (File file : files) {
-//            List<List<Object>> lists = readDataFromFile(file);
-//            try {
-//                Files.deleteIfExists(file.toPath());
-//                LOG.info("File {} remove successfully.", file.getAbsolutePath());
-//            } catch (IOException e) {
-//                LOG.error("File {} remove failed.", file.getAbsolutePath());
-//                throw new IOException("File {} remove failed.");
-//            }
-//            Collection<Megatop> megatopArrayList = getMegatopList(lists, label, file);
-//            megatopRepository.saveAll(megatopArrayList);
-//            LOG.info("File {} processed and saved successfully.", file.getName());
-//        }
-//        return "All files processed and saved successfully.";
-//    }
 
-    @Override
     public void download(HttpServletResponse response, Path path, String format, String... additionalParameters) throws IOException {
         try {
             List<Megatop> megatopByLabel = getMegatopByLabel(additionalParameters[0]);
@@ -82,42 +64,41 @@ public class MegatopService implements FileProcessingService {
                 // Скачиваем файл
                 dataDownload.downloadExcel(path, is, response);
                 DataDownload.cleanupTempFile(path);
-                LOG.info("Data exported successfully to Excel: {}", path.getFileName().toString());
+                log.info("Data exported successfully to Excel: {}", path.getFileName().toString());
             }
         } catch (IOException e) {
-            LOG.error("Error exporting data to Excel: {}", e.getMessage(), e);
+            log.error("Error exporting data to Excel: {}", e.getMessage(), e);
             throw e;
         }
     }
 
     @Override
-    public Collection readFiles(List<File> files, String... additionalParams) throws IOException {
+    public Collection<Megatop> readFiles(List<File> files, String... additionalParams) throws IOException {
         Collection<Megatop> megatopArrayList = new ArrayList<>();
+
         for (File file : files) {
-            List<List<Object>> lists = readDataFromFile(file);
             try {
-                Files.deleteIfExists(file.toPath());
-                LOG.info("File {} remove successfully.", file.getAbsolutePath());
+                List<List<Object>> lists = readDataFromFile(file);
+                Files.delete(file.toPath());
+                log.info("File {} remove successfully.", file.getAbsolutePath());
+                Collection<Megatop> megatopList = getMegatopList(lists, additionalParams[0], file);
+                try {
+                    megatopRepository.saveAll(megatopList);
+                    log.info("File {} processed and saved successfully.", file.getName());
+                } catch (Exception e) {
+                    log.error("Failed to save data from file: {}", file.getAbsolutePath(), e);
+                }
+                megatopArrayList.addAll(megatopList);
+
+                log.info("File {} processed and saved successfully.", file.getName());
             } catch (IOException e) {
-                LOG.error("File {} remove failed.", file.getAbsolutePath());
-                throw new IOException("File {} remove failed.");
+                log.error("Failed to remove file: {}", file.getAbsolutePath());
+                throw new IOException("Failed to remove file: " + file.getAbsolutePath(), e);
             }
-            megatopArrayList = getMegatopList(lists, additionalParams[0], file);
-            megatopRepository.saveAll(megatopArrayList);
-            LOG.info("File {} processed and saved successfully.", file.getName());
         }
-        LOG.info("All files processed and saved successfully.");
+
+        log.info("All files processed and saved successfully.");
         return megatopArrayList;
-    }
-
-    @Override
-    public void save(Collection<T> collection) {
-
-    }
-
-    @Override
-    public Collection<T> listAll() {
-        return null;
     }
 
     private List<Megatop> getMegatopByLabel(String label) {
@@ -179,11 +160,6 @@ public class MegatopService implements FileProcessingService {
     private String getStringValue(List<Object> list, int index) {
         return (index >= 0 && index < list.size()) ? String.valueOf(list.get(index)) : "";
     }
-
-
-//    public String download(File tempFile, HttpServletResponse response, String... additionalParams) throws IOException {
-//        return null;
-//    }
 
     public List<String> getLatestLabels() {
         // Получаем последние 10 сохраненных меток из базы данных

@@ -5,7 +5,6 @@ import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.service.impl.*;
 import by.demon.zoom.util.DataDownload;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -18,15 +17,16 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Controller
 @RequestMapping("/excel")
-public class FileController {
+public class FileController<T> {
 
     private final Map<String, Object> processingServices = new HashMap<>();
     private final HttpServletResponse response;
-    private final MegatopService megatopService;
+
 
     @Value("${temp.path}")
     private String TEMP_PATH;
@@ -40,10 +40,8 @@ public class FileController {
             UrlService urlService,
             EdadealService edadealService,
             HttpServletResponse response,
-            MegatopService megatopService1,
             AvService avService,
             HandbookService handbookService) {
-        this.megatopService = megatopService1;
         this.processingServices.put("stat", statisticService);
         this.processingServices.put("vlook", vlookService);
         this.processingServices.put("megatop", megatopService);
@@ -74,29 +72,18 @@ public class FileController {
     }
 
     @PostMapping("/vlook")
-    public @ResponseBody String excelVlook(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
+    public @ResponseBody String excelVlook(@RequestParam("file") MultipartFile[] multipartFile,
+                                           HttpServletResponse response,
+                                           @RequestParam(value = "format", required = false) String format) throws IOException {
         Collection<T> collection = readFiles("vlook", multipartFile);
-
+        download("vlook", response, format, collection);
         return "";
     }
 
     @PostMapping("/megatop/upload")
     public @ResponseBody String handleFileUpload(
-//            @ModelAttribute FileForm fileForm,
             @RequestParam("file") MultipartFile[] multipartFile,
             @RequestParam(value = "label", required = false) String label) throws IOException {
-
-//        String label = fileForm.getLabel();
-//        ArrayList<File> files = new ArrayList<>();
-//        if (fileForm.getFiles() != null) {
-//            for (MultipartFile file : fileForm.getFiles()) {
-//                Path filePath = saveFileAndGetPath(file);
-//                File transferTo = new File(filePath.toAbsolutePath().toString());
-//                files.add(transferTo);
-//            }
-//        }
-        // Обработка файлов и сохранение в базу данных
-//        return megatopService.export(files, label);
         String[] additionalParam = new String[]{label};
         Collection<T> collection = readFiles("megatop", multipartFile, additionalParam);
         return "";
@@ -175,49 +162,32 @@ public class FileController {
     }
 
 
-    private Collection<T> readFiles(String action, MultipartFile[] multipartFile, String... additionalParams) throws IOException {
-        FileProcessingService processingService = (FileProcessingService) processingServices.get(action);
+    private Collection<T> readFiles(String action, MultipartFile[] multipartFiles, String... additionalParams) throws IOException {
+        FileProcessingService<T> processingService = (FileProcessingService<T>) processingServices.get(action);
         if (processingService == null) {
             log.warn("Unsupported action: {}", action);
-            return null;
+            throw new IllegalArgumentException("Unsupported action: " + action);
         }
-        ArrayList<File> files = new ArrayList<>();
-        for (MultipartFile file : multipartFile) {
-            if (ifExist(file)) {
-                Path path = saveFileAndGetPath(file);
-                files.add(path.toFile());
-            }
-        }
+        List<File> files = Arrays.stream(multipartFiles)
+                .filter(this::ifExist)
+                .map(this::saveFileAndGetPath)
+                .filter(Objects::nonNull)
+                .map(Path::toFile)
+                .collect(Collectors.toList());
+
         return processingService.readFiles(files, additionalParams);
     }
 
-//    @Nullable
-//    private String processSingleFile(String[] additionalParams, MultipartFile file, FileProcessingService processingService) {
-//        Path filePath = saveFileAndGetPath(file);
-//        String processSingleFile;
-//        // Создаем директорию, если она не существует
-//        createTempDirectory();
-//        try {
-////            processSingleFile = processingService.readFiles(filePath, response, additionalParams);
-//        } catch (IllegalStateException | IOException e) {
-//            log.error("Error while uploading file: {}", e.getMessage());
-//            // Если обработка не удалась, файл остается на месте
-//            return "File uploaded failed: " + getOrgName(file);
-//        }
-//        return processSingleFile;
-//    }
-
-    private String download(String action, HttpServletResponse response, String format, String... additionalParams) throws IOException {
-        FileProcessingService processingService = (FileProcessingService) processingServices.get(action);
+    private String download(String action, HttpServletResponse response, String format, Object collection, String... additionalParams) throws IOException {
+        FileProcessingService<T> processingService = (FileProcessingService<T>) processingServices.get(action);
         String processSingleFile = "";
         if (processingService == null) {
             log.warn("Unsupported action: {}", action);
             return ("Unsupported action: {}" + action);
         } else {
             Path path = DataDownload.getPath("data", format);
-            processingService.download(response, path, format, additionalParams);
+            processingService.download(response, path, format, (Collection<T>) collection, additionalParams);
         }
-
         return processSingleFile;
     }
 
@@ -241,7 +211,6 @@ public class FileController {
         }
     }
 
-
     private void createTempDirectory() {
         if (TEMP_PATH == null) {
             log.error("TEMP_PATH is null. Unable to create directory.");
@@ -264,8 +233,8 @@ public class FileController {
         }
     }
 
-    private boolean ifExist(MultipartFile multipartFile) {
-        return multipartFile != null && !Objects.requireNonNull(multipartFile.getOriginalFilename()).isEmpty();
+    private boolean ifExist(MultipartFile file) {
+        return file != null && !file.isEmpty();
     }
 
     private Path getFilePath(MultipartFile multipartFile) {

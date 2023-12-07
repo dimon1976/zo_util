@@ -1,75 +1,55 @@
 package by.demon.zoom.service.impl;
 
 import by.demon.zoom.service.FileProcessingService;
-import by.demon.zoom.util.DataDownload;
-import by.demon.zoom.util.DataToExcel;
-import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Path;
 import java.util.*;
 
 import static by.demon.zoom.mapper.MappingUtils.ifExistCompetitor;
 import static by.demon.zoom.mapper.MappingUtils.listUsers;
+import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 
 @Service
-public class StatisticService implements FileProcessingService {
+public class StatisticService implements FileProcessingService<List<Object>> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(StatisticService.class);
+    private static final Logger log = LoggerFactory.getLogger(StatisticService.class);
 
-    private static final List<String> HEADER = Arrays.asList("Клиент", "ID связи", "ID клиента", "Верхняя категория клиента", "Категория клиента", "Бренд клиента",
+    // Изменяемый список
+    private static final List<String> header = new ArrayList<>(Arrays.asList("Клиент", "ID связи", "ID клиента", "Верхняя категория клиента", "Категория клиента", "Бренд клиента",
             "Модель клиента", "Код производителя клиента", "Штрих-код клиента", "Статус клиента", "Цена конкурента",
-            "Модель конкурента", "Код производителя конкурента", "ID конкурента", "Конкурент", "Конкурент вкл.");
+            "Модель конкурента", "Код производителя конкурента", "ID конкурента", "Конкурент", "Конкурент вкл."));
 
-    private final DataToExcel<Object> dataToExcel;
-    private final DataDownload dataDownload;
 
-    public StatisticService(DataToExcel<Object> dataToExcel, DataDownload dataDownload) {
-        this.dataToExcel = dataToExcel;
-        this.dataDownload = dataDownload;
-    }
+    public Collection<List<Object>> readFiles(List<File> files, String... additionalParams) {
+        ArrayList<List<Object>> allListObj = new ArrayList<>();
 
-    public Collection readFiles(List<File> files, String... additionalParams) throws IOException {
-//        List<List<Object>> originalWb = readDataFromFile(path.toFile());
-//        List<Integer> columns = Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 19, 20, 22, 23, 24);
-//        List<Integer> newColumn = getColumnList(additionalParams[0], additionalParams[2], additionalParams[3], columns);
-//        List<List<Object>> resultTest = getResultList(originalWb, newColumn, additionalParams[1]);
-//        try (OutputStream out = Files.newOutputStream(path)) {
-//            List<String> newHeader = addAdditionalColumnsToString(additionalParams[2], additionalParams[0], additionalParams[3]);
-//            short skip = 1;
-//            dataToExcel.exportToExcel(newHeader, resultTest, out, skip);
-//            download(response, path, Globals.SUFFIX_XLSX, additionalParams);
-//        } catch (IOException e) {
-//            LOG.error("Error exporting data to Excel: {}", e.getMessage(), e);
-//            throw e;
-//        }
-//        LOG.info("Data exported successfully to Excel: {}", path.toAbsolutePath());
-//        return path.toAbsolutePath().toString();
-        return null;
-    }
+        List<Integer> columns = Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 19, 20, 22, 23, 24);
+        List<Integer> newColumn = getColumnList(additionalParams[0], additionalParams[2], additionalParams[3], columns);
+        addAdditionalColumnsToString(additionalParams[2], additionalParams[0], additionalParams[3]);
 
-    @Override
-    public void download(HttpServletResponse response, Path path, String format, String... additionalParams) throws IOException {
-        try (InputStream is = new FileInputStream(path.toAbsolutePath().toString())) {
-            dataDownload.downloadExcel(path, is, response);
+        for (File file : files) {
+            try {
+                List<List<Object>> originalWb = readDataFromFile(file);
+                List<List<Object>> resultTest = getResultList(originalWb, newColumn, additionalParams[1]);
+                allListObj.addAll(resultTest);
+                log.info("File {} successfully read", file.getName());
+            } catch (IOException e) {
+                log.error("Error reading data from file: {}", file.getAbsolutePath(), e);
+            } catch (Exception e) {
+                log.error("Error processing file: {}", file.getAbsolutePath(), e);
+            } finally {
+                if (file.exists()) {
+                    if (!file.delete()) {
+                        log.warn("Failed to delete file: {}", file.getAbsolutePath());
+                    }
+                }
+            }
         }
-    }
-
-    @Override
-    public void save(Collection<T> collection) {
-
-    }
-
-    @Override
-    public Collection<T> listAll() {
-        return null;
+        return allListObj;
     }
 
 
@@ -91,18 +71,18 @@ public class StatisticService implements FileProcessingService {
         }
     }
 
-    private static List<String> addAdditionalColumnsToString(String showCompetitorUrl, String showSource, String showDateAdd) {
-        List<String> updatedHeader = new ArrayList<>(HEADER);
+    private static void addAdditionalColumnsToString(String showCompetitorUrl, String showSource, String showDateAdd) {
+//        List<String> updatedHeader = new ArrayList<>(header);
         if (showCompetitorUrl != null) {
-            updatedHeader.add("URL");
+            header.add("URL");
         }
         if (showSource != null) {
-            updatedHeader.add("Добавил");
+            header.add("Добавил");
         }
         if (showDateAdd != null) {
-            updatedHeader.add("Добавил");
+            header.add("Добавил");
         }
-        return updatedHeader;
+//        return updatedHeader;
     }
 
 
@@ -116,7 +96,8 @@ public class StatisticService implements FileProcessingService {
         return newList;
     }
 
-    private static void getRowList(List<Object> linked, List<Integer> columnList, List<Object> row, String sourceReplace) {
+    private static void getRowList(List<Object> linked, List<Integer> columnList, List<Object> row, String
+            sourceReplace) {
         for (int j = 0; j < row.size(); j++) {
             if (ifExistField(j, columnList)) {
                 Object value = row.get(j);

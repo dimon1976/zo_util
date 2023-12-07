@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 
 @Service
-public class HandbookService implements FileProcessingService {
+public class HandbookService implements FileProcessingService<T> {
 
 
     private final static Logger LOG = LoggerFactory.getLogger(HandbookService.class);
