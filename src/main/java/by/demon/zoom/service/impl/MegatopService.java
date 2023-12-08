@@ -74,31 +74,30 @@ public class MegatopService implements FileProcessingService<Megatop> {
 
     @Override
     public Collection<Megatop> readFiles(List<File> files, String... additionalParams) throws IOException {
-        Collection<Megatop> megatopArrayList = new ArrayList<>();
+        List<Megatop> megatopList = new ArrayList<>();
 
         for (File file : files) {
+            List<List<Object>> lists;
             try {
-                List<List<Object>> lists = readDataFromFile(file);
+                lists = readDataFromFile(file);
                 Files.delete(file.toPath());
-                log.info("File {} remove successfully.", file.getAbsolutePath());
-                Collection<Megatop> megatopList = getMegatopList(lists, additionalParams[0], file);
-                try {
-                    megatopRepository.saveAll(megatopList);
-                    log.info("File {} processed and saved successfully.", file.getName());
-                } catch (Exception e) {
-                    log.error("Failed to save data from file: {}", file.getAbsolutePath(), e);
-                }
-                megatopArrayList.addAll(megatopList);
-
-                log.info("File {} processed and saved successfully.", file.getName());
+                log.info("File {} removed successfully.", file.getAbsolutePath());
             } catch (IOException e) {
                 log.error("Failed to remove file: {}", file.getAbsolutePath());
-                throw new IOException("Failed to remove file: " + file.getAbsolutePath(), e);
+                throw e;
+            }
+
+            try {
+                megatopList.addAll(getMegatopList(lists, additionalParams[0], file));
+                megatopRepository.saveAll(megatopList);
+                log.info("File {} processed and saved successfully.", file.getName());
+            } catch (Exception e) {
+                log.error("Failed to save data from file: {}", file.getAbsolutePath(), e);
+                throw e;
             }
         }
 
-        log.info("All files processed and saved successfully.");
-        return megatopArrayList;
+        return megatopList;
     }
 
     private List<Megatop> getMegatopByLabel(String label) {
