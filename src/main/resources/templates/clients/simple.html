@@ -6,31 +6,64 @@
 </head>
 <body>
 <div th:replace="/include/_header :: content"></div>
+<!--<div class="container">-->
+<!--    <div class="row">-->
+<!--        <div class="col-sm-3">-->
+<!--            <div th:replace="/include/sidebar :: sidebar"></div>-->
+<!--        </div>-->
+<!--        <div class="col-sm-9">-->
+<!--            <div class="row">-->
+<!--                <blockquote class="blockquote">-->
+<!--                    <p>Simple.ru</p>-->
+<!--                </blockquote>-->
+<!--                <div class="col-12 col-sm-6">-->
+<!--                    <fieldset>-->
+<!--                        <form th:action="@{/excel/simpleReport}" th:method="post" enctype="multipart/form-data">-->
+<!--                            <label for="simple_report" class="form-label">Простая обработка отчета клиента-->
+<!--                                simple.ru</label>-->
+<!--                            <div class="">-->
+<!--                                <input type="file" class="form-control form-control-sm" name="file" id="simple_report"-->
+<!--                                       aria-describedby="simpleHelp">-->
+<!--                                <div id="simpleHelp" class="form-text">Выберите оригинальный файл отчета для обработки-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                            <br>-->
+<!--                            <button class="btn btn-primary">-->
+<!--                                Загрузить-->
+<!--                            </button>-->
+<!--                        </form>-->
+<!--                    </fieldset>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</div>-->
+
 <div class="container">
     <div class="row">
         <div class="col-sm-3">
             <div th:replace="/include/sidebar :: sidebar"></div>
         </div>
         <div class="col-sm-9">
+            <h2 class="display-4 mb-4">Simple</h2>
             <div class="row">
-                <blockquote class="blockquote">
-                    <p>Simple.ru</p>
-                </blockquote>
                 <div class="col-12 col-sm-6">
                     <fieldset>
                         <form th:action="@{/excel/simpleReport}" th:method="post" enctype="multipart/form-data">
-                            <label for="simple_report" class="form-label">Простая обработка отчета клиента
-                                simple.ru</label>
-                            <div class="">
+                            <div class="mb-3">
+                                <label for="simple_report" class="form-label">Простая обработка отчета клиента
+                                    simple.ru</label>
                                 <input type="file" class="form-control form-control-sm" name="file" id="simple_report"
                                        aria-describedby="simpleHelp">
                                 <div id="simpleHelp" class="form-text">Выберите оригинальный файл отчета для обработки
                                 </div>
                             </div>
-                            <br>
-                            <button class="btn btn-primary">
-                                Загрузить
-                            </button>
+
+                            <div class="mb-3">
+                                <button class="btn btn-primary">
+                                    Загрузить
+                                </button>
+                            </div>
                         </form>
                     </fieldset>
                 </div>
@@ -38,4 +71,5 @@
         </div>
     </div>
 </div>
+
 </body>

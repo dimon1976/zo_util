@@ -11,7 +11,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
 public class ClassLoaderUtil {
-    protected static final Logger LOGGER = LoggerFactory.getLogger(ClassLoaderUtil.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(ClassLoaderUtil.class);
     // class path
     @Getter
     private static String classPath;
@@ -27,7 +27,7 @@ public class ClassLoaderUtil {
     //
     static {
         if (loader == null) {
-            LOGGER.info("using system class loader!");
+            LOG.info("using system class loader!");
             loader = ClassLoader.getSystemClassLoader();
         }
         try {
@@ -38,18 +38,18 @@ public class ClassLoaderUtil {
             classPath = f.getAbsolutePath();
             classPath = URLDecoder.decode(classPath, StandardCharsets.UTF_8);
             if (classPath.contains(".jar!")) {
-                LOGGER.warn("using config file inline jar!" + classPath);
+                LOG.warn("using config file inline jar!" + classPath);
                 classPath = System.getProperty("user.dir");
                 //
                 addCurrentWorkingDir2Classpath(classPath);
             }
         } catch (Exception e) {
-            LOGGER.warn("cannot get classpath using getResource(), now using user.dir");
+            LOG.warn("cannot get classpath using getResource(), now using user.dir");
             classPath = System.getProperty("user.dir");
             //
             addCurrentWorkingDir2Classpath(classPath);
         }
-        LOGGER.info("classpath: {}", classPath);
+        LOG.info("classpath: {}", classPath);
     }
 
     /**
@@ -67,7 +67,7 @@ public class ClassLoaderUtil {
             // you have permissions to do so
             Thread.currentThread().setContextClassLoader(urlClassLoader);
         } catch (Exception e) {
-            LOGGER.warn(e.toString());
+            LOG.warn(e.toString());
         }
     }
 
