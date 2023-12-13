@@ -11,7 +11,6 @@ import by.demon.zoom.util.DataToExcel;
 import by.demon.zoom.util.DateUtils;
 import by.demon.zoom.util.StringUtil;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.formula.functions.T;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -23,10 +22,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -36,11 +38,11 @@ import static by.demon.zoom.util.ExcelReader.processRow;
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 
 @Service
-public class LentaService implements FileProcessingService<T> {
+public class LentaService<T> implements FileProcessingService {
 
     private HashMap<String, Lenta> data = new HashMap<>();
     private static final DateTimeFormatter LENTA_PATTERN = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    private static final Logger LOG = LoggerFactory.getLogger(LentaService.class);
+    private static final Logger log = LoggerFactory.getLogger(LentaService.class);
 
     @Value("${out.path}")
     private String outPath;
@@ -53,9 +55,10 @@ public class LentaService implements FileProcessingService<T> {
         this.dataDownload = dataDownload;
     }
 
+
     public String exportReport(String filePath, File file, HttpServletResponse response, Date date) {
         try {
-            LOG.info("Exporting report...");
+            log.info("Exporting report...");
 
             List<List<Object>> list = readDataFromFile(file);
             Collection<Lenta> lentaList = getResultList(list);
@@ -67,17 +70,63 @@ public class LentaService implements FileProcessingService<T> {
                 dataToExcel.exportToExcel(headerLentaReport, lentaReportDTO, out, skip);
 //                dataDownload.download(file.getName(), filePath, response);
             }
-            LOG.info("Report exported successfully: {}", filePath);
+            log.info("Report exported successfully: {}", filePath);
             return filePath;
         } catch (IOException e) {
-            LOG.error("Error exporting report: {}", e.getMessage());
+            log.error("Error exporting report: {}", e.getMessage());
             return "Error exporting report";
         }
     }
 
+    @Override
+    public Collection<?> readFiles(List<File> files, String... additionalParams) throws IOException {
+        switch (additionalParams[0]) {
+            case "report":
+                return readReportFiles(files, additionalParams);
+            case "task":
+                return readTaskFile(files);
+            case "edadeal":
+                break;
+
+            default:
+                log.info("Error action {}", additionalParams[0]);
+                break;
+        }
+        return null;
+    }
+
+    public Collection<LentaReportDTO> readReportFiles(List<File> files, String... additionalParams) {
+        Collection<LentaReportDTO> allUrlDTOs = new ArrayList<>(); // Создаем переменную для сохранения всех DTO
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        String var = additionalParams[1];
+        for (File file : files) {
+            try {
+                log.info("Exporting report...");
+                Date date = formatter.parse(var);
+                List<List<Object>> list = readDataFromFile(file);
+                Collection<Lenta> lentaList = getResultList(list);
+                LocalDate afterDate = convertToLocalDateViaInstant(date);
+                Collection<LentaReportDTO> lentaReportDTO = getLentaReportDTOList(lentaList, afterDate);
+                allUrlDTOs.addAll(lentaReportDTO);
+                log.info("File {} successfully read", file.getName());
+
+            } catch (Exception e) {
+                log.error("Error processing file: {}", file.getAbsolutePath(), e);
+
+            } finally {
+                if (file.exists()) {
+                    if (!file.delete()) {
+                        log.warn("Failed to delete file: {}", file.getAbsolutePath());
+                    }
+                }
+            }
+        }
+        return allUrlDTOs;
+    }
+
     private Collection<Lenta> getResultList(List<List<Object>> list) {
         try {
-            LOG.info("Getting result list...");
+            log.info("Getting result list...");
 
             ArrayList<Lenta> resultList = new ArrayList<>();
             int count = 0;
@@ -110,17 +159,17 @@ public class LentaService implements FileProcessingService<T> {
                 resultList.add(lenta);
                 count++;
             }
-            LOG.info("Result list obtained successfully");
+            log.info("Result list obtained successfully");
             return resultList;
         } catch (Exception e) {
-            LOG.error("Error getting result list: {}", e.getMessage());
+            log.error("Error getting result list: {}", e.getMessage());
             return Collections.emptyList();
         }
     }
 
     private HashSet<LentaReportDTO> getLentaReportDTOList(Collection<Lenta> lentaList, LocalDate afterDate) {
         try {
-            LOG.info("Getting LentaReportDTO list...");
+            log.info("Getting LentaReportDTO list...");
             HashSet<LentaReportDTO> lentaReportDTOs = new HashSet<>();
             for (Lenta lenta : lentaList) {
                 if (!lenta.getDateToPromo().isEmpty()) {
@@ -130,52 +179,36 @@ public class LentaService implements FileProcessingService<T> {
                     }
                 }
             }
-            LOG.info("LentaReportDTO list obtained successfully");
+            log.info("LentaReportDTO list obtained successfully");
             return lentaReportDTOs;
         } catch (Exception e) {
-            LOG.error("Error getting LentaReportDTO list: {}", e.getMessage());
+            log.error("Error getting LentaReportDTO list: {}", e.getMessage());
             return new HashSet<>();
         }
 
     }
 
     // Обработка задания от ленты
-    public String readFile(String filePath, File fileName, HttpServletResponse response, String... additionalParams) throws IOException {
-        LOG.info("Exporting data...");
-        try (Workbook workbook = loadWorkbook(fileName)) {
-            for (Sheet sheet : workbook) {
-                processSheet(sheet);
-                countSheet++;
-            }
-            countSheet = 0;
-            try {
-                File file = Path.of(outPath, fileName.getName().toLowerCase(Locale.ROOT).replace("." + getExtension(fileName), ".xlsx")).toFile();
-                LOG.info("Writing data...");
-
-                Collection<LentaDTO> lentaDTOs = getLentaDTOList();
-                try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
-                    DataToExcel<LentaDTO> dataToExcel = new DataToExcel<>();
-                    dataToExcel.exportToExcel(headerLentaTask, lentaDTOs, fileOutputStream, (short) 0);
-//                    dataDownload.download(file.getName(), filePath, response);
+    public Collection<LentaDTO> readTaskFile(List<File> files) throws IOException {
+        Collection<LentaDTO> allUrlDTOs = new ArrayList<>();
+        log.info("Exporting data...");
+        for (File file : files) {
+            try (Workbook workbook = loadWorkbook(file)) {
+                for (Sheet sheet : workbook) {
+                    processSheet(sheet);
+                    countSheet++;
                 }
+                countSheet = 0;
+                Collection<LentaDTO> lentaDTOs = getLentaDTOList();
+                allUrlDTOs.addAll(lentaDTOs);
                 data = new HashMap<>();
-
-                LOG.info("Data written successfully");
-                return filePath;
-            } catch (IOException e) {
-                LOG.error("Error exporting data: {}", e.getMessage());
-                return "Error exporting data";
             }
         }
-    }
-
-    @Override
-    public Collection<T> readFiles(List<File> files, String... additionalParams) throws IOException {
-        return null;
+        return allUrlDTOs;
     }
 
     private Workbook loadWorkbook(File filename) {
-        LOG.info("Loading workbook...");
+        log.info("Loading workbook...");
         String extension = getExtension(filename);
         try (FileInputStream file = new FileInputStream(filename)) {
             switch (extension) {
@@ -189,7 +222,7 @@ public class LentaService implements FileProcessingService<T> {
                     throw new RuntimeException("Unknown Excel file extension: " + extension);
             }
         } catch (IOException e) {
-            LOG.error("Error loading workbook: {}", e.getMessage());
+            log.error("Error loading workbook: {}", e.getMessage());
             throw new RuntimeException("Error loading workbook", e);
         }
 
@@ -197,7 +230,7 @@ public class LentaService implements FileProcessingService<T> {
 
     @NotNull
     private String getExtension(File filename) {
-        LOG.info("Getting file extension...");
+        log.info("Getting file extension...");
         return filename.getName().substring(filename.getName().lastIndexOf(".") + 1).toLowerCase();
     }
 
@@ -205,7 +238,7 @@ public class LentaService implements FileProcessingService<T> {
 
     private void processSheet(Sheet sheet) {
         try {
-            LOG.info("Processing sheet...");
+            log.info("Processing sheet...");
 
             Row row;
             int counter = 0;
@@ -223,9 +256,9 @@ public class LentaService implements FileProcessingService<T> {
                 }
                 addLenta(linked, data.get(linked.get(0).toString()));
             }
-            LOG.info("Sheet processed successfully");
+            log.info("Sheet processed successfully");
         } catch (Exception e) {
-            LOG.error("Error processing sheet: {}", e.getMessage());
+            log.error("Error processing sheet: {}", e.getMessage());
         }
     }
 
@@ -254,25 +287,25 @@ public class LentaService implements FileProcessingService<T> {
                 assert row != null;
                 lenta.setWeight(row.get(2).toString());
             }
-            LOG.info("Lenta added successfully");
+            log.info("Lenta added successfully");
         } catch (Exception e) {
-            LOG.error("Error adding Lenta: {}", e.getMessage());
+            log.error("Error adding Lenta: {}", e.getMessage());
         }
     }
 
     private Collection<LentaDTO> getLentaDTOList() {
         try {
-            LOG.info("Getting LentaDTO list...");
+            log.info("Getting LentaDTO list...");
 
             Collection<LentaDTO> lentaDTOS = new ArrayList<>();
             for (Map.Entry<String, Lenta> lenta : data.entrySet()) {
                 LentaDTO lentaDTO = MappingUtils.mapToLentaDTO(lenta.getValue());
                 lentaDTOS.add(lentaDTO);
             }
-            LOG.info("LentaDTO list obtained successfully");
+            log.info("LentaDTO list obtained successfully");
             return lentaDTOS;
         } catch (Exception e) {
-            LOG.error("Error getting LentaDTO list: {}", e.getMessage());
+            log.error("Error getting LentaDTO list: {}", e.getMessage());
             return new ArrayList<>();
         }
     }

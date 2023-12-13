@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
-public interface FileProcessingService<T> {
+public interface FileProcessingService {
 
-    Collection<T> readFiles(List<File> files, String... additionalParams) throws IOException;
+    Collection<?> readFiles(List<File> files, String... additionalParams) throws IOException;
 }

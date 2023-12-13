@@ -53,23 +53,13 @@ public class EdadealService implements FileProcessingService<T> {
         return path.toAbsolutePath().toString();
     }
 
-    @Override
+
     public void download(HttpServletResponse response, Path path, String format, String... additionalParams) throws IOException {
 
     }
 
     @Override
     public Collection<T> readFiles(List<File> files, String... additionalParams) throws IOException {
-        return null;
-    }
-
-    @Override
-    public void save(Collection<T> collection) {
-
-    }
-
-    @Override
-    public Collection<T> listAll() {
         return null;
     }
 

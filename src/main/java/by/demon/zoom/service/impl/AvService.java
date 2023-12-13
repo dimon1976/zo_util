@@ -63,7 +63,7 @@ public class AvService implements FileProcessingService<T> {
         return "File processed and saved successfully.";
     }
 
-    @Override
+
     public void download(HttpServletResponse response, Path path, String format, String... additionalParams) throws IOException {
         List<CsvReportEntity> allByJobNumber = avReportRepository.findAllByJobNumber(additionalParams[1]);
         List<String> strings = convert(allByJobNumber);
@@ -77,15 +77,7 @@ public class AvService implements FileProcessingService<T> {
         return null;
     }
 
-    @Override
-    public void save(Collection<T> collection) {
 
-    }
-
-    @Override
-    public Collection<T> listAll() {
-        return null;
-    }
 
     private Collection<CsvDataEntity> getTaskList(List<List<Object>> lists) {
         return lists.stream()

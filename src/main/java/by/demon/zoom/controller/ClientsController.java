@@ -8,6 +8,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.time.LocalDate;
+
 @Controller
 @RequestMapping("/clients")
 public class ClientsController {
@@ -24,6 +26,7 @@ public class ClientsController {
 
     @GetMapping("/lenta")
     public String lenta(Model model) {
+        model.addAttribute("date", LocalDate.now());
         model.addAttribute("lenta", new Lenta());
         return "/clients/lenta";
     }

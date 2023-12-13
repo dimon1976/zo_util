@@ -16,6 +16,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -65,9 +66,9 @@ public class FileController<T> {
                                                   @RequestParam(value = "showSource", required = false) String showSource,
                                                   @RequestParam(value = "sourceReplace", required = false) String sourceReplace,
                                                   @RequestParam(value = "showCompetitorUrl", required = false) String showCompetitorUrl,
-                                                  @RequestParam(value = "showDateAdd", required = false) String showDateAdd) {
+                                                  @RequestParam(value = "showDateAdd", required = false) String showDateAdd) throws IOException {
         String[] additionalParam = new String[]{showSource, sourceReplace, showCompetitorUrl, showDateAdd};
-//        return readFiles("stat", multipartFile, additionalParam);
+        Collection<T> stat = readFiles("stat", multipartFile, additionalParam);
         return "";
     }
 
@@ -139,25 +140,21 @@ public class FileController<T> {
     }
 
     @PostMapping("/lenta")
-    public @ResponseBody String excelLentaTask(@RequestParam("file") MultipartFile[] multipartFile) {
-//        return readFiles("lenta", multipartFile);
+    public @ResponseBody String excelLentaTask(@RequestParam("file") MultipartFile[] multipartFile,
+                                               @RequestParam(value = "lenta", required = false) String lenta) throws IOException {
+        String[] additionalParam = new String[]{"task", lenta};
+        Collection<T> collection = readFiles("lenta", multipartFile, additionalParam);
         return "";
     }
 
 
     @PostMapping("/lentaReport")
     public @ResponseBody String excelLentaReport(@ModelAttribute("lenta") Lenta lenta,
-                                                 @RequestParam("file") MultipartFile multipartFile) {
-        if (ifExist(multipartFile)) {
-            Path filePath = saveFileAndGetPath(multipartFile);
-            try {
-                multipartFile.transferTo(new File(filePath.toAbsolutePath().toString()));
-                LentaService lentaService = new LentaService(new DataDownload());
-                return lentaService.exportReport(filePath.toAbsolutePath().toString(), new File(filePath.toAbsolutePath().toString()), response, lenta.getAfterDate());
-            } catch (IllegalStateException | IOException e) {
-                log.error("Error while uploading file: {}", e.getMessage());
-            }
-        }
+                                                 @RequestParam("file") MultipartFile[] multipartFile) throws IOException {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        String date = formatter.format(lenta.getAfterDate());
+        String[] additionalParam = new String[]{"report", date};
+        Collection<T> collection = readFiles("lenta", multipartFile, additionalParam);
         return "/clients/lenta";
     }
 
@@ -186,7 +183,7 @@ public class FileController<T> {
             return ("Unsupported action: {}" + action);
         } else {
             Path path = DataDownload.getPath("data", format);
-            processingService.download(response, path, format, (Collection<T>) collection, additionalParams);
+//            processingService.download(response, path, format, (Collection<T>) collection, additionalParams);
         }
         return processSingleFile;
     }
