@@ -15,7 +15,7 @@
             <h2 class="display-4 mb-4">Lenta</h2>
             <div class="row">
                 <div class="col-12 col-sm-6">
-                    <form th:action="@{/excel/lenta}" th:method="post" enctype="multipart/form-data">
+                    <form th:action="@{/excel/lenta/upload/task}" th:method="post" enctype="multipart/form-data">
                         <h4>Обработка задания клиента Lenta</h4>
                         <div class="mb-3">
                             <label for="lentaTask" class="form-label">Выберите файл:</label>
@@ -31,7 +31,7 @@
                     </form>
                 </div>
                 <div class="col-12 col-sm-6">
-                    <form th:action="@{/excel/lentaReport}" th:method="post" th:object="${lenta}" enctype="multipart/form-data">
+                    <form th:action="@{/excel/lenta/upload/report}" th:method="post" th:object="${lenta}" enctype="multipart/form-data">
                         <h4>Обработка отчета клиента Lenta</h4>
                         <div class="mb-3">
                             <label for="lentaReport" class="form-label">Выберите файл отчета:</label>
@@ -53,7 +53,7 @@
             </div>
             <div class="row mt-3">
                 <div class="col-12">
-                    <form th:action="@{/excel/edadeal}" th:method="post" enctype="multipart/form-data">
+                    <form th:action="@{/excel/lenta/upload/edadeal}" th:method="post" enctype="multipart/form-data">
                         <h4>Обработка выгрузки Едадила</h4>
                         <div class="mb-3">
                             <label for="edadeal" class="form-label">Выберите файл выгрузки:</label>

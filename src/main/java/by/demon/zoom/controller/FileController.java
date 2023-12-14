@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Controller
 @RequestMapping("/excel")
-public class FileController<T> {
+public class FileController {
 
     private final Map<String, Object> processingServices = new HashMap<>();
     private final HttpServletResponse response;
@@ -56,27 +56,27 @@ public class FileController<T> {
     }
 
     @PostMapping("/getUrl/")
-    public @ResponseBody String getUrl(@RequestParam("file") MultipartFile[] multipartFile) {
-//        return readFiles("getUrl", multipartFile);
+    public @ResponseBody String getUrl(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
+        Collection<?> collection = readFiles("getUrl", multipartFile);
         return "";
     }
 
     @PostMapping("/stat/")
-    public @ResponseBody String editStatisticFile(@RequestParam("file") MultipartFile[] multipartFile,
+    public @ResponseBody String uploadStatisticFile(@RequestParam("file") MultipartFile[] multipartFile,
                                                   @RequestParam(value = "showSource", required = false) String showSource,
                                                   @RequestParam(value = "sourceReplace", required = false) String sourceReplace,
                                                   @RequestParam(value = "showCompetitorUrl", required = false) String showCompetitorUrl,
                                                   @RequestParam(value = "showDateAdd", required = false) String showDateAdd) throws IOException {
         String[] additionalParam = new String[]{showSource, sourceReplace, showCompetitorUrl, showDateAdd};
-        Collection<T> stat = readFiles("stat", multipartFile, additionalParam);
+        Collection<?> collection = readFiles("stat", multipartFile, additionalParam);
         return "";
     }
 
     @PostMapping("/vlook")
-    public @ResponseBody String excelVlook(@RequestParam("file") MultipartFile[] multipartFile,
+    public @ResponseBody String uploadVlook(@RequestParam("file") MultipartFile[] multipartFile,
                                            HttpServletResponse response,
                                            @RequestParam(value = "format", required = false) String format) throws IOException {
-        Collection<T> collection = readFiles("vlook", multipartFile);
+        Collection<?> collection = readFiles("vlook", multipartFile);
         download("vlook", response, format, collection);
         return "";
     }
@@ -86,7 +86,7 @@ public class FileController<T> {
             @RequestParam("file") MultipartFile[] multipartFile,
             @RequestParam(value = "label", required = false) String label) throws IOException {
         String[] additionalParam = new String[]{label};
-        Collection<T> collection = readFiles("megatop", multipartFile, additionalParam);
+        Collection<?> collection = readFiles("megatop", multipartFile, additionalParam);
         return "";
     }
 
@@ -99,26 +99,26 @@ public class FileController<T> {
         return download("megatop", response, format, additionalParam);
     }
 
-    @PostMapping("/simpleReport")
-    public @ResponseBody String excelSimpleReport(@RequestParam("file") MultipartFile[] multipartFile) {
-//        return readFiles("simple", multipartFile);
+    @PostMapping("/simple/upload/report")
+    public @ResponseBody String uploadSimpleReport(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
+        Collection<?> collection = readFiles("simple", multipartFile);
         return "";
     }
 
     @PostMapping("/av/task")
-    public @ResponseBody String avTask(@RequestParam("file") MultipartFile[] multipartFile) {
+    public @ResponseBody String uploadAvTask(@RequestParam("file") MultipartFile[] multipartFile) {
 //        return readFiles("avService", multipartFile, "task");
         return "";
     }
 
     @PostMapping("/av/report")
-    public @ResponseBody String avReport(@RequestParam("file") MultipartFile[] multipartFile) {
+    public @ResponseBody String uploadAvReport(@RequestParam("file") MultipartFile[] multipartFile) {
 //        return readFiles("avService", multipartFile, "report");
         return "";
     }
 
     @PostMapping("/av/handbook")
-    public @ResponseBody String avHandbook(@RequestParam("file") MultipartFile[] multipartFile) {
+    public @ResponseBody String uploadAvHandbook(@RequestParam("file") MultipartFile[] multipartFile) {
 //        return readFiles("handbook", multipartFile);
         return "";
     }
@@ -133,34 +133,35 @@ public class FileController<T> {
         return download("avService", response, format, additionalParam);
     }
 
-    @PostMapping("/edadeal")
-    public @ResponseBody String excelEdadeal(@RequestParam("file") MultipartFile[] multipartFile) {
-//        return readFiles("edadeal", multipartFile);
+    @PostMapping("/lenta/upload/edadeal")
+    public @ResponseBody String uploadEdadeal(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
+
+        Collection<?> collection = readFiles("edadeal", multipartFile);
         return "";
     }
 
-    @PostMapping("/lenta")
-    public @ResponseBody String excelLentaTask(@RequestParam("file") MultipartFile[] multipartFile,
+    @PostMapping("/lenta/upload/task")
+    public @ResponseBody String uploadLentaTask(@RequestParam("file") MultipartFile[] multipartFile,
                                                @RequestParam(value = "lenta", required = false) String lenta) throws IOException {
         String[] additionalParam = new String[]{"task", lenta};
-        Collection<T> collection = readFiles("lenta", multipartFile, additionalParam);
+        Collection<?> collection = readFiles("lenta", multipartFile, additionalParam);
         return "";
     }
 
 
-    @PostMapping("/lentaReport")
-    public @ResponseBody String excelLentaReport(@ModelAttribute("lenta") Lenta lenta,
+    @PostMapping("/lenta/upload/report")
+    public @ResponseBody String uploadLentaReport(@ModelAttribute("lenta") Lenta lenta,
                                                  @RequestParam("file") MultipartFile[] multipartFile) throws IOException {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         String date = formatter.format(lenta.getAfterDate());
         String[] additionalParam = new String[]{"report", date};
-        Collection<T> collection = readFiles("lenta", multipartFile, additionalParam);
+        Collection<?> collection = readFiles("lenta", multipartFile, additionalParam);
         return "/clients/lenta";
     }
 
 
-    private Collection<T> readFiles(String action, MultipartFile[] multipartFiles, String... additionalParams) throws IOException {
-        FileProcessingService<T> processingService = (FileProcessingService<T>) processingServices.get(action);
+    private Collection<?> readFiles(String action, MultipartFile[] multipartFiles, String... additionalParams) throws IOException {
+        FileProcessingService<?> processingService = (FileProcessingService<?>) processingServices.get(action);
         if (processingService == null) {
             log.warn("Unsupported action: {}", action);
             throw new IllegalArgumentException("Unsupported action: " + action);
@@ -176,7 +177,7 @@ public class FileController<T> {
     }
 
     private String download(String action, HttpServletResponse response, String format, Object collection, String... additionalParams) throws IOException {
-        FileProcessingService<T> processingService = (FileProcessingService<T>) processingServices.get(action);
+        FileProcessingService<?> processingService = (FileProcessingService<?>) processingServices.get(action);
         String processSingleFile = "";
         if (processingService == null) {
             log.warn("Unsupported action: {}", action);
@@ -236,6 +237,7 @@ public class FileController<T> {
 
     private Path getFilePath(MultipartFile multipartFile) {
         String orgName = multipartFile.getOriginalFilename();
+        assert orgName != null;
         String extension = getExtension(orgName);
         return Path.of(TEMP_PATH + "/" + orgName.replace("." + extension, "-" + "out." + extension));
     }

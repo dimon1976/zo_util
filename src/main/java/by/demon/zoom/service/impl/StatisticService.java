@@ -23,7 +23,7 @@ public class StatisticService implements FileProcessingService<List<Object>> {
             "Модель клиента", "Код производителя клиента", "Штрих-код клиента", "Статус клиента", "Цена конкурента",
             "Модель конкурента", "Код производителя конкурента", "ID конкурента", "Конкурент", "Конкурент вкл."));
 
-
+    @Override
     public Collection<List<Object>> readFiles(List<File> files, String... additionalParams) {
         ArrayList<List<Object>> allListObj = new ArrayList<>();
 

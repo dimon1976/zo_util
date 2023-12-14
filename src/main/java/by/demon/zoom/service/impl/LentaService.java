@@ -38,7 +38,7 @@ import static by.demon.zoom.util.ExcelReader.processRow;
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 
 @Service
-public class LentaService<T> implements FileProcessingService {
+public class LentaService<T> implements FileProcessingService<T> {
 
     private HashMap<String, Lenta> data = new HashMap<>();
     private static final DateTimeFormatter LENTA_PATTERN = DateTimeFormatter.ofPattern("dd.MM.yyyy");

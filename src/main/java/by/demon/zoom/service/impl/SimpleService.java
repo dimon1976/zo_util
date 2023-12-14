@@ -29,7 +29,7 @@ public class SimpleService implements FileProcessingService<SimpleDTO> {
             , "Комментарий", "Наименование товара конкурента", "Год конкурента", "Аналог", "Адрес конкурента"
             , "Статус товара (В наличии/Под заказ/Нет в наличии)", "Промо (да/нет)", "Ссылка конкурент", "Ссылка Симпл", "Скриншот");
 
-
+    @Override
     public Collection<SimpleDTO> readFiles(List<File> files, String... additionalParams) throws IOException {
         Collection<SimpleDTO> allUrlDTOs = new ArrayList<>(); // Создаем переменную для сохранения всех DTO
         for (File file : files) {

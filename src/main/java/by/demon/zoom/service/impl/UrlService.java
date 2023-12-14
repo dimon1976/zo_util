@@ -21,7 +21,7 @@ public class UrlService implements FileProcessingService<UrlDTO> {
     private static final Logger log = LoggerFactory.getLogger(UrlService.class);
     private static final List<String> HEADER = List.of("ID", "Ссылка конкурент");
 
-
+    @Override
     public Collection<UrlDTO> readFiles(List<File> files, String... additionalParams) {
         Collection<UrlDTO> allUrlDTOs = new ArrayList<>(); // Создаем переменную для сохранения всех DTO
 

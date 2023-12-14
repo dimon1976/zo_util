@@ -30,8 +30,8 @@ public class HandbookService implements FileProcessingService<T> {
         this.handbookRepository = handbookRepository;
     }
 
-    public String readFiles(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
 
+    public String readFiles(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
         List<List<Object>> lists = readDataFromFile(path.toFile());
         Collection<Handbook> handbookArrayList = getObjectList(lists);
         handbookRepository.deleteAll();
@@ -40,6 +40,11 @@ public class HandbookService implements FileProcessingService<T> {
 
         LOG.info("File {} processed and saved successfully.", path.getFileName());
         return "File processed and saved successfully.";
+    }
+
+    @Override
+    public Collection<T> readFiles(List<File> files, String... additionalParams) throws IOException {
+        return null;
     }
 
     private Collection<Handbook> getObjectList(List<List<Object>> lists) {
@@ -66,9 +71,6 @@ public class HandbookService implements FileProcessingService<T> {
         return (index >= 0 && index < list.size()) ? String.valueOf(list.get(index)) : "";
     }
 
-    @Override
-    public Collection<T> readFiles(List<File> files, String... additionalParams) throws IOException {
-        return null;
-    }
+
 
 }
