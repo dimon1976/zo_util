@@ -57,6 +57,10 @@ public class SimpleService implements FileProcessingService<SimpleDTO> {
         return allUrlDTOs;
     }
 
+    @Override
+    public String save(Collection<SimpleDTO> collection) {
+        return null;
+    }
 
     private Collection<SimpleDTO> getSimpleDTOList(Collection<Product> simpleArrayList) {
         return simpleArrayList.stream()

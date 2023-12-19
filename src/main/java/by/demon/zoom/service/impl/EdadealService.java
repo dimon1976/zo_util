@@ -69,6 +69,10 @@ public class EdadealService implements FileProcessingService<T> {
         return allUrlDTOs;
     }
 
+    @Override
+    public String save(Collection<T> collection) {
+        return null;
+    }
 
     private List<List<Object>> getResultList(List<List<Object>> list, List<Integer> columnList) {
         log.debug("Getting result list...");

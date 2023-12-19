@@ -100,6 +100,11 @@ public class MegatopService implements FileProcessingService<Megatop> {
         return megatopList;
     }
 
+    @Override
+    public String save(Collection<Megatop> collection) {
+        return null;
+    }
+
     private List<Megatop> getMegatopByLabel(String label) {
         return megatopRepository.findByLabel(label);
     }

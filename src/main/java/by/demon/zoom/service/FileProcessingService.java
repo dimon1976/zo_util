@@ -8,4 +8,6 @@ import java.util.List;
 public interface FileProcessingService<T> {
 
     Collection<?> readFiles(List<File> files, String... additionalParams) throws IOException;
+
+    String save(Collection<T> collection);
 }

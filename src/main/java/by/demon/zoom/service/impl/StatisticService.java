@@ -71,6 +71,11 @@ public class StatisticService implements FileProcessingService<List<Object>> {
         }
     }
 
+    @Override
+    public String save(Collection<List<Object>> collection) {
+        return null;
+    }
+
     private static void addAdditionalColumnsToString(String showCompetitorUrl, String showSource, String showDateAdd) {
 //        List<String> updatedHeader = new ArrayList<>(header);
         if (showCompetitorUrl != null) {

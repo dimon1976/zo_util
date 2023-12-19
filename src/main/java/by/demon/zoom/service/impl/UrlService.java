@@ -46,6 +46,10 @@ public class UrlService implements FileProcessingService<UrlDTO> {
         return allUrlDTOs; // Возвращаем список всех DTO
     }
 
+    @Override
+    public String save(Collection<UrlDTO> collection) {
+        return null;
+    }
 
     private Collection<UrlDTO> getUrlDTOList(List<List<Object>> excelData) {
         return excelData.stream()

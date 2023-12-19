@@ -54,6 +54,10 @@ public class VlookService implements FileProcessingService<VlookBarDTO> {
         return result;
     }
 
+    @Override
+    public String save(Collection<VlookBarDTO> collection) {
+        return null;
+    }
 
     private void addMapOne(List<Object> list, Map<String, Set<String>> mapOne) {
         if (list.size() >= 2) {

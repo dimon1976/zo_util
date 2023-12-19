@@ -95,6 +95,11 @@ public class LentaService<T> implements FileProcessingService<T> {
         return null;
     }
 
+    @Override
+    public String save(Collection<T> collection) {
+        return null;
+    }
+
     public Collection<LentaReportDTO> readReportFiles(List<File> files, String... additionalParams) {
         Collection<LentaReportDTO> allUrlDTOs = new ArrayList<>(); // Создаем переменную для сохранения всех DTO
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");

@@ -77,7 +77,10 @@ public class AvService implements FileProcessingService<T> {
         return null;
     }
 
-
+    @Override
+    public String save(Collection<T> collection) {
+        return null;
+    }
 
     private Collection<CsvDataEntity> getTaskList(List<List<Object>> lists) {
         return lists.stream()
