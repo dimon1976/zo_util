@@ -173,24 +173,19 @@ public class MegatopService implements FileProcessingService<Megatop> {
 //                .map(MappingUtils::mapToMegatopDTO)
 //                .collect(Collectors.toCollection(HashSet::new));
 
-        HashSet<MegatopDTO> megatopDTOSet = megatopList.stream()
+        // Преобразуйте HashSet в ArrayList
+        return megatopList.stream()
                 .filter(megatop -> "belwest.by".equals(megatop.getCompetitor()) ||
                         (!megatop.getUrl().contains("/ru/") && !megatop.getUrl().contains("/kz/") &&
                                 !megatop.getDate().toLocalDate().isBefore(beforeDate)))
-                .map(MappingUtils::mapToMegatopDTO)
-                .collect(Collectors.toCollection(HashSet::new));
-
-        // Преобразуйте HashSet в ArrayList
-        return new ArrayList<>(megatopDTOSet);
+                .map(MappingUtils::mapToMegatopDTO).distinct().collect(Collectors.toCollection(ArrayList::new));
 
     }
 
     private ArrayList<Megatop> getMegatopList(List<List<Object>> lists, String label, File file) {
-        HashSet<Megatop> megatopHashSet = lists.stream()
+        return lists.stream()
                 .filter(str -> !"Категория 1".equals(str.get(0)))
-                .map(str -> createMegatopFromList(str, Timestamp.from(Instant.now()), label, file))
-                .collect(Collectors.toCollection(HashSet::new));
-        return new ArrayList<>(megatopHashSet);
+                .map(str -> createMegatopFromList(str, Timestamp.from(Instant.now()), label, file)).distinct().collect(Collectors.toCollection(ArrayList::new));
     }
 
     private Megatop createMegatopFromList(List<Object> str, Timestamp instant, String label, File file) {

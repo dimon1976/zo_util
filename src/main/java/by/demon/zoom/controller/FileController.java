@@ -1,7 +1,6 @@
 package by.demon.zoom.controller;
 
 import by.demon.zoom.domain.Lenta;
-import by.demon.zoom.domain.Megatop;
 import by.demon.zoom.domain.av.Handbook;
 import by.demon.zoom.dto.SimpleDTO;
 import by.demon.zoom.dto.UrlDTO;
@@ -101,7 +100,7 @@ public class FileController<T> {
             @RequestParam("file") MultipartFile[] multipartFile,
             @RequestParam(value = "label", required = false) String label) throws IOException {
         String[] additionalParam = new String[]{label};
-        ArrayList<Megatop> megatop = megatopService.readFiles(getFiles(multipartFile), additionalParam);
+        megatopService.readFiles(getFiles(multipartFile), additionalParam);
         return "";
     }
 
