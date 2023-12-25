@@ -1,9 +1,8 @@
-package by.demon.zoom.service.impl;
+package by.demon.zoom.service.impl.lenta;
 
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.DataToExcel;
-import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -15,7 +14,7 @@ import java.util.*;
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 
 @Service
-public class EdadealService implements FileProcessingService<T> {
+public class EdadealService implements FileProcessingService<List<Object>> {
 
     private static final Logger log = LoggerFactory.getLogger(EdadealService.class);
     private static final String EXCLUDE_STRING = "от ";
@@ -69,8 +68,9 @@ public class EdadealService implements FileProcessingService<T> {
         return allUrlDTOs;
     }
 
+
     @Override
-    public String save(Collection<T> collection) {
+    public String save(Collection<List<Object>> collection) {
         return null;
     }
 

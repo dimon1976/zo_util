@@ -7,10 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -31,16 +29,16 @@ public class HandbookService implements FileProcessingService<Handbook> {
     }
 
 
-    public String readFiles(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
-        List<List<Object>> lists = readDataFromFile(path.toFile());
-        Collection<Handbook> handbookArrayList = getObjectList(lists);
-        handbookRepository.deleteAll();
-        log.info("Successful clearing of the handbook table");
-        handbookRepository.saveAll(handbookArrayList);
-
-        log.info("File {} processed and saved successfully.", path.getFileName());
-        return "File processed and saved successfully.";
-    }
+//    public String readFiles(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
+//        List<List<Object>> lists = readDataFromFile(path.toFile());
+//        Collection<Handbook> handbookArrayList = getObjectList(lists);
+//        handbookRepository.deleteAll();
+//        log.info("Successful clearing of the handbook table");
+//        handbookRepository.saveAll(handbookArrayList);
+//
+//        log.info("File {} processed and saved successfully.", path.getFileName());
+//        return "File processed and saved successfully.";
+//    }
 
     @Override
     public Collection<Handbook> readFiles(List<File> files, String... additionalParams) throws IOException {

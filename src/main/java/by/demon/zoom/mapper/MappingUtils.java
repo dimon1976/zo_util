@@ -5,7 +5,7 @@ import by.demon.zoom.domain.Megatop;
 import by.demon.zoom.domain.Product;
 import by.demon.zoom.dto.MegatopDTO;
 import by.demon.zoom.dto.SimpleDTO;
-import by.demon.zoom.dto.lenta.LentaDTO;
+import by.demon.zoom.dto.lenta.LentaTaskDTO;
 import by.demon.zoom.dto.lenta.LentaReportDTO;
 import org.springframework.stereotype.Service;
 
@@ -43,8 +43,8 @@ public final class MappingUtils {
         return megatopDTO;
     }
 
-    public static LentaDTO mapToLentaDTO(Lenta entity) {
-        LentaDTO lentaDTO = new LentaDTO();
+    public static LentaTaskDTO mapToLentaDTO(Lenta entity) {
+        LentaTaskDTO lentaDTO = new LentaTaskDTO();
         String joinEan = String.join(",", entity.getEan());
         lentaDTO.setId(entity.getId());
         lentaDTO.setModel(entity.getModel());

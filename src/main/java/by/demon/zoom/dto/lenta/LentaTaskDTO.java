@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LentaDTO {
+public class LentaTaskDTO {
 
     private String id;
     private String model;
