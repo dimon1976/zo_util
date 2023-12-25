@@ -5,6 +5,7 @@ import by.demon.zoom.domain.av.Handbook;
 import by.demon.zoom.dto.SimpleDTO;
 import by.demon.zoom.dto.UrlDTO;
 import by.demon.zoom.dto.VlookBarDTO;
+import by.demon.zoom.dto.imp.MegatopDTO;
 import by.demon.zoom.dto.lenta.LentaReportDTO;
 import by.demon.zoom.dto.lenta.LentaTaskDTO;
 import by.demon.zoom.service.impl.*;
@@ -14,7 +15,6 @@ import by.demon.zoom.service.impl.av.AvTaskService;
 import by.demon.zoom.service.impl.lenta.EdadealService;
 import by.demon.zoom.service.impl.lenta.LentaReportService;
 import by.demon.zoom.service.impl.lenta.LentaTaskService;
-import by.demon.zoom.util.DataDownload;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
@@ -110,8 +110,8 @@ public class FileController<T> {
                                              @RequestParam(value = "format", required = false) String format,
                                              HttpServletResponse response) throws IOException {
         String[] additionalParam = new String[]{label};
-        Path path = DataDownload.getPath("data", format);
-        megatopService.download(response, path, format, additionalParam);
+        ArrayList<MegatopDTO> megatopDTOS = megatopService.getDto(additionalParam);
+        megatopService.download(megatopDTOS, response, format);
         return "";
     }
 

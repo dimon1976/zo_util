@@ -19,7 +19,7 @@ import java.util.StringJoiner;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-public class Megatop {
+public class Megatop{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

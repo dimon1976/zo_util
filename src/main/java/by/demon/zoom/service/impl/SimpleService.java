@@ -17,7 +17,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static by.demon.zoom.util.ExcelReader.readExcel;
+import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 
 @Service
 public class SimpleService implements FileProcessingService<SimpleDTO> {
@@ -34,7 +34,7 @@ public class SimpleService implements FileProcessingService<SimpleDTO> {
         ArrayList<SimpleDTO> allUrlDTOs = new ArrayList<>(); // Создаем переменную для сохранения всех DTO
         for (File file : files) {
             try {
-                List<List<Object>> lists = readExcel(file);
+                List<List<Object>> lists = readDataFromFile(file);
                 Collection<Product> productList = getProductList(lists);
                 Collection<SimpleDTO> collect = getSimpleDTOList(productList);
                 allUrlDTOs.addAll(collect);

@@ -2,7 +2,7 @@ package by.demon.zoom.service.impl;
 
 import by.demon.zoom.dao.MegatopRepository;
 import by.demon.zoom.domain.Megatop;
-import by.demon.zoom.dto.MegatopDTO;
+import by.demon.zoom.dto.imp.MegatopDTO;
 import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DataDownload;
@@ -27,7 +27,10 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -55,71 +58,90 @@ public class MegatopService implements FileProcessingService<Megatop> {
     }
 
 
-    public void download(HttpServletResponse response, Path path, String format, String... additionalParameters) throws IOException {
-        try {
-            List<Megatop> megatopByLabel = getMegatopByLabel(additionalParameters[0]);
-            ArrayList<MegatopDTO> megatopDTOList = getMegatopDTOList(megatopByLabel);
-            // Экспортируем данные в Excel
-            try (ByteArrayOutputStream out = new ByteArrayOutputStream();
-                 FileInputStream is = new FileInputStream(path.toAbsolutePath().toString())) {
-                dataToExcel.exportToExcel(header, megatopDTOList, out, 0);
-                byte[] data = out.toByteArray();
-                Files.write(path, data);
-                // Скачиваем файл
-                dataDownload.downloadExcel(path, is, response);
-                DataDownload.cleanupTempFile(path);
-                log.info("Data exported successfully to Excel: {}", path.getFileName().toString());
-            }
-        } catch (IOException e) {
-            log.error("Error exporting data to Excel: {}", e.getMessage(), e);
-            throw e;
+    public void download(ArrayList<MegatopDTO> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
+        switch (format) {
+            case "excel":
+                try {
+
+                    Path path = DataDownload.getPath("data", ".xlsx");
+                    // Экспортируем данные в Excel
+                    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                        dataToExcel.exportToExcel(header, list, out, 0);
+                        byte[] data = out.toByteArray();
+                        Files.write(path, data);
+                        log.info("Data written to file: {}", path); // Добавьте логирование для проверки
+                    }
+
+                    // Скачиваем файл
+                    try (FileInputStream is = new FileInputStream(path.toAbsolutePath().toString())) {
+                        dataDownload.downloadExcel(path, is, response);
+                    }
+
+                    // Удаляем временный файл
+                    DataDownload.cleanupTempFile(path);
+                    log.info("Data exported successfully to Excel: {}", path.getFileName().toString());
+                } catch (IOException e) {
+                    log.error("Error exporting data to Excel: {}", e.getMessage(), e);
+                    throw e;
+                }
+                break;
+            case "csv":
+                Path path1 = DataDownload.getPath("data", ".csv");
+                List<String> strings = convert(list);
+                dataDownload.downloadCsv(path1, strings, response);
+                break;
+            default:
+                break;
         }
+    }
+
+    public ArrayList<MegatopDTO> getDto(String... additionalParameters) {
+        List<Megatop> megatopByLabel = getMegatopByLabel(additionalParameters[0]);
+        return getMegatopDTOList(megatopByLabel);
+    }
+
+    private static List<String> convert(List<MegatopDTO> objectList) {
+//        List<String> collect = objectList.stream()
+//                .filter(Objects::nonNull)
+//                .map(CsvRow::toCsvRow)
+//                .collect(Collectors.toList());
+//        return collect;
+        List<String> collect = new ArrayList<>();
+
+        for (MegatopDTO obj : objectList) {
+            try {
+                if (obj != null) {  // Фильтруем нулевые элементы
+                    String csvRow = obj.toCsvRow();  // Преобразуем в строку CSV
+                    collect.add(csvRow);  // Добавляем в список результатов
+                }
+            } catch (Exception e) {
+                // Логируем ошибку
+                log.error("Ошибка преобразования объекта в строку CSV", e);
+            }
+        }
+
+        return collect;
     }
 
     @Override
     public ArrayList<Megatop> readFiles(List<File> files, String... additionalParams) throws IOException {
-//        ArrayList<Megatop> megatopList = new ArrayList<>();
-//
-//        for (File file : files) {
-//            List<List<Object>> lists;
-//            try {
-//                lists = readDataFromFile(file);
-//                Files.delete(file.toPath());
-//                log.info("File {} removed successfully.", file.getAbsolutePath());
-//            } catch (IOException e) {
-//                log.error("Failed to remove file: {}", file.getAbsolutePath());
-//                throw e;
-//            }
-//
-//            try {
-//                megatopList.addAll(getMegatopList(lists, additionalParams[0], file));
-//                save(megatopList);
-//                log.info("File {} processed and saved successfully.", file.getName());
-//            } catch (Exception e) {
-//                log.error("Failed to save data from file: {}", file.getAbsolutePath(), e);
-//                throw e;
-//            }
-//        }
-//
-//        return megatopList;
-
-        // Используйте количество доступных процессоров для определения количества потоков
+        // Используем количество доступных процессоров для определения количества потоков
         int threadCount = Runtime.getRuntime().availableProcessors();
 
-        // Создайте пул потоков
+        // Создаем пул потоков
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
 
-        // Создайте список для сбора результатов обработки файлов
+        // Создаем список для сбора результатов обработки файлов
         List<Future<ArrayList<Megatop>>> futures = new ArrayList<>();
 
-        // Отправьте задачу обработки каждого файла в отдельный поток
+        // Отправляем задачу обработки каждого файла в отдельный поток
         for (File file : files) {
             futures.add(executorService.submit(() -> {
                 try {
                     log.info("Processing file: {}", file.getName());
                     List<List<Object>> lists = readDataFromFile(file);
 
-                    // Удалите файл только после успешного чтения данных
+                    // Удаляем файл только после успешного чтения данных
                     Files.delete(file.toPath());
                     log.info("File {} removed successfully.", file.getAbsolutePath());
 
@@ -129,12 +151,11 @@ public class MegatopService implements FileProcessingService<Megatop> {
                     return megatopList;
                 } catch (Exception e) {
                     log.error("Failed to process file: {}", file.getAbsolutePath(), e);
-                    throw new RuntimeException("Failed to process file", e); // Оборачивание в RuntimeException для распространения ошибки
+                    throw new RuntimeException("Failed to process file", e); // Оборачиваем в RuntimeException для распространения ошибки
                 }
             }));
         }
-
-        // Соберите результаты из всех потоков
+        // Собераем результаты из всех потоков
         ArrayList<Megatop> allMegatops = new ArrayList<>();
         for (Future<ArrayList<Megatop>> future : futures) {
             try {
@@ -166,14 +187,6 @@ public class MegatopService implements FileProcessingService<Megatop> {
     }
 
     private ArrayList<MegatopDTO> getMegatopDTOList(Collection<Megatop> megatopList) {
-//        return megatopList.stream()
-//                .filter(megatop -> "belwest.by".equals(megatop.getCompetitor()) ||
-//                        (!megatop.getUrl().contains("/ru/") && !megatop.getUrl().contains("/kz/") &&
-//                                !megatop.getDate().toLocalDate().isBefore(beforeDate)))
-//                .map(MappingUtils::mapToMegatopDTO)
-//                .collect(Collectors.toCollection(HashSet::new));
-
-        // Преобразуйте HashSet в ArrayList
         return megatopList.stream()
                 .filter(megatop -> "belwest.by".equals(megatop.getCompetitor()) ||
                         (!megatop.getUrl().contains("/ru/") && !megatop.getUrl().contains("/kz/") &&

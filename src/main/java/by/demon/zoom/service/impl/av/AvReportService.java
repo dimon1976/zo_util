@@ -1,8 +1,8 @@
 package by.demon.zoom.service.impl.av;
 
 import by.demon.zoom.dao.AvReportRepository;
-import by.demon.zoom.domain.CsvRow;
-import by.demon.zoom.domain.av.CsvReportEntity;
+import by.demon.zoom.domain.imp.av.CsvAvReportEntity;
+import by.demon.zoom.dto.CsvRow;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DataDownload;
 import org.slf4j.Logger;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 
 @Service
-public class AvReportService implements FileProcessingService<CsvReportEntity> {
+public class AvReportService implements FileProcessingService<CsvAvReportEntity> {
 
 
     private final static Logger log = LoggerFactory.getLogger(AvReportService.class);
@@ -41,7 +41,7 @@ public class AvReportService implements FileProcessingService<CsvReportEntity> {
     }
 
     public void download(HttpServletResponse response, Path path, String format, String... additionalParams) throws IOException {
-        List<CsvReportEntity> allByJobNumber = avReportRepository.findAllByJobNumber(additionalParams[1]);
+        List<CsvAvReportEntity> allByJobNumber = avReportRepository.findAllByJobNumber(additionalParams[1]);
         List<String> strings = convert(allByJobNumber);
 //        List<CsvDataEntity> dataEntities = avTaskRepository.findByJobNumberAndRetailerCode("TASK-00003539", "ЯНДЕКС_М_ОНЛ");
 
@@ -49,14 +49,14 @@ public class AvReportService implements FileProcessingService<CsvReportEntity> {
     }
 
     @Override
-    public ArrayList<CsvReportEntity> readFiles(List<File> files, String... additionalParams) throws IOException {
-        ArrayList<CsvReportEntity> allReports = new ArrayList<>();
+    public ArrayList<CsvAvReportEntity> readFiles(List<File> files, String... additionalParams) throws IOException {
+        ArrayList<CsvAvReportEntity> allReports = new ArrayList<>();
 
         int threadCount = Runtime.getRuntime().availableProcessors();
 
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
 
-        List<Future<ArrayList<CsvReportEntity>>> futures = files.stream()
+        List<Future<ArrayList<CsvAvReportEntity>>> futures = files.stream()
                 .map(file -> executorService.submit(() -> {
                     try {
                         log.info("Processing file: {}", file.getName());
@@ -72,9 +72,9 @@ public class AvReportService implements FileProcessingService<CsvReportEntity> {
                 }))
                 .collect(Collectors.toList());
 
-        for (Future<ArrayList<CsvReportEntity>> future : futures) {
+        for (Future<ArrayList<CsvAvReportEntity>> future : futures) {
             try {
-                ArrayList<CsvReportEntity> reportArrayList = future.get();
+                ArrayList<CsvAvReportEntity> reportArrayList = future.get();
                 allReports.addAll(reportArrayList);
             } catch (InterruptedException | ExecutionException e) {
                 log.error("Error processing file", e);
@@ -92,7 +92,7 @@ public class AvReportService implements FileProcessingService<CsvReportEntity> {
     }
 
     @Override
-    public String save(ArrayList<CsvReportEntity> reportArrayList) {
+    public String save(ArrayList<CsvAvReportEntity> reportArrayList) {
         try {
             avReportRepository.saveAll(reportArrayList);
             log.info("Job file has been successfully saved");
@@ -104,7 +104,7 @@ public class AvReportService implements FileProcessingService<CsvReportEntity> {
     }
 
 
-    private ArrayList<CsvReportEntity> getReportList(List<List<Object>> lists) {
+    private ArrayList<CsvAvReportEntity> getReportList(List<List<Object>> lists) {
         return lists.stream()
                 .filter(str -> !"Номер задания".equals(str.get(0)))
                 .map(this::createReportFromList)
@@ -113,15 +113,17 @@ public class AvReportService implements FileProcessingService<CsvReportEntity> {
 
     //
 
-    public static List<String> convert(List<CsvReportEntity> objectList) {
+    private List<String> convert(List<CsvAvReportEntity> objectList) {
         return objectList.stream()
                 .map(CsvRow::toCsvRow)
                 .collect(Collectors.toList());
     }
 
 
-    private CsvReportEntity createReportFromList(List<Object> str) {
-        CsvReportEntity csvReportEntity = new CsvReportEntity();
+
+
+    private CsvAvReportEntity createReportFromList(List<Object> str) {
+        CsvAvReportEntity csvReportEntity = new CsvAvReportEntity();
         csvReportEntity.setJobNumber(getStringValue(str, 0));
         csvReportEntity.setJobStart(getStringValue(str, 1));
         csvReportEntity.setJobEnd(getStringValue(str, 2));

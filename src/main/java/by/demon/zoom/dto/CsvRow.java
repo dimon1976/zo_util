@@ -1,4 +1,4 @@
-package by.demon.zoom.domain;
+package by.demon.zoom.dto;
 
 import java.util.List;
 

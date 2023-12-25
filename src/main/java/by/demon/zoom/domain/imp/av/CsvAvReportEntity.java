@@ -1,6 +1,6 @@
-package by.demon.zoom.domain.av;
+package by.demon.zoom.domain.imp.av;
 
-import by.demon.zoom.domain.CsvRow;
+import by.demon.zoom.dto.CsvRow;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @Entity
 @Table(name = "av_report")
-public class CsvReportEntity implements CsvRow {
+public class CsvAvReportEntity implements CsvRow {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
