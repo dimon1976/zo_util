@@ -24,7 +24,7 @@ public class StatisticService implements FileProcessingService<List<Object>> {
             "Модель конкурента", "Код производителя конкурента", "ID конкурента", "Конкурент", "Конкурент вкл."));
 
     @Override
-    public Collection<List<Object>> readFiles(List<File> files, String... additionalParams) {
+    public ArrayList<List<Object>> readFiles(List<File> files, String... additionalParams) {
         ArrayList<List<Object>> allListObj = new ArrayList<>();
 
         List<Integer> columns = Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 19, 20, 22, 23, 24);
@@ -72,7 +72,7 @@ public class StatisticService implements FileProcessingService<List<Object>> {
     }
 
     @Override
-    public String save(Collection<List<Object>> collection) {
+    public String save(ArrayList<List<Object>> collection) {
         return null;
     }
 

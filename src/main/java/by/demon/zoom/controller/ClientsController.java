@@ -1,8 +1,10 @@
 package by.demon.zoom.controller;
 
 import by.demon.zoom.domain.Lenta;
-import by.demon.zoom.service.impl.AvService;
+import by.demon.zoom.service.impl.av.AvHandbookService;
+import by.demon.zoom.service.impl.av.AvReportService;
 import by.demon.zoom.service.impl.MegatopService;
+import by.demon.zoom.service.impl.av.AvTaskService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,13 +18,17 @@ public class ClientsController {
 
 
     private final MegatopService megatopService;
-    private final AvService avService;
+    private final AvReportService avReportService;
+    private final AvTaskService avTaskService;
+    private final AvHandbookService avHandbookService;
 
-
-    public ClientsController(MegatopService megatopService, AvService avService) {
+    public ClientsController(MegatopService megatopService, AvReportService avReportService, AvTaskService avTaskService, AvHandbookService avHandbookService) {
         this.megatopService = megatopService;
-        this.avService = avService;
+        this.avReportService = avReportService;
+        this.avTaskService = avTaskService;
+        this.avHandbookService = avHandbookService;
     }
+
 
     @GetMapping("/lenta")
     public String lenta(Model model) {
@@ -46,9 +52,9 @@ public class ClientsController {
 
     @GetMapping("/av")
     public String av(Model model) {
-        model.addAttribute("reports", avService.getLatestReport());
-        model.addAttribute("tasks", avService.getLatestTask());
-        model.addAttribute("retailNetworks", avService.getRetailNetwork());
+        model.addAttribute("reports", avReportService.getLatestReport());
+        model.addAttribute("tasks", avTaskService.getLatestTask());
+        model.addAttribute("retailNetworks", avHandbookService.getRetailNetwork());
         return "/clients/av";
     }
 }

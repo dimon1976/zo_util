@@ -30,8 +30,8 @@ public class SimpleService implements FileProcessingService<SimpleDTO> {
             , "Статус товара (В наличии/Под заказ/Нет в наличии)", "Промо (да/нет)", "Ссылка конкурент", "Ссылка Симпл", "Скриншот");
 
     @Override
-    public Collection<SimpleDTO> readFiles(List<File> files, String... additionalParams) throws IOException {
-        Collection<SimpleDTO> allUrlDTOs = new ArrayList<>(); // Создаем переменную для сохранения всех DTO
+    public ArrayList<SimpleDTO> readFiles(List<File> files, String... additionalParams) throws IOException {
+        ArrayList<SimpleDTO> allUrlDTOs = new ArrayList<>(); // Создаем переменную для сохранения всех DTO
         for (File file : files) {
             try {
                 List<List<Object>> lists = readExcel(file);
@@ -58,7 +58,7 @@ public class SimpleService implements FileProcessingService<SimpleDTO> {
     }
 
     @Override
-    public String save(Collection<SimpleDTO> collection) {
+    public String save(ArrayList<SimpleDTO> collection) {
         return null;
     }
 

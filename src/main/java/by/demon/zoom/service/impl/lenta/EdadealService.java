@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.*;
 
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
@@ -46,11 +47,12 @@ public class EdadealService implements FileProcessingService<List<Object>> {
 
 
     @Override
-    public Collection<List<Object>> readFiles(List<File> files, String... additionalParams) throws IOException {
-        Collection<List<Object>> allUrlDTOs = new ArrayList<>(); // Создаем переменную для сохранения всех DTO
+    public ArrayList<List<Object>> readFiles(List<File> files, String... additionalParams) throws IOException {
+        ArrayList<List<Object>> allUrlDTOs = new ArrayList<>(); // Создаем переменную для сохранения всех DTO
         for (File file : files) {
             try {
                 List<List<Object>> originalWb = readDataFromFile(file);
+                Files.delete(file.toPath());
                 List<Integer> columns = Arrays.asList(0, 1, 2, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24);
                 List<List<Object>> resultList = getResultList(originalWb, columns);
                 allUrlDTOs.addAll(resultList);
@@ -68,9 +70,8 @@ public class EdadealService implements FileProcessingService<List<Object>> {
         return allUrlDTOs;
     }
 
-
     @Override
-    public String save(Collection<List<Object>> collection) {
+    public String save(ArrayList<List<Object>> collection) {
         return null;
     }
 

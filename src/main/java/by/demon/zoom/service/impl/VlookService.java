@@ -20,10 +20,10 @@ public class VlookService implements FileProcessingService<VlookBarDTO> {
 
 
     @Override
-    public Collection<VlookBarDTO> readFiles(List<File> files, String... additionalParams) {
+    public ArrayList<VlookBarDTO> readFiles(List<File> files, String... additionalParams) {
         Map<String, Set<String>> mapOne = new HashMap<>();
         Map<String, Set<String>> mapTwo = new HashMap<>();
-        List<VlookBarDTO> result = new ArrayList<>();
+        ArrayList<VlookBarDTO> result = new ArrayList<>();
         for (File file : files) {
             try {
                 readDataFromFile(file)
@@ -55,7 +55,7 @@ public class VlookService implements FileProcessingService<VlookBarDTO> {
     }
 
     @Override
-    public String save(Collection<VlookBarDTO> collection) {
+    public String save(ArrayList<VlookBarDTO> collection) {
         return null;
     }
 

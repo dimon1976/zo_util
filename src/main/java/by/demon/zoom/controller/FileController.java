@@ -9,6 +9,9 @@ import by.demon.zoom.dto.VlookBarDTO;
 import by.demon.zoom.dto.lenta.LentaReportDTO;
 import by.demon.zoom.dto.lenta.LentaTaskDTO;
 import by.demon.zoom.service.impl.*;
+import by.demon.zoom.service.impl.av.AvHandbookService;
+import by.demon.zoom.service.impl.av.AvReportService;
+import by.demon.zoom.service.impl.av.AvTaskService;
 import by.demon.zoom.service.impl.lenta.EdadealService;
 import by.demon.zoom.service.impl.lenta.LentaReportService;
 import by.demon.zoom.service.impl.lenta.LentaTaskService;
@@ -27,10 +30,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -47,31 +47,33 @@ public class FileController<T> {
     private final LentaTaskService lentaTaskService;
     private final SimpleService simpleService;
     private final EdadealService edadealService;
-    private final AvService avService;
-    private final HandbookService handbookService;
+    private final AvReportService avReportService;
+    private final AvTaskService avTaskService;
+    private final AvHandbookService handbookService;
 
 
     @Value("${temp.path}")
     private String TEMP_PATH;
 
-    public FileController(HttpServletResponse response, UrlService urlService, StatisticService statisticService, VlookService vlookService, MegatopService megatopService, LentaReportService lentaService, LentaTaskService lentaTaskService, SimpleService simpleService, EdadealService edadealService, AvService avService, HandbookService handbookService) {
+    public FileController(HttpServletResponse response, UrlService urlService, StatisticService statisticService, VlookService vlookService, MegatopService megatopService, LentaReportService lentaReportService, LentaTaskService lentaTaskService, SimpleService simpleService, EdadealService edadealService, AvReportService avReportService, AvTaskService avTaskService, AvHandbookService handbookService) {
         this.response = response;
         this.urlService = urlService;
         this.statisticService = statisticService;
         this.vlookService = vlookService;
         this.megatopService = megatopService;
-        this.lentaReportService = lentaService;
+        this.lentaReportService = lentaReportService;
         this.lentaTaskService = lentaTaskService;
         this.simpleService = simpleService;
         this.edadealService = edadealService;
-        this.avService = avService;
+        this.avReportService = avReportService;
+        this.avTaskService = avTaskService;
         this.handbookService = handbookService;
     }
 
 
     @PostMapping("/getUrl/")
     public @ResponseBody String getUrl(@RequestParam("file") MultipartFile[] multipartFile) {
-        Collection<UrlDTO> urlDTOS = urlService.readFiles(getFiles(multipartFile));
+        ArrayList<UrlDTO> urlDTOS = urlService.readFiles(getFiles(multipartFile));
         return "";
     }
 
@@ -82,7 +84,7 @@ public class FileController<T> {
                                                     @RequestParam(value = "showCompetitorUrl", required = false) String showCompetitorUrl,
                                                     @RequestParam(value = "showDateAdd", required = false) String showDateAdd) {
         String[] additionalParam = new String[]{showSource, sourceReplace, showCompetitorUrl, showDateAdd};
-        Collection<List<Object>> lists = statisticService.readFiles(getFiles(multipartFile), additionalParam);
+        ArrayList<List<Object>> lists = statisticService.readFiles(getFiles(multipartFile), additionalParam);
         return "";
     }
 
@@ -90,7 +92,7 @@ public class FileController<T> {
     public @ResponseBody String uploadVlook(@RequestParam("file") MultipartFile[] multipartFile,
                                             HttpServletResponse response,
                                             @RequestParam(value = "format", required = false) String format) {
-        Collection<VlookBarDTO> vlookBarDTOS = vlookService.readFiles(getFiles(multipartFile));
+        ArrayList<VlookBarDTO> vlookBarDTOS = vlookService.readFiles(getFiles(multipartFile));
         return "";
     }
 
@@ -99,7 +101,7 @@ public class FileController<T> {
             @RequestParam("file") MultipartFile[] multipartFile,
             @RequestParam(value = "label", required = false) String label) throws IOException {
         String[] additionalParam = new String[]{label};
-        Collection<Megatop> megatop = megatopService.readFiles(getFiles(multipartFile), additionalParam);
+        ArrayList<Megatop> megatop = megatopService.readFiles(getFiles(multipartFile), additionalParam);
         return "";
     }
 
@@ -116,27 +118,26 @@ public class FileController<T> {
 
     @PostMapping("/simple/upload/report")
     public @ResponseBody String uploadSimpleReport(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
-        Collection<SimpleDTO> simpleDTOS = simpleService.readFiles(getFiles(multipartFile));
+        ArrayList<SimpleDTO> simpleDTOS = simpleService.readFiles(getFiles(multipartFile));
         return "";
     }
 
     @PostMapping("/av/task")
     public @ResponseBody String uploadAvTask(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
-        avService.readFiles(getFiles(multipartFile));
+        avTaskService.readFiles(getFiles(multipartFile));
         return "";
     }
 
     @PostMapping("/av/report")
-    public @ResponseBody String uploadAvReport(@RequestParam("file") MultipartFile[] multipartFile) {
-
+    public @ResponseBody String uploadAvReport(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
+        avReportService.readFiles(getFiles(multipartFile));
         return "";
     }
 
     @PostMapping("/av/handbook")
     public @ResponseBody String uploadAvHandbook(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
-        Collection<Handbook> handbooks = handbookService.readFiles(getFiles(multipartFile));
-        handbookService.save(handbooks);
-        return "";
+        ArrayList<Handbook> handbooks = handbookService.readFiles(getFiles(multipartFile));
+        return handbookService.save(handbooks);
     }
 
     @PostMapping("/av/download")
@@ -158,8 +159,7 @@ public class FileController<T> {
     @PostMapping("/lenta/upload/task")
     public @ResponseBody String uploadLentaTask(@RequestParam("file") MultipartFile[] multipartFile,
                                                 @RequestParam(value = "lenta", required = false) String lenta) throws IOException {
-        String[] additionalParam = new String[]{"task", lenta};
-        Collection<LentaTaskDTO> collection = lentaTaskService.readFiles(getFiles(multipartFile), additionalParam);
+        Collection<LentaTaskDTO> collection = lentaTaskService.readFiles(getFiles(multipartFile));
         return "";
     }
 
@@ -170,7 +170,7 @@ public class FileController<T> {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         String date = formatter.format(lenta.getAfterDate());
         String[] additionalParam = new String[]{"report", date};
-        Collection<LentaReportDTO> reportCollection = lentaReportService.readFiles(getFiles(multipartFile),additionalParam);
+        Collection<LentaReportDTO> reportCollection = lentaReportService.readFiles(getFiles(multipartFile), additionalParam);
         return "/clients/lenta";
     }
 
@@ -194,13 +194,12 @@ public class FileController<T> {
 
     @NotNull
     private List<File> getFiles(MultipartFile[] multipartFiles) {
-        List<File> files = Arrays.stream(multipartFiles)
+        return Arrays.stream(multipartFiles)
                 .filter(this::ifExist)
                 .map(this::saveFileAndGetPath)
                 .filter(Objects::nonNull)
                 .map(Path::toFile)
                 .collect(Collectors.toList());
-        return files;
     }
 
 //    private String download(String action, HttpServletResponse response, String format, Object collection, String... additionalParams) throws IOException {

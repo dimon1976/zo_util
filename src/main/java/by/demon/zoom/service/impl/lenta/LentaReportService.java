@@ -52,6 +52,7 @@ public class LentaReportService implements FileProcessingService<LentaReportDTO>
             log.info("Exporting report...");
 
             List<List<Object>> list = readDataFromFile(file);
+            Files.delete(file.toPath());
             Collection<Lenta> lentaList = getResultList(list);
             LocalDate afterDate = convertToLocalDateViaInstant(date);
             Collection<LentaReportDTO> lentaReportDTO = getLentaReportDTOList(lentaList, afterDate);
@@ -71,8 +72,8 @@ public class LentaReportService implements FileProcessingService<LentaReportDTO>
 
 
     @Override
-    public Collection<LentaReportDTO> readFiles(List<File> files, String... additionalParams) {
-        Collection<LentaReportDTO> allUrlDTOs = new ArrayList<>(); // Создаем переменную для сохранения всех DTO
+    public ArrayList<LentaReportDTO> readFiles(List<File> files, String... additionalParams) {
+        ArrayList<LentaReportDTO> allUrlDTOs = new ArrayList<>(); // Создаем переменную для сохранения всех DTO
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         String var = additionalParams[1];
         for (File file : files) {
@@ -80,6 +81,7 @@ public class LentaReportService implements FileProcessingService<LentaReportDTO>
                 log.info("Exporting report...");
                 Date date = formatter.parse(var);
                 List<List<Object>> list = readDataFromFile(file);
+                Files.delete(file.toPath());
                 Collection<Lenta> lentaList = getResultList(list);
                 LocalDate afterDate = convertToLocalDateViaInstant(date);
                 Collection<LentaReportDTO> lentaReportDTO = getLentaReportDTOList(lentaList, afterDate);
@@ -101,7 +103,7 @@ public class LentaReportService implements FileProcessingService<LentaReportDTO>
     }
 
     @Override
-    public String save(Collection<LentaReportDTO> collection) {
+    public String save(ArrayList<LentaReportDTO> collection) {
         return null;
     }
 

@@ -1,6 +1,6 @@
-package by.demon.zoom.service.impl;
+package by.demon.zoom.service.impl.av;
 
-import by.demon.zoom.dao.HandbookRepository;
+import by.demon.zoom.dao.AvHandbookRepository;
 import by.demon.zoom.domain.av.Handbook;
 import by.demon.zoom.service.FileProcessingService;
 import org.slf4j.Logger;
@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -18,34 +19,24 @@ import java.util.stream.Collectors;
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 
 @Service
-public class HandbookService implements FileProcessingService<Handbook> {
+public class AvHandbookService implements FileProcessingService<Handbook> {
 
 
-    private final static Logger log = LoggerFactory.getLogger(HandbookService.class);
-    private final HandbookRepository handbookRepository;
+    private final static Logger log = LoggerFactory.getLogger(AvHandbookService.class);
+    private final AvHandbookRepository handbookRepository;
 
-    public HandbookService(HandbookRepository handbookRepository) {
+    public AvHandbookService(AvHandbookRepository handbookRepository) {
         this.handbookRepository = handbookRepository;
     }
 
 
-//    public String readFiles(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
-//        List<List<Object>> lists = readDataFromFile(path.toFile());
-//        Collection<Handbook> handbookArrayList = getObjectList(lists);
-//        handbookRepository.deleteAll();
-//        log.info("Successful clearing of the handbook table");
-//        handbookRepository.saveAll(handbookArrayList);
-//
-//        log.info("File {} processed and saved successfully.", path.getFileName());
-//        return "File processed and saved successfully.";
-//    }
-
     @Override
-    public Collection<Handbook> readFiles(List<File> files, String... additionalParams) throws IOException {
-        Collection<Handbook> handbookList = new ArrayList<>();
+    public ArrayList<Handbook> readFiles(List<File> files, String... additionalParams) throws IOException {
+        ArrayList<Handbook> handbookList = new ArrayList<>();
         for (File file : files) {
             try {
                 List<List<Object>> lists = readDataFromFile(file);
+                Files.delete(file.toPath());
                 Collection<Handbook> handbook = getObjectList(lists);
                 handbookList.addAll(handbook);
                 log.info("File {} successfully read", file.getName());
@@ -68,16 +59,34 @@ public class HandbookService implements FileProcessingService<Handbook> {
     }
 
     @Override
-    public String save(Collection<Handbook> collection) {
-            try {
-                handbookRepository.deleteAll(handbookRepository.findAll());
-                log.info("Successful clearing of the handbook table");
-                handbookRepository.saveAll(collection);
-                return ""; // or handle return value based on saveAll outcome
-            } catch (Exception e) {
-                log.error("Error saving handbooks", e);
-                throw e;
+    public String save(ArrayList<Handbook> collection) {
+        try {
+            // Оптимизация: Удалять только необходимые записи
+            List<Handbook> existingHandbooks = handbookRepository.findAll();
+            List<Handbook> handbooksToDelete = existingHandbooks.stream()
+                    .filter(h -> !collection.contains(h))
+                    .collect(Collectors.toList());
+            handbookRepository.deleteAll(handbooksToDelete);
+
+            log.info("Deleted {} existing handbooks from the table", handbooksToDelete.size());
+
+            // Оптимизация: Сохранение только новых или измененных записей
+            List<Handbook> handbooksToSave = collection.stream()
+                    .filter(h -> !existingHandbooks.contains(h) || !h.equals(existingHandbooks.get(existingHandbooks.indexOf(h))))
+                    .collect(Collectors.toList());
+
+            if (!handbooksToSave.isEmpty()) {
+                handbookRepository.saveAll(handbooksToSave);
+                log.info("Saved {} new or updated handbooks to the table", handbooksToSave.size());
+            } else {
+                log.info("No new or updated handbooks to save");
             }
+
+            return "Handbook updated"; // or handle return value based on saveAll outcome
+        } catch (Exception e) {
+            log.error("Error saving handbooks", e);
+            throw new RuntimeException("Failed to save handbooks", e); // Wrap in a custom exception if needed
+        }
     }
 
     private Collection<Handbook> getObjectList(List<List<Object>> lists) {
@@ -89,14 +98,13 @@ public class HandbookService implements FileProcessingService<Handbook> {
 
     private Handbook createObjectFromList(List<Object> str) {
         Handbook handbook = new Handbook();
-        handbook.setRegionCode(getStringValue(str, 0));
+        handbook.setRetailNetworkCode(getStringValue(str, 0));
         handbook.setRetailNetwork(getStringValue(str, 1));
         handbook.setPhysicalAddress(getStringValue(str, 2));
         handbook.setPriceZoneCode(getStringValue(str, 3));
         handbook.setWebSite(getStringValue(str, 4));
         handbook.setRegionCode(getStringValue(str, 5));
         handbook.setRegionName(getStringValue(str, 6));
-
         return handbook;
     }
 
@@ -104,5 +112,8 @@ public class HandbookService implements FileProcessingService<Handbook> {
         return (index >= 0 && index < list.size()) ? String.valueOf(list.get(index)) : "";
     }
 
+    public List<String> getRetailNetwork() {
+        return handbookRepository.findDistinctByRetailNetwork();
+    }
 
 }

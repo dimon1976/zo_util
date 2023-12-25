@@ -35,8 +35,8 @@ public class LentaTaskService implements FileProcessingService<LentaTaskDTO> {
 
     @Override
     // Обработка задания от ленты
-    public Collection<LentaTaskDTO> readFiles(List<File> files, String... additionalParams) throws IOException {
-        Collection<LentaTaskDTO> allUrlDTOs = new ArrayList<>();
+    public ArrayList<LentaTaskDTO> readFiles(List<File> files, String... additionalParams) throws IOException {
+        ArrayList<LentaTaskDTO> allUrlDTOs = new ArrayList<>();
         log.info("Exporting data...");
         for (File file : files) {
             try (Workbook workbook = loadWorkbook(file)) {
@@ -54,7 +54,7 @@ public class LentaTaskService implements FileProcessingService<LentaTaskDTO> {
     }
 
     @Override
-    public String save(Collection<LentaTaskDTO> collection) {
+    public String save(ArrayList<LentaTaskDTO> collection) {
         return null;
     }
 

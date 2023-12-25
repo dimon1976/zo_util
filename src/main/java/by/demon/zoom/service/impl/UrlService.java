@@ -22,8 +22,8 @@ public class UrlService implements FileProcessingService<UrlDTO> {
     private static final List<String> HEADER = List.of("ID", "Ссылка конкурент");
 
     @Override
-    public Collection<UrlDTO> readFiles(List<File> files, String... additionalParams) {
-        Collection<UrlDTO> allUrlDTOs = new ArrayList<>(); // Создаем переменную для сохранения всех DTO
+    public ArrayList<UrlDTO> readFiles(List<File> files, String... additionalParams) {
+        ArrayList<UrlDTO> allUrlDTOs = new ArrayList<>(); // Создаем переменную для сохранения всех DTO
 
         for (File file : files) {
             try {
@@ -47,7 +47,7 @@ public class UrlService implements FileProcessingService<UrlDTO> {
     }
 
     @Override
-    public String save(Collection<UrlDTO> collection) {
+    public String save(ArrayList<UrlDTO> collection) {
         return null;
     }
 

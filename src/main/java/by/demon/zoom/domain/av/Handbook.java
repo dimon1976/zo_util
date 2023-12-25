@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.Objects;
 
 @Data
 @NoArgsConstructor
@@ -22,4 +23,17 @@ public class Handbook {
     private String webSite;
     private String regionCode;
     private String regionName;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Handbook handbook = (Handbook) o;
+        return Objects.equals(retailNetworkCode, handbook.retailNetworkCode) && Objects.equals(retailNetwork, handbook.retailNetwork) && Objects.equals(physicalAddress, handbook.physicalAddress) && Objects.equals(priceZoneCode, handbook.priceZoneCode) && Objects.equals(webSite, handbook.webSite) && Objects.equals(regionCode, handbook.regionCode) && Objects.equals(regionName, handbook.regionName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(retailNetworkCode, retailNetwork, physicalAddress, priceZoneCode, webSite, regionCode, regionName);
+    }
 }
