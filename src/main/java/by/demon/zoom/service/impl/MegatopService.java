@@ -27,10 +27,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -101,11 +98,11 @@ public class MegatopService implements FileProcessingService<Megatop> {
     }
 
     private static List<String> convert(List<MegatopDTO> objectList) {
-//        List<String> collect = objectList.stream()
-//                .filter(Objects::nonNull)
-//                .map(CsvRow::toCsvRow)
+//        return objectList.stream()
+////                .filter(Objects::nonNull)
+//                .map(MegatopDTO::toCsvRow)
 //                .collect(Collectors.toList());
-//        return collect;
+
         List<String> collect = new ArrayList<>();
 
         for (MegatopDTO obj : objectList) {
@@ -187,12 +184,27 @@ public class MegatopService implements FileProcessingService<Megatop> {
     }
 
     private ArrayList<MegatopDTO> getMegatopDTOList(Collection<Megatop> megatopList) {
-        return megatopList.stream()
-                .filter(megatop -> "belwest.by".equals(megatop.getCompetitor()) ||
-                        (!megatop.getUrl().contains("/ru/") && !megatop.getUrl().contains("/kz/") &&
-                                !megatop.getDate().toLocalDate().isBefore(beforeDate)))
-                .map(MappingUtils::mapToMegatopDTO).distinct().collect(Collectors.toCollection(ArrayList::new));
+//        return megatopList.stream()
+//                .filter(megatop -> "belwest.by".equals(megatop.getCompetitor()) ||
+//                        (!megatop.getUrl().contains("/ru/") && !megatop.getUrl().contains("/kz/") &&
+//                                !megatop.getDate().toLocalDate().isBefore(beforeDate)))
+//                .map(MappingUtils::mapToMegatopDTO).distinct().collect(Collectors.toCollection(ArrayList::new));
 
+        ArrayList<MegatopDTO> megatopDTOList = new ArrayList<>();
+        Set<MegatopDTO> uniqueDTOs = new HashSet<>();  // Для хранения уникальных DTO
+
+        for (Megatop megatop : megatopList) {
+            if ("belwest.by".equals(megatop.getCompetitor()) ||
+                    (!megatop.getUrl().contains("/ru/") && !megatop.getUrl().contains("/kz/") &&
+                            !megatop.getDate().toLocalDate().isBefore(beforeDate))) {
+                MegatopDTO megatopDTO = MappingUtils.mapToMegatopDTO(megatop);
+                if (uniqueDTOs.add(megatopDTO)) {  // Добавить только уникальные DTO
+                    megatopDTOList.add(megatopDTO);
+                }
+            }
+        }
+
+        return megatopDTOList;
     }
 
     private ArrayList<Megatop> getMegatopList(List<List<Object>> lists, String label, File file) {

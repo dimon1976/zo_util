@@ -37,4 +37,6 @@ public class MegatopDTO implements CsvRow {
         return List.of(category1, category, heelHeight, collection, upperConstruction, upperMaterial, liningMaterial, rostovChildren, colors, season, competitor, id, category2, brand, model,
                 vendorCode, price, oldPrice, url, status);
     }
+
+
 }
