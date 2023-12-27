@@ -2,12 +2,14 @@ package by.demon.zoom.util;
 
 import com.opencsv.CSVWriter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,48 +25,56 @@ public class DataDownload {
 
     private static final Logger LOG = LoggerFactory.getLogger(DataDownload.class);
 
-    public void downloadExcel(Path path, InputStream is, HttpServletResponse response) throws IOException {
+    public void downloadExcel(Path path, HttpServletResponse response) throws IOException {
         if (path.getFileName() == null) {
             handleInvalidFilename(response);
             return;
         }
 
         LOG.info("Downloading file: {}", path.getFileName());
+        long contentLength = Files.size(path);
+        response.setContentLengthLong(contentLength);
         setResponseHeaders(response, path.getFileName().toString(), "application/vnd.ms-excel;charset=gb2312");
 
-        try (InputStream fis = new BufferedInputStream(is);
+        try (InputStream fis = Files.newInputStream(path);
              OutputStream toClient = new BufferedOutputStream(response.getOutputStream())) {
 
-            copyStreamData(fis, toClient);
+            IOUtils.copy(fis, toClient);
         } catch (IOException ex) {
             handleDownloadError(ex);
         }
-
     }
 
     public void downloadCsv(Path path, List<String> data, List<String> header, HttpServletResponse response) throws IOException {
-        try {
-            setResponseHeaders(response, path.getFileName().toString(), "text/csv;charset=Windows-1251");
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             OutputStream outputStream = new BufferedOutputStream(baos)) {
 
-            try (OutputStream outputStream = response.getOutputStream();
-                 Writer writer = new OutputStreamWriter(outputStream, "Windows-1251");
+            // Создать CSVWriter
+            try (Writer writer = new OutputStreamWriter(outputStream, "Windows-1251");
                  CSVWriter csvWriter = new CSVWriter(writer, ';',
                          CSVWriter.DEFAULT_QUOTE_CHARACTER,
                          CSVWriter.DEFAULT_ESCAPE_CHARACTER,
                          CSVWriter.DEFAULT_LINE_END)) {
 
+                // Записать данные в CSV
                 if (!header.isEmpty()) {
                     String headersString = String.join(";", header);
                     List<String> headers = List.of(headersString);
                     writeCsvData(csvWriter, headers);
                 }
                 writeCsvData(csvWriter, data);
-                outputStream.flush();
             }
+
+            // Установить заголовки ответа
+            long contentLength = baos.size();
+            response.setContentLengthLong(contentLength);
+            setResponseHeaders(response, path.getFileName().toString(), "text/csv;charset=Windows-1251");
+
+            // Отправить данные в ответ
+            baos.writeTo(response.getOutputStream());
         } catch (IOException e) {
             handleDownloadError(e);
         }
-        deleteFile(path);
     }
 
 
@@ -74,17 +84,10 @@ public class DataDownload {
     }
 
     private void setResponseHeaders(HttpServletResponse response, String filename, String contentType) {
-        response.setHeader("Content-Disposition", "attachment;filename=" + new String(filename.getBytes(), StandardCharsets.ISO_8859_1));
+        // Правильно закодировать имя файла для URL-совместимости
+        String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8);
+        response.setHeader("Content-Disposition", "attachment; filename*=UTF-8''" + encodedFilename);
         response.setContentType(contentType);
-    }
-
-    private void copyStreamData(InputStream input, OutputStream output) throws IOException {
-        byte[] buffer = new byte[4096];
-        int bytesRead;
-        while ((bytesRead = input.read(buffer)) != -1) {
-            output.write(buffer, 0, bytesRead);
-        }
-        output.flush();
     }
 
     private void writeCsvData(CSVWriter csvWriter, List<String> data) {
@@ -99,9 +102,6 @@ public class DataDownload {
         throw ex;
     }
 
-    private void deleteFile(Path path) throws IOException {
-        Files.deleteIfExists(path);
-    }
 
     public static Path getPath(String fileName, String suffix) {
         // Создаем временный файл и записываем в него данные
@@ -115,15 +115,5 @@ public class DataDownload {
         } else {
             log.error("Failed to remove file: {}", path.getFileName());
         }
-    }
-
-    public static String setSuffix(String format) {
-        if (format.equalsIgnoreCase("Excel")) {
-            return Globals.SUFFIX_XLSX;
-        } else if (format.equalsIgnoreCase("CSV")) {
-            return Globals.SUFFIX_CSV;
-        }
-        LOG.error("Wrong format - {}", format);
-        return "";
     }
 }

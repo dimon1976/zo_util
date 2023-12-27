@@ -10,4 +10,6 @@ public interface FileProcessingService<T> {
     ArrayList<T> readFiles(List<File> files, String... additionalParams) throws IOException;
 
     String save(ArrayList<T> collection);
+
+
 }

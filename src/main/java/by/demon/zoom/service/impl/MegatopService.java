@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -56,39 +55,30 @@ public class MegatopService implements FileProcessingService<Megatop> {
 
 
     public void download(ArrayList<MegatopDTO> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
-        switch (format) {
-            case "excel":
-                try {
-
-                    Path path = DataDownload.getPath("data", ".xlsx");
-                    // Экспортируем данные в Excel
+        Path path = DataDownload.getPath("data", format.equals("excel") ? ".xlsx" : ".csv");
+        try {
+            switch (format) {
+                case "excel":
                     try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
                         dataToExcel.exportToExcel(header, list, out, 0);
-                        byte[] data = out.toByteArray();
-                        Files.write(path, data);
-                        log.info("Data written to file: {}", path); // Добавьте логирование для проверки
+                        Files.write(path, out.toByteArray());
                     }
-
-                    // Скачиваем файл
-                    try (FileInputStream is = new FileInputStream(path.toAbsolutePath().toString())) {
-                        dataDownload.downloadExcel(path, is, response);
-                    }
-
-                    // Удаляем временный файл
+                    dataDownload.downloadExcel(path, response);
                     DataDownload.cleanupTempFile(path);
-                    log.info("Data exported successfully to Excel: {}", path.getFileName().toString());
-                } catch (IOException e) {
-                    log.error("Error exporting data to Excel: {}", e.getMessage(), e);
-                    throw e;
-                }
-                break;
-            case "csv":
-                Path path1 = DataDownload.getPath("data", ".csv");
-                List<String> strings = convert(list);
-                dataDownload.downloadCsv(path1, strings, header, response);
-                break;
-            default:
-                break;
+                    break;
+                case "csv":
+                    List<String> strings = convert(list);
+                    dataDownload.downloadCsv(path, strings, header, response);
+                    break;
+                default:
+                    log.error("Incorrect format: {}", format);
+                    break;
+            }
+
+            log.info("Data exported successfully to {}: {}", format, path.getFileName().toString());
+        } catch (IOException e) {
+            log.error("Error exporting data to {}: {}", format, e.getMessage(), e);
+            throw e;
         }
     }
 
@@ -98,26 +88,10 @@ public class MegatopService implements FileProcessingService<Megatop> {
     }
 
     private static List<String> convert(List<MegatopDTO> objectList) {
-//        return objectList.stream()
-////                .filter(Objects::nonNull)
-//                .map(MegatopDTO::toCsvRow)
-//                .collect(Collectors.toList());
-
-        List<String> collect = new ArrayList<>();
-
-        for (MegatopDTO obj : objectList) {
-            try {
-                if (obj != null) {  // Фильтруем нулевые элементы
-                    String csvRow = obj.toCsvRow();  // Преобразуем в строку CSV
-                    collect.add(csvRow);  // Добавляем в список результатов
-                }
-            } catch (Exception e) {
-                // Логируем ошибку
-                log.error("Ошибка преобразования объекта в строку CSV", e);
-            }
-        }
-
-        return collect;
+        return objectList.stream()
+                .filter(Objects::nonNull)
+                .map(MegatopDTO::toCsvRow)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -152,7 +126,7 @@ public class MegatopService implements FileProcessingService<Megatop> {
                 }
             }));
         }
-        // Собераем результаты из всех потоков
+        // Собираем результаты из всех потоков
         ArrayList<Megatop> allMegatops = new ArrayList<>();
         for (Future<ArrayList<Megatop>> future : futures) {
             try {
