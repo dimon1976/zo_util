@@ -42,7 +42,7 @@ public class DataDownload {
 
     }
 
-    public void downloadCsv(Path path, List<String> data, HttpServletResponse response) throws IOException {
+    public void downloadCsv(Path path, List<String> data, List<String> header, HttpServletResponse response) throws IOException {
         try {
             setResponseHeaders(response, path.getFileName().toString(), "text/csv;charset=Windows-1251");
 
@@ -53,6 +53,11 @@ public class DataDownload {
                          CSVWriter.DEFAULT_ESCAPE_CHARACTER,
                          CSVWriter.DEFAULT_LINE_END)) {
 
+                if (!header.isEmpty()) {
+                    String headersString = String.join(";", header);
+                    List<String> headers = List.of(headersString);
+                    writeCsvData(csvWriter, headers);
+                }
                 writeCsvData(csvWriter, data);
                 outputStream.flush();
             }

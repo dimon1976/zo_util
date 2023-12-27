@@ -85,7 +85,7 @@ public class MegatopService implements FileProcessingService<Megatop> {
             case "csv":
                 Path path1 = DataDownload.getPath("data", ".csv");
                 List<String> strings = convert(list);
-                dataDownload.downloadCsv(path1, strings, response);
+                dataDownload.downloadCsv(path1, strings, header, response);
                 break;
             default:
                 break;
