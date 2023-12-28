@@ -118,6 +118,7 @@ public class FileController<T> {
     @PostMapping("/simple/upload/report")
     public @ResponseBody String uploadSimpleReport(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
         ArrayList<SimpleDTO> simpleDTOS = simpleService.readFiles(getFiles(multipartFile));
+        simpleService.download(simpleDTOS, response, "excel");
         return "";
     }
 

@@ -158,12 +158,6 @@ public class MegatopService implements FileProcessingService<Megatop> {
     }
 
     private ArrayList<MegatopDTO> getMegatopDTOList(Collection<Megatop> megatopList) {
-//        return megatopList.stream()
-//                .filter(megatop -> "belwest.by".equals(megatop.getCompetitor()) ||
-//                        (!megatop.getUrl().contains("/ru/") && !megatop.getUrl().contains("/kz/") &&
-//                                !megatop.getDate().toLocalDate().isBefore(beforeDate)))
-//                .map(MappingUtils::mapToMegatopDTO).distinct().collect(Collectors.toCollection(ArrayList::new));
-
         ArrayList<MegatopDTO> megatopDTOList = new ArrayList<>();
         Set<MegatopDTO> uniqueDTOs = new HashSet<>();  // Для хранения уникальных DTO
 
