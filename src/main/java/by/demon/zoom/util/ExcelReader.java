@@ -88,7 +88,7 @@ public class ExcelReader {
     public static Object getCellValue(Cell cell) {
         switch (cell.getCellType()) {
             case STRING:
-                return cell.getStringCellValue();
+                return cell.getStringCellValue().replaceAll(";","|");
             case NUMERIC:
                 double numericValue = cell.getNumericCellValue();
                 long longValue = (long) numericValue; // Проверяем, является ли значение целым числом

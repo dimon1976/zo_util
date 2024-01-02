@@ -1,11 +1,12 @@
 package by.demon.zoom.controller;
 
 import by.demon.zoom.domain.Lenta;
-import by.demon.zoom.domain.av.Handbook;
-import by.demon.zoom.dto.SimpleDTO;
-import by.demon.zoom.dto.UrlDTO;
-import by.demon.zoom.dto.VlookBarDTO;
+import by.demon.zoom.domain.av.AvHandbook;
+import by.demon.zoom.domain.imp.av.CsvAvReportEntity;
 import by.demon.zoom.dto.imp.MegatopDTO;
+import by.demon.zoom.dto.imp.SimpleDTO;
+import by.demon.zoom.dto.imp.UrlDTO;
+import by.demon.zoom.dto.imp.VlookBarDTO;
 import by.demon.zoom.dto.lenta.LentaReportDTO;
 import by.demon.zoom.dto.lenta.LentaTaskDTO;
 import by.demon.zoom.service.impl.*;
@@ -29,7 +30,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -71,8 +75,9 @@ public class FileController<T> {
 
 
     @PostMapping("/getUrl/")
-    public @ResponseBody String getUrl(@RequestParam("file") MultipartFile[] multipartFile) {
+    public @ResponseBody String getUrl(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
         ArrayList<UrlDTO> urlDTOS = urlService.readFiles(getFiles(multipartFile));
+        urlService.download(urlDTOS, response, "excel");
         return "";
     }
 
@@ -81,17 +86,19 @@ public class FileController<T> {
                                                     @RequestParam(value = "showSource", required = false) String showSource,
                                                     @RequestParam(value = "sourceReplace", required = false) String sourceReplace,
                                                     @RequestParam(value = "showCompetitorUrl", required = false) String showCompetitorUrl,
-                                                    @RequestParam(value = "showDateAdd", required = false) String showDateAdd) {
+                                                    @RequestParam(value = "showDateAdd", required = false) String showDateAdd) throws IOException {
         String[] additionalParam = new String[]{showSource, sourceReplace, showCompetitorUrl, showDateAdd};
         ArrayList<List<Object>> lists = statisticService.readFiles(getFiles(multipartFile), additionalParam);
+        statisticService.download(lists, response, "excel", additionalParam);
         return "";
     }
 
     @PostMapping("/vlook")
     public @ResponseBody String uploadVlook(@RequestParam("file") MultipartFile[] multipartFile,
                                             HttpServletResponse response,
-                                            @RequestParam(value = "format", required = false) String format) {
+                                            @RequestParam(value = "format", required = false) String format) throws IOException {
         ArrayList<VlookBarDTO> vlookBarDTOS = vlookService.readFiles(getFiles(multipartFile));
+        vlookService.download(vlookBarDTOS, response, "csv");
         return "";
     }
 
@@ -136,30 +143,34 @@ public class FileController<T> {
 
     @PostMapping("/av/handbook")
     public @ResponseBody String uploadAvHandbook(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
-        ArrayList<Handbook> handbooks = handbookService.readFiles(getFiles(multipartFile));
+        ArrayList<AvHandbook> handbooks = handbookService.readFiles(getFiles(multipartFile));
         return handbookService.save(handbooks);
     }
 
-    @PostMapping("/av/download")
+    @PostMapping("/av/download/report")
     public @ResponseBody String avDownload(@RequestParam(value = "task_no", required = false) String task_no,
                                            @RequestParam(value = "report_no", required = false) String report_no,
                                            @RequestParam(value = "format", required = false) String format,
                                            @RequestParam(value = "retailerNetwork", required = false) String retailerNetwork,
                                            HttpServletResponse response) throws IOException {
-        String[] additionalParam = new String[]{task_no, report_no, retailerNetwork};
+        String[] additionalParam = new String[]{report_no, retailerNetwork};
+        ArrayList<CsvAvReportEntity> avDataEntityArrayList = avReportService.getDto(additionalParam);
+        avReportService.download(avDataEntityArrayList,response,"csv");
         return "";
     }
 
     @PostMapping("/lenta/upload/edadeal")
     public @ResponseBody String uploadEdadeal(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
-        edadealService.readFiles(getFiles(multipartFile));
+        ArrayList<List<Object>> list = edadealService.readFiles(getFiles(multipartFile));
+        edadealService.download(list, response, "excel");
         return "";
     }
 
     @PostMapping("/lenta/upload/task")
     public @ResponseBody String uploadLentaTask(@RequestParam("file") MultipartFile[] multipartFile,
                                                 @RequestParam(value = "lenta", required = false) String lenta) throws IOException {
-        Collection<LentaTaskDTO> collection = lentaTaskService.readFiles(getFiles(multipartFile));
+        ArrayList<LentaTaskDTO> collection = lentaTaskService.readFiles(getFiles(multipartFile));
+        lentaTaskService.download(collection, response, "excel");
         return "";
     }
 
@@ -170,27 +181,10 @@ public class FileController<T> {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         String date = formatter.format(lenta.getAfterDate());
         String[] additionalParam = new String[]{"report", date};
-        Collection<LentaReportDTO> reportCollection = lentaReportService.readFiles(getFiles(multipartFile), additionalParam);
+        ArrayList<LentaReportDTO> reportCollection = lentaReportService.readFiles(getFiles(multipartFile), additionalParam);
+        lentaReportService.download(reportCollection, response, "excel");
         return "/clients/lenta";
     }
-
-
-//    private Collection<?> readFiles(String action, MultipartFile[] multipartFiles, String... additionalParams) throws IOException {
-//        FileProcessingService<?> processingService = (FileProcessingService<?>) processingServices.get(action);
-//        if (processingService == null) {
-//            log.warn("Unsupported action: {}", action);
-//            throw new IllegalArgumentException("Unsupported action: " + action);
-//        }
-//        List<File> files = getFiles(multipartFiles);
-//        Collection<?> resultCollection = processingService.readFiles(files, additionalParams);
-//
-//        if (resultCollection != null) {
-//            // Дальнейшая обработка в соответствии с типом T
-//            return resultCollection;
-//        } else {
-//            throw new IllegalStateException("Invalid result type");
-//        }
-//    }
 
     @NotNull
     private List<File> getFiles(MultipartFile[] multipartFiles) {
@@ -201,29 +195,6 @@ public class FileController<T> {
                 .map(Path::toFile)
                 .collect(Collectors.toList());
     }
-
-//    private String download(String action, HttpServletResponse response, String format, Object collection, String... additionalParams) throws IOException {
-//        FileProcessingService<?> processingService = (FileProcessingService<?>) processingServices.get(action);
-//        String processSingleFile = "";
-//        if (processingService == null) {
-//            log.warn("Unsupported action: {}", action);
-//            return ("Unsupported action: {}" + action);
-//        } else {
-//            Path path = DataDownload.getPath("data", format);
-////            processingService.download(response, path, format, (Collection<T>) collection, additionalParams);
-//        }
-//        return processSingleFile;
-//    }
-
-//    private String save(String action, Collection<?> collection) {
-//        FileProcessingService<?> processingService = (FileProcessingService<?>) processingServices.get(action);
-//        if (processingService == null) {
-//            log.warn("Unsupported action: {}", action);
-//            throw new IllegalArgumentException("Unsupported action: " + action);
-//        }
-////        return processingService.save(collection);
-//        return "";
-//    }
 
     private Path saveFileAndGetPath(MultipartFile file) {
         try {
@@ -256,14 +227,6 @@ public class FileController<T> {
             log.error("Failed to create directory: {}", TEMP_PATH);
         } else {
             log.info("Directory created successfully: {}", TEMP_PATH);
-        }
-    }
-
-    private void cleanupTempFile(File transferTo) {
-        if (transferTo.delete()) {
-            log.info("File removed successfully: {}", transferTo.getName());
-        } else {
-            log.error("Failed to remove file: {}", transferTo.getName());
         }
     }
 

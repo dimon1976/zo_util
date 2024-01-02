@@ -1,7 +1,7 @@
 package by.demon.zoom.service.impl.av;
 
 import by.demon.zoom.dao.AvHandbookRepository;
-import by.demon.zoom.domain.av.Handbook;
+import by.demon.zoom.domain.av.AvHandbook;
 import by.demon.zoom.service.FileProcessingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 
 @Service
-public class AvHandbookService implements FileProcessingService<Handbook> {
+public class AvHandbookService implements FileProcessingService<AvHandbook> {
 
 
     private final static Logger log = LoggerFactory.getLogger(AvHandbookService.class);
@@ -31,13 +31,13 @@ public class AvHandbookService implements FileProcessingService<Handbook> {
 
 
     @Override
-    public ArrayList<Handbook> readFiles(List<File> files, String... additionalParams) throws IOException {
-        ArrayList<Handbook> handbookList = new ArrayList<>();
+    public ArrayList<AvHandbook> readFiles(List<File> files, String... additionalParams) throws IOException {
+        ArrayList<AvHandbook> handbookList = new ArrayList<>();
         for (File file : files) {
             try {
                 List<List<Object>> lists = readDataFromFile(file);
                 Files.delete(file.toPath());
-                Collection<Handbook> handbook = getObjectList(lists);
+                Collection<AvHandbook> handbook = getObjectList(lists);
                 handbookList.addAll(handbook);
                 log.info("File {} successfully read", file.getName());
 
@@ -59,19 +59,19 @@ public class AvHandbookService implements FileProcessingService<Handbook> {
     }
 
     @Override
-    public String save(ArrayList<Handbook> collection) {
+    public String save(ArrayList<AvHandbook> collection) {
         try {
-            // Оптимизация: Удалять только необходимые записи
-            List<Handbook> existingHandbooks = handbookRepository.findAll();
-            List<Handbook> handbooksToDelete = existingHandbooks.stream()
+            // Удалять только необходимые записи
+            List<AvHandbook> existingHandbooks = handbookRepository.findAll();
+            List<AvHandbook> handbooksToDelete = existingHandbooks.stream()
                     .filter(h -> !collection.contains(h))
                     .collect(Collectors.toList());
             handbookRepository.deleteAll(handbooksToDelete);
 
             log.info("Deleted {} existing handbooks from the table", handbooksToDelete.size());
 
-            // Оптимизация: Сохранение только новых или измененных записей
-            List<Handbook> handbooksToSave = collection.stream()
+            // Сохранение только новых или измененных записей
+            List<AvHandbook> handbooksToSave = collection.stream()
                     .filter(h -> !existingHandbooks.contains(h) || !h.equals(existingHandbooks.get(existingHandbooks.indexOf(h))))
                     .collect(Collectors.toList());
 
@@ -82,22 +82,22 @@ public class AvHandbookService implements FileProcessingService<Handbook> {
                 log.info("No new or updated handbooks to save");
             }
 
-            return "Handbook updated"; // or handle return value based on saveAll outcome
+            return "Handbook updated";
         } catch (Exception e) {
             log.error("Error saving handbooks", e);
-            throw new RuntimeException("Failed to save handbooks", e); // Wrap in a custom exception if needed
+            throw new RuntimeException("Failed to save handbooks", e);
         }
     }
 
-    private Collection<Handbook> getObjectList(List<List<Object>> lists) {
+    private Collection<AvHandbook> getObjectList(List<List<Object>> lists) {
         return lists.stream()
                 .filter(str -> !"Номер задания".equals(str.get(0)))
                 .map(this::createObjectFromList)
                 .collect(Collectors.toCollection(HashSet::new));
     }
 
-    private Handbook createObjectFromList(List<Object> str) {
-        Handbook handbook = new Handbook();
+    private AvHandbook createObjectFromList(List<Object> str) {
+        AvHandbook handbook = new AvHandbook();
         handbook.setRetailNetworkCode(getStringValue(str, 0));
         handbook.setRetailNetwork(getStringValue(str, 1));
         handbook.setPhysicalAddress(getStringValue(str, 2));

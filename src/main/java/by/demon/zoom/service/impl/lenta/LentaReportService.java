@@ -2,6 +2,7 @@ package by.demon.zoom.service.impl.lenta;
 
 
 import by.demon.zoom.domain.Lenta;
+import by.demon.zoom.dto.CsvRow;
 import by.demon.zoom.dto.lenta.LentaReportDTO;
 import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.service.FileProcessingService;
@@ -15,15 +16,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.DateUtils.convertToLocalDateViaInstant;
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
@@ -39,37 +41,14 @@ public class LentaReportService implements FileProcessingService<LentaReportDTO>
     private String outPath;
 
     private final DataDownload dataDownload;
+    private final DataToExcel<LentaReportDTO> dataToExcel;
 
-    private final List<String> headerLentaReport = Arrays.asList("Город", "Товар", "Наименование товара", "Цена", "Сеть", "Акц. Цена 1", "Дата начала промо", "Дата окончания промо", "% скидки", "Механика акции", "Фото (ссылка)", "Доп.цена", "Модель", "Вес Едадил", "Вес Едадил, кг", "Вес Ленты", "Вес Ленты, кг", "Цена Едадил за КГ", "Пересчет к весу Ленты", "Доп. поле");
+    private final List<String> header = Arrays.asList("Город", "Товар", "Наименование товара", "Цена", "Сеть", "Акц. Цена 1", "Дата начала промо", "Дата окончания промо", "% скидки", "Механика акции", "Фото (ссылка)", "Доп.цена", "Модель", "Вес Едадил", "Вес Едадил, кг", "Вес Ленты", "Вес Ленты, кг", "Цена Едадил за КГ", "Пересчет к весу Ленты", "Доп. поле");
 
-    public LentaReportService(DataDownload dataDownload) {
+    public LentaReportService(DataDownload dataDownload, DataToExcel<LentaReportDTO> dataToExcel) {
         this.dataDownload = dataDownload;
+        this.dataToExcel = dataToExcel;
     }
-
-
-    public String exportReport(String filePath, File file, HttpServletResponse response, Date date) {
-        try {
-            log.info("Exporting report...");
-
-            List<List<Object>> list = readDataFromFile(file);
-            Files.delete(file.toPath());
-            Collection<Lenta> lentaList = getResultList(list);
-            LocalDate afterDate = convertToLocalDateViaInstant(date);
-            Collection<LentaReportDTO> lentaReportDTO = getLentaReportDTOList(lentaList, afterDate);
-            try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
-                DataToExcel<LentaReportDTO> dataToExcel = new DataToExcel<>();
-                short skip = 1;
-                dataToExcel.exportToExcel(headerLentaReport, lentaReportDTO, out, skip);
-//                dataDownload.download(file.getName(), filePath, response);
-            }
-            log.info("Report exported successfully: {}", filePath);
-            return filePath;
-        } catch (IOException e) {
-            log.error("Error exporting report: {}", e.getMessage());
-            return "Error exporting report";
-        }
-    }
-
 
     @Override
     public ArrayList<LentaReportDTO> readFiles(List<File> files, String... additionalParams) {
@@ -100,6 +79,41 @@ public class LentaReportService implements FileProcessingService<LentaReportDTO>
             }
         }
         return allUrlDTOs;
+    }
+
+    public void download(ArrayList<LentaReportDTO> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
+        Path path = DataDownload.getPath("data", format.equals("excel") ? ".xlsx" : ".csv");
+        try {
+            switch (format) {
+                case "excel":
+                    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                        dataToExcel.exportToExcel(header, list, out, 1);
+                        Files.write(path, out.toByteArray());
+                    }
+                    dataDownload.downloadExcel(path, response);
+                    DataDownload.cleanupTempFile(path);
+                    break;
+                case "csv":
+                    List<String> strings = convert(list);
+                    dataDownload.downloadCsv(path, strings, header, response);
+                    break;
+                default:
+                    log.error("Incorrect format: {}", format);
+                    break;
+            }
+
+            log.info("Data exported successfully to {}: {}", format, path.getFileName().toString());
+        } catch (IOException e) {
+            log.error("Error exporting data to {}: {}", format, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    private static List<String> convert(List<LentaReportDTO> objectList) {
+        return objectList.stream()
+                .filter(Objects::nonNull)
+                .map(CsvRow::toCsvRow)
+                .collect(Collectors.toList());
     }
 
     @Override

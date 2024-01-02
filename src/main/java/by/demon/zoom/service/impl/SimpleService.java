@@ -1,8 +1,8 @@
 package by.demon.zoom.service.impl;
 
 import by.demon.zoom.domain.Product;
-import by.demon.zoom.dto.SimpleDTO;
-import by.demon.zoom.dto.imp.MegatopDTO;
+import by.demon.zoom.dto.CsvRow;
+import by.demon.zoom.dto.imp.SimpleDTO;
 import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DataDownload;
@@ -98,9 +98,10 @@ public class SimpleService implements FileProcessingService<SimpleDTO> {
     private static List<String> convert(List<SimpleDTO> objectList) {
         return objectList.stream()
                 .filter(Objects::nonNull)
-                .map(SimpleDTO::toCsvRow)
+                .map(CsvRow::toCsvRow)
                 .collect(Collectors.toList());
     }
+
     @Override
     public String save(ArrayList<SimpleDTO> collection) {
         return null;

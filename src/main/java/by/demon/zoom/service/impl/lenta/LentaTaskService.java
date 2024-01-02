@@ -1,9 +1,12 @@
 package by.demon.zoom.service.impl.lenta;
 
 import by.demon.zoom.domain.Lenta;
+import by.demon.zoom.dto.CsvRow;
 import by.demon.zoom.dto.lenta.LentaTaskDTO;
 import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.service.FileProcessingService;
+import by.demon.zoom.util.DataDownload;
+import by.demon.zoom.util.DataToExcel;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -14,10 +17,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.ExcelReader.processRow;
 
@@ -28,9 +36,16 @@ public class LentaTaskService implements FileProcessingService<LentaTaskDTO> {
 
     private HashMap<String, Lenta> data = new HashMap<>();
     private static final Logger log = LoggerFactory.getLogger(LentaTaskService.class);
-    private final List<String> headerLentaTask = Arrays.asList("Id", "Наименование товара", "Вес", "Цена", "Москва, Нижний новгород", "Ростов-на-Дону",
+    private final DataToExcel<LentaTaskDTO> dataToExcel;
+    private final DataDownload dataDownload;
+    private final List<String> header = Arrays.asList("Id", "Наименование товара", "Вес", "Цена", "Москва, Нижний новгород", "Ростов-на-Дону",
             "Санкт-Петербург, Петрозаводск", "Новосибирск, Иркутск, Красноярск", "Екатеринбург", "Саратов, Уфа, Ульяновск", "Штрихкод");
     private int countSheet = 0;
+
+    public LentaTaskService(DataToExcel<LentaTaskDTO> dataToExcel, DataDownload dataDownload) {
+        this.dataToExcel = dataToExcel;
+        this.dataDownload = dataDownload;
+    }
 
 
     @Override
@@ -51,6 +66,41 @@ public class LentaTaskService implements FileProcessingService<LentaTaskDTO> {
             }
         }
         return allUrlDTOs;
+    }
+
+    public void download(ArrayList<LentaTaskDTO> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
+        Path path = DataDownload.getPath("data", format.equals("excel") ? ".xlsx" : ".csv");
+        try {
+            switch (format) {
+                case "excel":
+                    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                        dataToExcel.exportToExcel(header, list, out, 0);
+                        Files.write(path, out.toByteArray());
+                    }
+                    dataDownload.downloadExcel(path, response);
+                    DataDownload.cleanupTempFile(path);
+                    break;
+                case "csv":
+                    List<String> strings = convert(list);
+                    dataDownload.downloadCsv(path, strings, header, response);
+                    break;
+                default:
+                    log.error("Incorrect format: {}", format);
+                    break;
+            }
+
+            log.info("Data exported successfully to {}: {}", format, path.getFileName().toString());
+        } catch (IOException e) {
+            log.error("Error exporting data to {}: {}", format, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    private static List<String> convert(List<LentaTaskDTO> objectList) {
+        return objectList.stream()
+                .filter(Objects::nonNull)
+                .map(CsvRow::toCsvRow)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -138,7 +188,6 @@ public class LentaTaskService implements FileProcessingService<LentaTaskDTO> {
                 assert row != null;
                 lenta.setWeight(row.get(2).toString());
             }
-            log.info("Lenta added successfully");
         } catch (Exception e) {
             log.error("Error adding Lenta: {}", e.getMessage());
         }

@@ -1,5 +1,6 @@
-package by.demon.zoom.dto;
+package by.demon.zoom.dto.imp;
 
+import by.demon.zoom.dto.CsvRow;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,7 +10,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SimpleDTO implements CsvRow{
+public class SimpleDTO implements CsvRow {
     private String id;
     private String category1;
     private String category2;

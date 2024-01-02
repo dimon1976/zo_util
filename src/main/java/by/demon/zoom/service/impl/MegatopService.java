@@ -2,6 +2,7 @@ package by.demon.zoom.service.impl;
 
 import by.demon.zoom.dao.MegatopRepository;
 import by.demon.zoom.domain.Megatop;
+import by.demon.zoom.dto.CsvRow;
 import by.demon.zoom.dto.imp.MegatopDTO;
 import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.service.FileProcessingService;
@@ -82,16 +83,16 @@ public class MegatopService implements FileProcessingService<Megatop> {
         }
     }
 
-    public ArrayList<MegatopDTO> getDto(String... additionalParameters) {
-        List<Megatop> megatopByLabel = getMegatopByLabel(additionalParameters[0]);
-        return getMegatopDTOList(megatopByLabel);
-    }
-
     private static List<String> convert(List<MegatopDTO> objectList) {
         return objectList.stream()
                 .filter(Objects::nonNull)
-                .map(MegatopDTO::toCsvRow)
+                .map(CsvRow::toCsvRow)
                 .collect(Collectors.toList());
+    }
+
+    public ArrayList<MegatopDTO> getDto(String... additionalParameters) {
+        List<Megatop> megatopByLabel = getMegatopByLabel(additionalParameters[0]);
+        return getMegatopDTOList(megatopByLabel);
     }
 
     @Override

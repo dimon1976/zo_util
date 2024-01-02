@@ -12,7 +12,7 @@ import java.util.Objects;
 @AllArgsConstructor
 @Entity
 @Table(name = "av_handbook")
-public class Handbook {
+public class AvHandbook {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -28,7 +28,7 @@ public class Handbook {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Handbook handbook = (Handbook) o;
+        AvHandbook handbook = (AvHandbook) o;
         return Objects.equals(retailNetworkCode, handbook.retailNetworkCode) && Objects.equals(retailNetwork, handbook.retailNetwork) && Objects.equals(physicalAddress, handbook.physicalAddress) && Objects.equals(priceZoneCode, handbook.priceZoneCode) && Objects.equals(webSite, handbook.webSite) && Objects.equals(regionCode, handbook.regionCode) && Objects.equals(regionName, handbook.regionName);
     }
 

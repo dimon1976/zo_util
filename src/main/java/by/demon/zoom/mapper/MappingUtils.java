@@ -3,7 +3,7 @@ package by.demon.zoom.mapper;
 import by.demon.zoom.domain.Lenta;
 import by.demon.zoom.domain.Megatop;
 import by.demon.zoom.domain.Product;
-import by.demon.zoom.dto.SimpleDTO;
+import by.demon.zoom.dto.imp.SimpleDTO;
 import by.demon.zoom.dto.imp.MegatopDTO;
 import by.demon.zoom.dto.lenta.LentaReportDTO;
 import by.demon.zoom.dto.lenta.LentaTaskDTO;

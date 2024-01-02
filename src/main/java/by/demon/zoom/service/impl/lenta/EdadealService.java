@@ -7,12 +7,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.*;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
+import static java.util.stream.Collectors.joining;
 
 @Service
 public class EdadealService implements FileProcessingService<List<Object>> {
@@ -29,22 +37,6 @@ public class EdadealService implements FileProcessingService<List<Object>> {
         this.dataToExcel = dataToExcel;
         this.dataDownload = dataDownload;
     }
-
-//    public String readFiles(Path path, HttpServletResponse response, String... additionalParams) throws IOException {
-//        log.info("Exporting data...");
-//        List<List<Object>> originalWb = readDataFromFile(path.toFile());
-//        List<Integer> columns = Arrays.asList(0, 1, 2, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24);
-//        List<List<Object>> resultList = getResultList(originalWb, columns);
-//        try (OutputStream out = Files.newOutputStream(path);
-//             FileInputStream is = new FileInputStream(path.toAbsolutePath().toString())) {
-//            short skip = 1;
-//            dataToExcel.exportToExcel(header, resultList, out, skip);
-//            dataDownload.downloadExcel(path, is, response);
-//        }
-//        log.info("Exported data to Excel: {}", path.toAbsolutePath());
-//        return path.toAbsolutePath().toString();
-//    }
-
 
     @Override
     public ArrayList<List<Object>> readFiles(List<File> files, String... additionalParams) throws IOException {
@@ -68,6 +60,44 @@ public class EdadealService implements FileProcessingService<List<Object>> {
             }
         }
         return allUrlDTOs;
+    }
+
+    public void download(ArrayList<List<Object>> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
+        Path path = DataDownload.getPath("data", format.equals("excel") ? ".xlsx" : ".csv");
+        try {
+            switch (format) {
+                case "excel":
+                    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                        dataToExcel.exportObjectToExcel(header, list, out, 1);
+                        Files.write(path, out.toByteArray());
+                    }
+                    dataDownload.downloadExcel(path, response);
+                    DataDownload.cleanupTempFile(path);
+                    break;
+                case "csv":
+                    List<String> strings = convert(list);
+                    //Пустой заголовок, т.к. лист уже содержит заголовок
+                    List<String> fakeHeader = new ArrayList<>();
+                    dataDownload.downloadCsv(path, strings, fakeHeader, response);
+                    break;
+                default:
+                    log.error("Incorrect format: {}", format);
+                    break;
+            }
+
+            log.info("Data exported successfully to {}: {}", format, path.getFileName().toString());
+        } catch (IOException e) {
+            log.error("Error exporting data to {}: {}", format, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    private static List<String> convert(List<List<Object>> objectList) {
+        return objectList.stream()
+                .map(row -> row.stream()
+                        .map(String::valueOf)
+                        .collect(joining(";")))
+                .collect(Collectors.toList());
     }
 
     @Override

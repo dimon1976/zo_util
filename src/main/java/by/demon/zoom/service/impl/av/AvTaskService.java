@@ -1,7 +1,7 @@
 package by.demon.zoom.service.impl.av;
 
 import by.demon.zoom.dao.AvTaskRepository;
-import by.demon.zoom.domain.av.CsvDataEntity;
+import by.demon.zoom.domain.av.AvDataEntity;
 import by.demon.zoom.service.FileProcessingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 
 @Service
-public class AvTaskService implements FileProcessingService<CsvDataEntity> {
+public class AvTaskService implements FileProcessingService<AvDataEntity> {
 
     private final AvTaskRepository avTaskRepository;
     private final static Logger log = LoggerFactory.getLogger(AvTaskService.class);
@@ -34,47 +34,14 @@ public class AvTaskService implements FileProcessingService<CsvDataEntity> {
 
 
     @Override
-    public ArrayList<CsvDataEntity> readFiles(List<File> files, String... additionalParams) throws IOException {
-//        Long start = MethodPerformance.start();
-//        ArrayList<CsvDataEntity> allTasks = new ArrayList<>();
-//
-//        for (File file : files) {
-//            try {
-//                log.info("Processing file: {}", file.getName());
-//                List<List<Object>> lists = readDataFromFile(file);
-//                ArrayList<CsvDataEntity> taskArrayList = getTaskList(lists);
-//                allTasks.addAll(taskArrayList);
-//                String jobNumber = taskArrayList.get(2).getJobNumber();
-//                log.info("Task {} successfully read and processed", jobNumber);
-//            } catch (IOException e) {
-//                log.error("Error reading data from file: {}", file.getAbsolutePath(), e);
-//            } catch (Exception e) {
-//                log.error("Error processing file: {}", file.getAbsolutePath(), e);
-//            } finally {
-//                if (file.exists()) {
-//                    if (!file.delete()) {
-//                        log.warn("Failed to delete file: {}", file.getAbsolutePath());
-//                    } else {
-//                        log.info("File {} successfully deleted", file.getName());
-//                    }
-//                }
-//            }
-//        }
-//        MethodPerformance.finish(start, "Время обработки файлов заданий ленты");
-//        try {
-//            save(allTasks);
-//            return allTasks;
-//        } catch (Exception e) {
-//            log.error("Error saving tasks", e);
-//            throw new RuntimeException("Failed to save tasks", e);
-//        }
-        ArrayList<CsvDataEntity> allTasks = new ArrayList<>();
+    public ArrayList<AvDataEntity> readFiles(List<File> files, String... additionalParams) throws IOException {
+        ArrayList<AvDataEntity> allTasks = new ArrayList<>();
 
         int threadCount = Runtime.getRuntime().availableProcessors();
 
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
 
-        List<Future<ArrayList<CsvDataEntity>>> futures = files.stream()
+        List<Future<ArrayList<AvDataEntity>>> futures = files.stream()
                 .map(file -> executorService.submit(() -> {
                     try {
                         log.info("Processing file: {}", file.getName());
@@ -90,9 +57,9 @@ public class AvTaskService implements FileProcessingService<CsvDataEntity> {
                 }))
                 .collect(Collectors.toList());
 
-        for (Future<ArrayList<CsvDataEntity>> future : futures) {
+        for (Future<ArrayList<AvDataEntity>> future : futures) {
             try {
-                ArrayList<CsvDataEntity> taskArrayList = future.get();
+                ArrayList<AvDataEntity> taskArrayList = future.get();
                 allTasks.addAll(taskArrayList);
             } catch (InterruptedException | ExecutionException e) {
                 log.error("Error processing file", e);
@@ -110,7 +77,7 @@ public class AvTaskService implements FileProcessingService<CsvDataEntity> {
     }
 
     @Override
-    public String save(ArrayList<CsvDataEntity> taskArrayList) {
+    public String save(ArrayList<AvDataEntity> taskArrayList) {
         try {
             avTaskRepository.saveAll(taskArrayList);
             log.info("Job file has been successfully saved");
@@ -122,15 +89,15 @@ public class AvTaskService implements FileProcessingService<CsvDataEntity> {
     }
 
 
-    private ArrayList<CsvDataEntity> getTaskList(List<List<Object>> lists) {
+    private ArrayList<AvDataEntity> getTaskList(List<List<Object>> lists) {
         return lists.stream()
                 .filter(str -> !"Номер задания".equals(str.get(0)))
                 .map(this::createTaskFromList)
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    private CsvDataEntity createTaskFromList(List<Object> str) {
-        CsvDataEntity task = new CsvDataEntity();
+    private AvDataEntity createTaskFromList(List<Object> str) {
+        AvDataEntity task = new AvDataEntity();
         task.setJobNumber(getStringValue(str, 0));
         task.setJobStart(getStringValue(str, 1));
         task.setJobEnd(getStringValue(str, 2));
@@ -141,7 +108,7 @@ public class AvTaskService implements FileProcessingService<CsvDataEntity> {
         task.setProductComment(getStringValue(str, 7));
         task.setBrand(getStringValue(str, 8));
         task.setPriceZoneCode(getStringValue(str, 9));
-        task.setRetailerCode(getStringValue(str, 10));
+        task.setRetailerCode(getStringValue(str, 10));// Значение для сверки в отчете
         task.setRetailChain(getStringValue(str, 11));
         task.setRegion(getStringValue(str, 12));
         task.setPhysicalAddress(getStringValue(str, 13));
@@ -158,4 +125,7 @@ public class AvTaskService implements FileProcessingService<CsvDataEntity> {
         Pageable pageable = PageRequest.of(0, 10);
         return avTaskRepository.findDistinctTopByJobNumber(pageable);
     }
+
+
+
 }

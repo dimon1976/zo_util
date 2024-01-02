@@ -11,7 +11,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @Entity
 @Table(name = "av_task")
-public class CsvDataEntity {
+public class AvDataEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

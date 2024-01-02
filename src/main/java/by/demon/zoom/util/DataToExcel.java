@@ -68,7 +68,7 @@ public class DataToExcel<T> {
         }
     }
 
-    private void exportObjectToExcel(List<String> headers, List<List<Object>> dataset, OutputStream out, int skip) {
+    public void exportObjectToExcel(List<String> headers, List<List<Object>> dataset, OutputStream out, int skip) {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             XSSFSheet sheet = workbook.createSheet(Globals.SHEET_NAME);
             sheet.setDefaultColumnWidth(DEFAULT_COLUMN_WIDTH);

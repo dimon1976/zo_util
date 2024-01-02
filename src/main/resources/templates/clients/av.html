@@ -76,40 +76,40 @@
 
                 <!-- Вариант для скачивания -->
                 <div class="col-12 col-sm-6">
-                    <h4>Download Data</h4>
-                    <form th:action="@{/excel/av/download}" method="post" class="mb-3">
+                    <h4>Download Report</h4>
+                    <form th:action="@{/excel/av/download/report}" method="post" class="mb-3">
                         <div class="mb-3">
                             <label for="report_no" class="form-label">Download report:</label>
-                            <select id="report_no" name="task_no" class="form-select" required>
+                            <select id="report_no" name="report_no" class="form-select" required>
                                 <option value="">Выбери № отчета</option>
                                 <option th:each="report_no : ${reports}" th:value="${report_no}" th:text="${report_no}"></option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="task_no" class="form-label">Download task:</label>
-                            <select id="task_no" name="task_no" class="form-select" required>
-                                <option value="">Выбери № задачи</option>
-                                <option th:each="task_no : ${tasks}" th:value="${task_no}" th:text="${task_no}"></option>
-                            </select>
-                        </div>
-                        <!-- Добавлен селектор с выбором поля retailerCode retailNetworks -->
-                        <div class="mb-3">
-                            <label for="retailerNetwork" class="form-label">Choose retailer code in task:</label>
-                            <select id="retailerNetwork" name="retailerNetwork" class="form-select" required>
-                                <option value="">Выбери retailer network</option>
-                                <option th:each="retailerNetwork : ${retailNetworks}" th:value="${retailerNetwork}" th:text="${retailerNetwork}"></option>
                             </select>
                         </div>
 
                         <input type="submit" class="btn btn-primary" value="Download">
                     </form>
+
+<!--                    <div class="mb-3">-->
+<!--                        <label for="task_no" class="form-label">Download task:</label>-->
+<!--                        <select id="task_no" name="task_no" class="form-select" required>-->
+<!--                            <option value="">Выбери № задачи</option>-->
+<!--                            <option th:each="task_no : ${tasks}" th:value="${task_no}" th:text="${task_no}"></option>-->
+<!--                        </select>-->
+<!--                    </div>-->
+<!--                    &lt;!&ndash; Добавлен селектор с выбором поля retailerCode retailNetworks &ndash;&gt;-->
+<!--                    <div class="mb-3">-->
+<!--                        <label for="retailerNetwork" class="form-label">Choose retailer code in task:</label>-->
+<!--                        <select id="retailerNetwork" name="retailerNetwork" class="form-select" required>-->
+<!--                            <option value="">Выбери retailer network</option>-->
+<!--                            <option th:each="retailerNetwork : ${retailNetworks}" th:value="${retailerNetwork}" th:text="${retailerNetwork}"></option>-->
+<!--                        </select>-->
+<!--                    </div>-->
+
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-
 
 </body>
 </html>
