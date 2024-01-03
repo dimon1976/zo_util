@@ -1,17 +1,19 @@
-package by.demon.zoom.domain.av;
+package by.demon.zoom.domain.imp.av;
 
+import by.demon.zoom.dto.CsvRow;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @Table(name = "av_task")
-public class AvDataEntity {
+public class AvDataEntity implements CsvRow {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,4 +33,10 @@ public class AvDataEntity {
     private String region;
     private String physicalAddress;
     private String barcode;
+    private String numberOfPieces;
+
+    @Override
+    public List<Object> values() {
+        return List.of(jobNumber,jobStart,jobEnd,itemNumber,category,productCategoryCode,productDescription,productComment,brand,priceZoneCode,retailerCode,retailChain,region,physicalAddress,barcode,numberOfPieces);
+    }
 }

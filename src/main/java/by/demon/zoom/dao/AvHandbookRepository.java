@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface AvHandbookRepository extends JpaRepository<AvHandbook, Long> {
 
-    @Query("select DISTINCT retailNetwork FROM AvHandbook order by retailNetwork desc ")
-    List<String>findDistinctByRetailNetwork();
+    @Query("select DISTINCT retailNetworkCode FROM AvHandbook ")
+    List<String>findDistinctByRetailNetworkCode();
 
 }

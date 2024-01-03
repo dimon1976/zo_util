@@ -1,6 +1,7 @@
 package by.demon.zoom.controller;
 
 import by.demon.zoom.domain.Lenta;
+import by.demon.zoom.domain.imp.av.AvDataEntity;
 import by.demon.zoom.domain.av.AvHandbook;
 import by.demon.zoom.domain.imp.av.CsvAvReportEntity;
 import by.demon.zoom.dto.imp.MegatopDTO;
@@ -129,33 +130,42 @@ public class FileController<T> {
         return "";
     }
 
-    @PostMapping("/av/task")
+    @PostMapping("/av/upload/task")
     public @ResponseBody String uploadAvTask(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
         avTaskService.readFiles(getFiles(multipartFile));
         return "";
     }
 
-    @PostMapping("/av/report")
+    @PostMapping("/av/upload/report")
     public @ResponseBody String uploadAvReport(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
         avReportService.readFiles(getFiles(multipartFile));
         return "";
     }
 
-    @PostMapping("/av/handbook")
+    @PostMapping("/av/upload/handbook")
     public @ResponseBody String uploadAvHandbook(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
         ArrayList<AvHandbook> handbooks = handbookService.readFiles(getFiles(multipartFile));
         return handbookService.save(handbooks);
     }
 
     @PostMapping("/av/download/report")
-    public @ResponseBody String avDownload(@RequestParam(value = "task_no", required = false) String task_no,
-                                           @RequestParam(value = "report_no", required = false) String report_no,
-                                           @RequestParam(value = "format", required = false) String format,
-                                           @RequestParam(value = "retailerNetwork", required = false) String retailerNetwork,
-                                           HttpServletResponse response) throws IOException {
-        String[] additionalParam = new String[]{report_no, retailerNetwork};
+    public @ResponseBody String avDownloadReport(@RequestParam(value = "report_no", required = false) String report_no,
+                                                 @RequestParam(value = "format", required = false) String format,
+                                                 HttpServletResponse response) throws IOException {
+        String[] additionalParam = new String[]{report_no};
         ArrayList<CsvAvReportEntity> avDataEntityArrayList = avReportService.getDto(additionalParam);
-        avReportService.download(avDataEntityArrayList,response,"csv");
+        avReportService.download(avDataEntityArrayList, response, "csv");
+        return "";
+    }
+
+    @PostMapping("av/download/task")
+    public @ResponseBody String avDownloadTask(@RequestParam(value = "task_no", required = false) String task_no,
+                                               @RequestParam(value = "retailNetworkCode", required = false) String retailNetworkCode,
+                                               @RequestParam(value = "format", required = false) String format,
+                                               HttpServletResponse response) throws IOException {
+        String[] additionalParam = new String[]{task_no, retailNetworkCode, format};
+        ArrayList<AvDataEntity> avDataEntityArrayList = avTaskService.getDto(additionalParam);
+        avTaskService.download(avDataEntityArrayList, response, "csv", additionalParam);
         return "";
     }
 

@@ -54,7 +54,7 @@ public class ClientsController {
     public String av(Model model) {
         model.addAttribute("reports", avReportService.getLatestReport());
         model.addAttribute("tasks", avTaskService.getLatestTask());
-        model.addAttribute("retailNetworks", avHandbookService.getRetailNetwork());
+        model.addAttribute("retailNetworkCode", avHandbookService.getRetailNetworkCode());
         return "/clients/av";
     }
 }

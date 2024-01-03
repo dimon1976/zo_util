@@ -112,8 +112,8 @@ public class AvHandbookService implements FileProcessingService<AvHandbook> {
         return (index >= 0 && index < list.size()) ? String.valueOf(list.get(index)) : "";
     }
 
-    public List<String> getRetailNetwork() {
-        return handbookRepository.findDistinctByRetailNetwork();
+    public List<String> getRetailNetworkCode() {
+        return handbookRepository.findDistinctByRetailNetworkCode();
     }
 
 }
