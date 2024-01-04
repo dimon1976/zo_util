@@ -10,10 +10,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
@@ -36,10 +33,11 @@ public class AvHandbookService implements FileProcessingService<AvHandbook> {
         for (File file : files) {
             try {
                 List<List<Object>> lists = readDataFromFile(file);
-                Files.delete(file.toPath());
                 Collection<AvHandbook> handbook = getObjectList(lists);
+                System.out.println();
                 handbookList.addAll(handbook);
                 log.info("File {} successfully read", file.getName());
+                Files.delete(file.toPath());
 
             } catch (IOException e) {
                 log.error("Error reading data from file: {}", file.getAbsolutePath(), e);
@@ -91,7 +89,8 @@ public class AvHandbookService implements FileProcessingService<AvHandbook> {
 
     private Collection<AvHandbook> getObjectList(List<List<Object>> lists) {
         return lists.stream()
-                .filter(str -> !"Номер задания".equals(str.get(0)))
+                .filter(Objects::nonNull) // Убедитесь, что список не пуст
+                .filter(list -> list.size() > 0) // Убедитесь, что список не является нулевым и имеет хотя бы один элемент
                 .map(this::createObjectFromList)
                 .collect(Collectors.toCollection(HashSet::new));
     }

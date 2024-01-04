@@ -104,7 +104,7 @@ public class FileController<T> {
     }
 
     @PostMapping("/megatop/upload")
-    public @ResponseBody String handleFileUpload(
+    public @ResponseBody String megatopFileUpload(
             @RequestParam("file") MultipartFile[] multipartFile,
             @RequestParam(value = "label", required = false) String label) throws IOException {
         String[] additionalParam = new String[]{label};
@@ -114,7 +114,7 @@ public class FileController<T> {
 
 
     @PostMapping("/megatop/download")
-    public @ResponseBody String downloadData(@RequestParam(value = "downloadLabel", required = false) String label,
+    public @ResponseBody String megatopDownload(@RequestParam(value = "downloadLabel", required = false) String label,
                                              @RequestParam(value = "format", required = false) String format,
                                              HttpServletResponse response) throws IOException {
         String[] additionalParam = new String[]{label};
