@@ -105,7 +105,7 @@ public class DataDownload {
 
     public static Path getPath(String fileName, String suffix) {
         // Создаем временный файл и записываем в него данные
-        String timestampLabel = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss"));
+        String timestampLabel = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss"));
         return Path.of(TEMP_PATH, fileName + "-" + timestampLabel + suffix);
     }
 

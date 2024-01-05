@@ -115,8 +115,8 @@ public class FileController<T> {
 
     @PostMapping("/megatop/download")
     public @ResponseBody String megatopDownload(@RequestParam(value = "downloadLabel", required = false) String label,
-                                             @RequestParam(value = "format", required = false) String format,
-                                             HttpServletResponse response) throws IOException {
+                                                @RequestParam(value = "format", required = false) String format,
+                                                HttpServletResponse response) throws IOException {
         String[] additionalParam = new String[]{label};
         ArrayList<MegatopDTO> megatopDTOS = megatopService.getDto(additionalParam);
         megatopService.download(megatopDTOS, response, format);
@@ -125,8 +125,10 @@ public class FileController<T> {
 
     @PostMapping("/simple/upload/report")
     public @ResponseBody String uploadSimpleReport(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
-        ArrayList<SimpleDTO> simpleDTOS = simpleService.readFiles(getFiles(multipartFile));
-        simpleService.download(simpleDTOS, response, "excel");
+        List<File> files = getFiles(multipartFile);
+        ArrayList<SimpleDTO> simpleDTOS = simpleService.readFiles(files);
+        String[] additionalParam = new String[]{files.get(0).getName()};
+        simpleService.download(simpleDTOS, response, "excel", additionalParam);
         return "";
     }
 

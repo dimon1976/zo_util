@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
+import static by.demon.zoom.util.Globals.TEMP_PATH;
 
 @Service
 public class SimpleService implements FileProcessingService<SimpleDTO> {
@@ -67,8 +68,11 @@ public class SimpleService implements FileProcessingService<SimpleDTO> {
         }
         return allUrlDTOs;
     }
+
     public void download(ArrayList<SimpleDTO> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
-        Path path = DataDownload.getPath("data", format.equals("excel") ? ".xlsx" : ".csv");
+        String orgName = additionalParameters[0];
+        String s = orgName.lastIndexOf(".") == -1 ? "" : orgName.substring(0, orgName.lastIndexOf("."));
+        Path path = Path.of(TEMP_PATH, s + "-out" + (format.equals("excel") ? ".xlsx" : ".csv"));
         try {
             switch (format) {
                 case "excel":

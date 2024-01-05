@@ -7,6 +7,7 @@ import by.demon.zoom.dto.CsvRow;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.DataToExcel;
+import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
@@ -141,6 +142,18 @@ public class AvReportService implements FileProcessingService<CsvAvReportEntity>
                 .anyMatch(i -> i.equals(str));
     }
 
+//    @Override
+//    public String save(ArrayList<CsvAvReportEntity> reportArrayList) {
+//        try {
+//            avReportRepository.saveAll(reportArrayList);
+//            log.info("Job file has been successfully saved");
+//            return "The job file has been successfully saved";
+//        } catch (Exception e) {
+//            log.error("Error saving tasks", e);
+//            throw new RuntimeException("Failed to save tasks", e);
+//        }
+//    }
+
     @Override
     public String save(ArrayList<CsvAvReportEntity> reportArrayList) {
         try {
@@ -149,6 +162,25 @@ public class AvReportService implements FileProcessingService<CsvAvReportEntity>
             return "The job file has been successfully saved";
         } catch (Exception e) {
             log.error("Error saving tasks", e);
+
+            // Получите первопричину исключения
+            Exception cause = (Exception) e.getCause();
+
+            // Если первопричина - это ConstraintViolationException
+            if (cause instanceof ConstraintViolationException) {
+
+                // Получите SQL-запрос, который был выполнен при попытке сохранить объект
+                String sql = ((ConstraintViolationException) cause).getSQL();
+
+                // Найдите индекс первого символа ошибки в строке
+                int index = sql.indexOf("value too long for column");
+
+                // Логируйте индекс строки с ошибкой
+                log.error("Error saving task at line: {}", index);
+
+                throw new RuntimeException("Failed to save tasks", e);
+            }
+
             throw new RuntimeException("Failed to save tasks", e);
         }
     }

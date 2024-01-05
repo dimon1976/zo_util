@@ -20,7 +20,7 @@ public interface CsvRow {
                         // Замена в числах точек для корректного подсчета в эксел ячеек с типом число
                         return String.valueOf(value).replace('.', ',');
                     } else {
-                        return String.valueOf(value);
+                        return String.valueOf(value).replace(';',',');
                     }
                 })
                 .collect(joining(COLUMN_SEPARATOR));

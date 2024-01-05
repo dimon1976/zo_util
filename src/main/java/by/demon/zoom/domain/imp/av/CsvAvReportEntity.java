@@ -40,6 +40,8 @@ public class CsvAvReportEntity implements CsvRow {
     private String monitoringDate;
     private String photo;
     private String note;
+    //*https://stackoverflow.com/questions/36446201/org-postgresql-util-psqlexception-error-value-too-long-for-type-character-vary
+    @Column(length = 1024)
     private String linkToProductPage;
 
     @Override
