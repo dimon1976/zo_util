@@ -153,22 +153,34 @@ public class FileController<T> {
     @PostMapping("/av/download/report")
     public @ResponseBody String avDownloadReport(@RequestParam(value = "report_no", required = false) String report_no,
                                                  @RequestParam(value = "format", required = false) String format,
+                                                 @RequestParam(value = "delete", required = false) String delete,
                                                  HttpServletResponse response) throws IOException {
-        String[] additionalParam = new String[]{report_no};
-        ArrayList<CsvAvReportEntity> avDataEntityArrayList = avReportService.getDto(additionalParam);
-        avReportService.download(avDataEntityArrayList, response, "csv");
-        return "";
+        if (delete != null) {
+            avReportService.deleteReport(report_no);
+            return "";
+        } else {
+            String[] additionalParam = new String[]{report_no};
+            ArrayList<CsvAvReportEntity> avDataEntityArrayList = avReportService.getDto(additionalParam);
+            avReportService.download(avDataEntityArrayList, response, "csv");
+            return "";
+        }
     }
 
     @PostMapping("av/download/task")
     public @ResponseBody String avDownloadTask(@RequestParam(value = "task_no", required = false) String task_no,
                                                @RequestParam(value = "retailNetworkCode", required = false) String retailNetworkCode,
                                                @RequestParam(value = "format", required = false) String format,
+                                               @RequestParam(value = "delete", required = false) String delete,
                                                HttpServletResponse response) throws IOException {
-        String[] additionalParam = new String[]{task_no, retailNetworkCode, format};
-        ArrayList<AvDataEntity> avDataEntityArrayList = avTaskService.getDto(additionalParam);
-        avTaskService.download(avDataEntityArrayList, response, "csv", additionalParam);
-        return "";
+        if (delete != null) {
+            avTaskService.deleteTask(task_no);
+            return "";
+        } else {
+            String[] additionalParam = new String[]{task_no, retailNetworkCode, format};
+            ArrayList<AvDataEntity> avDataEntityArrayList = avTaskService.getDto(additionalParam);
+            avTaskService.download(avDataEntityArrayList, response, "csv", additionalParam);
+            return "";
+        }
     }
 
     @PostMapping("/lenta/upload/edadeal")

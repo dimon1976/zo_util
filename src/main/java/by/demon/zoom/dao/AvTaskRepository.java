@@ -3,6 +3,7 @@ package by.demon.zoom.dao;
 import by.demon.zoom.domain.imp.av.AvDataEntity;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.ArrayList;
@@ -18,6 +19,8 @@ public interface AvTaskRepository extends JpaRepository<AvDataEntity, Long> {
     @Query("select DISTINCT retailerCode FROM AvDataEntity where jobNumber=:task")
     ArrayList<String> findDistinctByJobNumber(String task);
 
-
+    @Modifying
+    @Query("delete from AvDataEntity where jobNumber = :task")
+    void deleteAllByField(String task);
 
 }

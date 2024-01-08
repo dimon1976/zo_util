@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.transaction.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -142,17 +143,11 @@ public class AvReportService implements FileProcessingService<CsvAvReportEntity>
                 .anyMatch(i -> i.equals(str));
     }
 
-//    @Override
-//    public String save(ArrayList<CsvAvReportEntity> reportArrayList) {
-//        try {
-//            avReportRepository.saveAll(reportArrayList);
-//            log.info("Job file has been successfully saved");
-//            return "The job file has been successfully saved";
-//        } catch (Exception e) {
-//            log.error("Error saving tasks", e);
-//            throw new RuntimeException("Failed to save tasks", e);
-//        }
-//    }
+    @Transactional
+    public void deleteReport(String reportNum){
+        avReportRepository.deleteAllByField(reportNum);
+    }
+
 
     @Override
     public String save(ArrayList<CsvAvReportEntity> reportArrayList) {

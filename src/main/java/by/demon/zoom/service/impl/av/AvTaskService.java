@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.transaction.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -59,7 +60,7 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
                     DataDownload.cleanupTempFile(path);
                     break;
                 case "csv":
-                    if (additionalParameters[1].equals("ЯНДЕКС_М_ОНЛ")){
+                    if (additionalParameters[1].equals("ЯНДЕКС_М_ОНЛ")) {
                         path = Path.of(TEMP_PATH, "task_y.csv");
                     }
                     List<String> strings = convert(list);
@@ -139,11 +140,16 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
     }
 
     public ArrayList<AvDataEntity> getDto(String... additionalParameters) {
-        ArrayList<AvDataEntity> byJobNumberAndRetailerCode = avTaskRepository.findByJobNumberAndRetailerCode(additionalParameters[0], additionalParameters[1]);
+        ArrayList<AvDataEntity> byJobNumberAndRetailerCode = avTaskRepository.findByJobNumberAndRetailerCode(additionalParameters[0], additionalParameters[1] == null ? "" : additionalParameters[1]);
         for (AvDataEntity entity : byJobNumberAndRetailerCode) {
             entity.setNumberOfPieces("1");
         }
         return byJobNumberAndRetailerCode;
+    }
+
+    @Transactional
+    public void deleteTask(String taskNum){
+        avTaskRepository.deleteAllByField(taskNum);
     }
 
 
