@@ -186,8 +186,7 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
     }
 
     public LinkedHashSet<String> getLatestTask() {
-        // Получаем последние 10 сохраненных заданий из базы данных
-        Pageable pageable = PageRequest.of(0, 10);
+        // Получаем последние 10 сохраненных заданий из базы данных нативным запросом
         return avTaskRepository.findDistinctTopByJobNumber();
     }
 
