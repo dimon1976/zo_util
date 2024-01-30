@@ -1,7 +1,6 @@
 package by.demon.zoom.dao;
 
 import by.demon.zoom.domain.imp.av.AvDataEntity;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
