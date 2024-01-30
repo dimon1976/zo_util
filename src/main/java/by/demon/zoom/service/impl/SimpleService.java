@@ -72,7 +72,7 @@ public class SimpleService implements FileProcessingService<SimpleDTO> {
     public void download(ArrayList<SimpleDTO> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
         String orgName = additionalParameters[0];
         String s = orgName.lastIndexOf(".") == -1 ? "" : orgName.substring(0, orgName.lastIndexOf("."));
-        Path path = Path.of(TEMP_PATH, s + "-out" + (format.equals("excel") ? ".xlsx" : ".csv"));
+        Path path = Path.of(TEMP_PATH, s + (format.equals("excel") ? ".xlsx" : ".csv"));
         try {
             switch (format) {
                 case "excel":

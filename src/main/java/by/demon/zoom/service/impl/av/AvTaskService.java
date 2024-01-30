@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -184,10 +185,10 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
         return (index >= 0 && index < list.size()) ? String.valueOf(list.get(index)) : "";
     }
 
-    public List<String> getLatestTask() {
+    public LinkedHashSet<String> getLatestTask() {
         // Получаем последние 10 сохраненных заданий из базы данных
         Pageable pageable = PageRequest.of(0, 10);
-        return avTaskRepository.findDistinctTopByJobNumber(pageable);
+        return avTaskRepository.findDistinctTopByJobNumber();
     }
 
 
