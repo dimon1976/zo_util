@@ -10,8 +10,8 @@ import java.util.List;
 
 public interface AvReportRepository extends JpaRepository<CsvAvReportEntity, Long> {
 
-    @Query("select DISTINCT jobNumber FROM CsvAvReportEntity order by jobNumber desc ")
-    List<String> findDistinctTopByJobNumber(Pageable pageable);
+    @Query(value = "SELECT DISTINCT job_number FROM av_report ORDER BY job_number DESC LIMIT 10", nativeQuery = true)
+    List<String> findDistinctTopByJobNumber();
 
     List<CsvAvReportEntity> findAllByJobNumber(String task);
 

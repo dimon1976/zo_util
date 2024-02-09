@@ -233,8 +233,8 @@ public class AvReportService implements FileProcessingService<CsvAvReportEntity>
 
     public List<String> getLatestReport() {
         // Получаем последние 10 сохраненных заданий из базы данных
-        Pageable pageable = PageRequest.of(0, 10);
-        return avReportRepository.findDistinctTopByJobNumber(pageable);
+//        Pageable pageable = PageRequest.of(0, 20);
+        return avReportRepository.findDistinctTopByJobNumber();
     }
 
     public List<String> getRetailerCodeFromTask(String task) {
