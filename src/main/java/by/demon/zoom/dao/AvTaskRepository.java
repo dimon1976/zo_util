@@ -13,7 +13,7 @@ public interface AvTaskRepository extends JpaRepository<AvDataEntity, Long> {
     @Query("select a from AvDataEntity a where a.retailerCode=:retailerCode and a.jobNumber=:jobNumber")
     ArrayList<AvDataEntity> findByJobNumberAndRetailerCode(String jobNumber, String retailerCode);
 
-    @Query(value = "SELECT DISTINCT job_number FROM av_task ORDER BY job_number DESC LIMIT 10", nativeQuery = true)
+    @Query(value = "SELECT DISTINCT job_number FROM av_task ORDER BY job_number DESC LIMIT 25", nativeQuery = true)
     LinkedHashSet<String> findDistinctTopByJobNumber();
 
     @Query("select DISTINCT retailerCode FROM AvDataEntity where jobNumber=:task")
