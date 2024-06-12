@@ -224,7 +224,7 @@ public class MegatopService implements FileProcessingService<Megatop> {
 
     public List<String> getLatestLabels() {
         // Получаем последние 10 сохраненных меток из базы данных
-        Pageable pageable = PageRequest.of(0, 10);
+        Pageable pageable = PageRequest.of(0, 30);
         return megatopRepository.findTop10DistinctLabels(pageable);
     }
 }

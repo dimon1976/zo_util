@@ -5,18 +5,18 @@ import by.demon.zoom.service.impl.av.AvHandbookService;
 import by.demon.zoom.service.impl.av.AvReportService;
 import by.demon.zoom.service.impl.MegatopService;
 import by.demon.zoom.service.impl.av.AvTaskService;
+import by.demon.zoom.util.MethodPerformance;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.time.Instant;
 import java.time.LocalDate;
 
 @Controller
 @RequestMapping("/clients")
 public class ClientsController {
-
-
     private final MegatopService megatopService;
     private final AvReportService avReportService;
     private final AvTaskService avTaskService;
@@ -53,7 +53,9 @@ public class ClientsController {
     @GetMapping("/av")
     public String av(Model model) {
         model.addAttribute("reports", avReportService.getLatestReport());
+        Instant start= MethodPerformance.start();
         model.addAttribute("tasks", avTaskService.getLatestTask());
+        MethodPerformance.finish(start, "task");
         model.addAttribute("retailNetworkCode", avHandbookService.getRetailNetworkCode());
         return "/clients/av";
     }

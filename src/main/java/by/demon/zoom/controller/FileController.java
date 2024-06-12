@@ -220,7 +220,7 @@ public class FileController<T> {
                 .collect(Collectors.toList());
     }
 
-    private Path saveFileAndGetPath(MultipartFile file) {
+    private Path saveFileAndGetPath (MultipartFile file) {
         try {
             Path filePath = getFilePath(file);
             File transferTo = new File(filePath.toAbsolutePath().toString());
