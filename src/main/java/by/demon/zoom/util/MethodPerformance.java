@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.TimeUnit;
 
 public class MethodPerformance {
     private static final Logger LOG = LoggerFactory.getLogger(MethodPerformance.class);

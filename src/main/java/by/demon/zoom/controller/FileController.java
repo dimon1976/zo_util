@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Controller
 @RequestMapping("/excel")
-public class FileController<T> {
+public class FileController {
 
     private final HttpServletResponse response;
     private final UrlService urlService;
