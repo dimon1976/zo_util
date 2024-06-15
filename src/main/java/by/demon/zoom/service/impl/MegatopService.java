@@ -2,7 +2,8 @@ package by.demon.zoom.service.impl;
 
 import by.demon.zoom.dao.MegatopRepository;
 import by.demon.zoom.domain.Megatop;
-import by.demon.zoom.dto.MegatopDTO;
+import by.demon.zoom.dto.CsvRow;
+import by.demon.zoom.dto.imp.MegatopDTO;
 import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DataDownload;
@@ -11,7 +12,6 @@ import by.demon.zoom.util.DateUtils;
 import by.demon.zoom.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,21 +27,19 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 
 @Service
-public class MegatopService implements FileProcessingService {
+public class MegatopService implements FileProcessingService<Megatop> {
 
-    @Value("${temp.path}")
-    private String TEMP_PATH;
-
-    private static final Logger LOG = LoggerFactory.getLogger(MegatopService.class);
+    private static final Logger log = LoggerFactory.getLogger(MegatopService.class);
     private static final DateTimeFormatter MEGATOP_PATTERN = DateTimeFormatter.ofPattern("dd.MM.yyyy H:m");
     private final List<String> header = Arrays.asList("Категория 1", "Категория", "Высота каблука", "Коллекция", "Конструкция верх", "Материал верха", "Материал подкладки",
             "Ростовка дети", "Цвета", "Сезон", "Конкурент", "ID", "Категория", "Бренд", "Модель", "Артикул", "Цена", "Старая цена", "Ссылка на модель", "Статус");
@@ -56,38 +54,103 @@ public class MegatopService implements FileProcessingService {
         this.dataDownload = dataDownload;
     }
 
-    public String export(List<File> files, String label) {
-        for (File file : files) {
-            List<List<Object>> lists = readDataFromFile(file);
-            Collection<Megatop> megatopArrayList = getMegatopList(lists, label, file);
-            megatopRepository.saveAll(megatopArrayList);
-            LOG.info("File {} processed and saved successfully.", file.getName());
-        }
-        return "All files processed and saved successfully.";
-    }
 
-    public void exportToFile(String label, HttpServletResponse response) throws IOException {
+    public void download(ArrayList<MegatopDTO> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
+        Path path = DataDownload.getPath("data", format.equals("excel") ? ".xlsx" : ".csv");
         try {
-            List<Megatop> megatopByLabel = getMegatopByLabel(label);
-            HashSet<MegatopDTO> megatopDTOList = getMegatopDTOList(megatopByLabel);
-
-            // Создаем временный файл и записываем в него данные
-            String timestampLabel = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss"));
-            Path path = Path.of(TEMP_PATH, "report-megatop-" + timestampLabel + ".xlsx");
-
-            // Экспортируем данные в Excel
-            try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-                dataToExcel.exportToExcel(header, megatopDTOList, out, 0);
-                byte[] data = out.toByteArray();
-                Files.write(path, data);
+            switch (format) {
+                case "excel":
+                    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                        dataToExcel.exportToExcel(header, list, out, 0);
+                        Files.write(path, out.toByteArray());
+                    }
+                    dataDownload.downloadExcel(path, response);
+                    DataDownload.cleanupTempFile(path);
+                    break;
+                case "csv":
+                    List<String> strings = convert(list);
+                    dataDownload.downloadCsv(path, strings, header, response);
+                    break;
+                default:
+                    log.error("Incorrect format: {}", format);
+                    break;
             }
 
-            // Скачиваем файл
-            dataDownload.download(path.getFileName().toString(), path.toString(), response);
-            LOG.info("Data exported successfully to Excel: {}", path.getFileName().toString());
+            log.info("Data exported successfully to {}: {}", format, path.getFileName().toString());
         } catch (IOException e) {
-            LOG.error("Error exporting data to Excel: {}", e.getMessage(), e);
+            log.error("Error exporting data to {}: {}", format, e.getMessage(), e);
             throw e;
+        }
+    }
+
+    private static List<String> convert(List<MegatopDTO> objectList) {
+        return objectList.stream()
+                .filter(Objects::nonNull)
+                .map(CsvRow::toCsvRow)
+                .collect(Collectors.toList());
+    }
+
+    public ArrayList<MegatopDTO> getDto(String... additionalParameters) {
+        List<Megatop> megatopByLabel = getMegatopByLabel(additionalParameters[0]);
+        return getMegatopDTOList(megatopByLabel);
+    }
+
+    @Override
+    public ArrayList<Megatop> readFiles(List<File> files, String... additionalParams) throws IOException {
+        // Используем количество доступных процессоров для определения количества потоков
+        int threadCount = Runtime.getRuntime().availableProcessors();
+
+        // Создаем пул потоков
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+
+        // Создаем список для сбора результатов обработки файлов
+        List<Future<ArrayList<Megatop>>> futures = new ArrayList<>();
+
+        // Отправляем задачу обработки каждого файла в отдельный поток
+        for (File file : files) {
+            futures.add(executorService.submit(() -> {
+                try {
+                    log.info("Processing file: {}", file.getName());
+                    List<List<Object>> lists = readDataFromFile(file);
+
+                    // Удаляем файл только после успешного чтения данных
+                    Files.delete(file.toPath());
+                    log.info("File {} removed successfully.", file.getAbsolutePath());
+
+                    ArrayList<Megatop> megatopList = getMegatopList(lists, additionalParams[0], file);
+                    save(megatopList);
+                    log.info("File {} processed and saved successfully.", file.getName());
+                    return megatopList;
+                } catch (Exception e) {
+                    log.error("Failed to process file: {}", file.getAbsolutePath(), e);
+                    throw new RuntimeException("Failed to process file", e); // Оборачиваем в RuntimeException для распространения ошибки
+                }
+            }));
+        }
+        // Собираем результаты из всех потоков
+        ArrayList<Megatop> allMegatops = new ArrayList<>();
+        for (Future<ArrayList<Megatop>> future : futures) {
+            try {
+                allMegatops.addAll(future.get());
+            } catch (InterruptedException | ExecutionException e) {
+                log.error("Error processing file", e);
+            }
+        }
+
+        executorService.shutdown();
+
+        return allMegatops;
+    }
+
+    @Override
+    public String save(ArrayList<Megatop> megatopList) {
+        try {
+            megatopRepository.saveAll(megatopList);
+            log.info("Saved {} Megatop objects", megatopList.size());
+            return "";
+        } catch (Exception e) {
+            log.error("Failed to save Megatop objects", e);
+            throw new RuntimeException("Failed to save Megatop objects", e);
         }
     }
 
@@ -95,20 +158,28 @@ public class MegatopService implements FileProcessingService {
         return megatopRepository.findByLabel(label);
     }
 
-    private HashSet<MegatopDTO> getMegatopDTOList(Collection<Megatop> megatopList) {
-        return megatopList.stream()
-                .filter(megatop -> "belwest.by".equals(megatop.getCompetitor()) ||
-                        (!megatop.getUrl().contains("/ru/") && !megatop.getUrl().contains("/kz/") &&
-                                !megatop.getDate().toLocalDate().isBefore(beforeDate)))
-                .map(MappingUtils::mapToMegatopDTO)
-                .collect(Collectors.toCollection(HashSet::new));
+    private ArrayList<MegatopDTO> getMegatopDTOList(Collection<Megatop> megatopList) {
+        ArrayList<MegatopDTO> megatopDTOList = new ArrayList<>();
+        Set<MegatopDTO> uniqueDTOs = new HashSet<>();  // Для хранения уникальных DTO
+
+        for (Megatop megatop : megatopList) {
+            if ("belwest.by".equals(megatop.getCompetitor()) ||
+                    (!megatop.getUrl().contains("/ru/") && !megatop.getUrl().contains("/kz/") &&
+                            !megatop.getDate().toLocalDate().isBefore(beforeDate))) {
+                MegatopDTO megatopDTO = MappingUtils.mapToMegatopDTO(megatop);
+                if (uniqueDTOs.add(megatopDTO)) {  // Добавить только уникальные DTO
+                    megatopDTOList.add(megatopDTO);
+                }
+            }
+        }
+
+        return megatopDTOList;
     }
 
-    private Collection<Megatop> getMegatopList(List<List<Object>> lists, String label, File file) {
+    private ArrayList<Megatop> getMegatopList(List<List<Object>> lists, String label, File file) {
         return lists.stream()
                 .filter(str -> !"Категория 1".equals(str.get(0)))
-                .map(str -> createMegatopFromList(str, Timestamp.from(Instant.now()), label, file))
-                .collect(Collectors.toCollection(HashSet::new));
+                .map(str -> createMegatopFromList(str, Timestamp.from(Instant.now()), label, file)).distinct().collect(Collectors.toCollection(ArrayList::new));
     }
 
     private Megatop createMegatopFromList(List<Object> str, Timestamp instant, String label, File file) {
@@ -151,14 +222,9 @@ public class MegatopService implements FileProcessingService {
         return (index >= 0 && index < list.size()) ? String.valueOf(list.get(index)) : "";
     }
 
-    @Override
-    public String export(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
-        return null;
-    }
-
     public List<String> getLatestLabels() {
         // Получаем последние 10 сохраненных меток из базы данных
-        Pageable pageable = PageRequest.of(0, 10);
+        Pageable pageable = PageRequest.of(0, 30);
         return megatopRepository.findTop10DistinctLabels(pageable);
     }
 }

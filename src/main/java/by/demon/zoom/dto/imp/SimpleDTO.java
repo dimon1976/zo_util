@@ -1,13 +1,16 @@
-package by.demon.zoom.dto;
+package by.demon.zoom.dto.imp;
 
+import by.demon.zoom.dto.CsvRow;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SimpleDTO {
+public class SimpleDTO implements CsvRow {
     private String id;
     private String category1;
     private String category2;
@@ -32,4 +35,10 @@ public class SimpleDTO {
     private String competitorUrl;
     private String clientUrl;
     private String urlWebCache;
+
+
+    public List<Object> values() {
+        return List.of(id, category1, category2, category3, brand, model, price, city, competitor, time, date, competitorPrice, competitorOldPrice, competitorActionPrice, comment, competitorModel, competitorYear, analogue,
+                addressOfTheCompetitor, status, promo, competitorUrl, clientUrl, urlWebCache);
+    }
 }

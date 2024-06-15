@@ -1,12 +1,24 @@
 package by.demon.zoom.controller;
 
-import by.demon.zoom.domain.FileForm;
 import by.demon.zoom.domain.Lenta;
-import by.demon.zoom.service.FileProcessingService;
+import by.demon.zoom.domain.imp.av.AvDataEntity;
+import by.demon.zoom.domain.av.AvHandbook;
+import by.demon.zoom.domain.imp.av.CsvAvReportEntity;
+import by.demon.zoom.dto.imp.MegatopDTO;
+import by.demon.zoom.dto.imp.SimpleDTO;
+import by.demon.zoom.dto.imp.UrlDTO;
+import by.demon.zoom.dto.imp.VlookBarDTO;
+import by.demon.zoom.dto.lenta.LentaReportDTO;
+import by.demon.zoom.dto.lenta.LentaTaskDTO;
 import by.demon.zoom.service.impl.*;
-import by.demon.zoom.util.DataDownload;
+import by.demon.zoom.service.impl.av.AvHandbookService;
+import by.demon.zoom.service.impl.av.AvReportService;
+import by.demon.zoom.service.impl.av.AvTaskService;
+import by.demon.zoom.service.impl.lenta.EdadealService;
+import by.demon.zoom.service.impl.lenta.LentaReportService;
+import by.demon.zoom.service.impl.lenta.LentaTaskService;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -17,163 +29,206 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Path;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Controller
 @RequestMapping("/excel")
 public class FileController {
 
-    private final Map<String, Object> processingServices = new HashMap<>();
     private final HttpServletResponse response;
+    private final UrlService urlService;
+    private final StatisticService statisticService;
+    private final VlookService vlookService;
     private final MegatopService megatopService;
+    private final LentaReportService lentaReportService;
+    private final LentaTaskService lentaTaskService;
+    private final SimpleService simpleService;
+    private final EdadealService edadealService;
+    private final AvReportService avReportService;
+    private final AvTaskService avTaskService;
+    private final AvHandbookService handbookService;
+
 
     @Value("${temp.path}")
     private String TEMP_PATH;
 
-    public FileController(
-            StatisticService statisticService,
-            VlookService vlookService,
-            MegatopService megatopService,
-            LentaService lentaService,
-            SimpleService simpleService,
-            UrlService urlService,
-            EdadealService edadealService,
-            HttpServletResponse response, MegatopService megatopService1) {
-        this.megatopService = megatopService1;
-        this.processingServices.put("stat", statisticService);
-        this.processingServices.put("vlook", vlookService);
-        this.processingServices.put("megatop", megatopService);
-        this.processingServices.put("lenta", lentaService);
-        this.processingServices.put("simple", simpleService);
-        this.processingServices.put("getUrl", urlService);
-        this.processingServices.put("edadeal", edadealService);
+    public FileController(HttpServletResponse response, UrlService urlService, StatisticService statisticService, VlookService vlookService, MegatopService megatopService, LentaReportService lentaReportService, LentaTaskService lentaTaskService, SimpleService simpleService, EdadealService edadealService, AvReportService avReportService, AvTaskService avTaskService, AvHandbookService handbookService) {
         this.response = response;
+        this.urlService = urlService;
+        this.statisticService = statisticService;
+        this.vlookService = vlookService;
+        this.megatopService = megatopService;
+        this.lentaReportService = lentaReportService;
+        this.lentaTaskService = lentaTaskService;
+        this.simpleService = simpleService;
+        this.edadealService = edadealService;
+        this.avReportService = avReportService;
+        this.avTaskService = avTaskService;
+        this.handbookService = handbookService;
     }
 
+
     @PostMapping("/getUrl/")
-    public @ResponseBody String getUrl(@RequestParam("file") MultipartFile[] multipartFile) {
-        return processFiles("getUrl", multipartFile);
+    public @ResponseBody String getUrl(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
+        ArrayList<UrlDTO> urlDTOS = urlService.readFiles(getFiles(multipartFile));
+        urlService.download(urlDTOS, response, "excel");
+        return "";
     }
 
     @PostMapping("/stat/")
-    public @ResponseBody String editStatisticFile(@RequestParam("file") MultipartFile[] multipartFile,
-                                                  @RequestParam(value = "showSource", required = false) String showSource,
-                                                  @RequestParam(value = "sourceReplace", required = false) String sourceReplace,
-                                                  @RequestParam(value = "showCompetitorUrl", required = false) String showCompetitorUrl,
-                                                  @RequestParam(value = "showDateAdd", required = false) String showDateAdd) {
-        return processFiles("stat", multipartFile, showSource, sourceReplace, showCompetitorUrl, showDateAdd);
+    public @ResponseBody String uploadStatisticFile(@RequestParam("file") MultipartFile[] multipartFile,
+                                                    @RequestParam(value = "showSource", required = false) String showSource,
+                                                    @RequestParam(value = "sourceReplace", required = false) String sourceReplace,
+                                                    @RequestParam(value = "showCompetitorUrl", required = false) String showCompetitorUrl,
+                                                    @RequestParam(value = "showDateAdd", required = false) String showDateAdd) throws IOException {
+        String[] additionalParam = new String[]{showSource, sourceReplace, showCompetitorUrl, showDateAdd};
+        ArrayList<List<Object>> lists = statisticService.readFiles(getFiles(multipartFile), additionalParam);
+        statisticService.download(lists, response, "excel", additionalParam);
+        return "";
     }
 
     @PostMapping("/vlook")
-    public @ResponseBody String excelVlook(@RequestParam("file") MultipartFile[] multipartFile) {
-        return processFiles("vlook", multipartFile);
+    public @ResponseBody String uploadVlook(@RequestParam("file") MultipartFile[] multipartFile,
+                                            HttpServletResponse response,
+                                            @RequestParam(value = "format", required = false) String format) throws IOException {
+        ArrayList<VlookBarDTO> vlookBarDTOS = vlookService.readFiles(getFiles(multipartFile));
+        vlookService.download(vlookBarDTOS, response, "csv");
+        return "";
     }
 
     @PostMapping("/megatop/upload")
-    public @ResponseBody String handleFileUpload(@ModelAttribute FileForm fileForm) {
-        String label = fileForm.getLabel();
-        ArrayList<File> files = new ArrayList<>();
-        if (fileForm.getFiles() != null) {
-            for (MultipartFile file : fileForm.getFiles()) {
-                String filePath = saveFileAndGetPath(file);
-                File transferTo = new File(filePath);
-                files.add(transferTo);
-            }
-        }
-        // Обработка файлов и сохранение в базу данных
-        megatopService.export(files, label);
-        return "index";
+    public @ResponseBody String megatopFileUpload(
+            @RequestParam("file") MultipartFile[] multipartFile,
+            @RequestParam(value = "label", required = false) String label) throws IOException {
+        String[] additionalParam = new String[]{label};
+        megatopService.readFiles(getFiles(multipartFile), additionalParam);
+        return "";
     }
 
 
     @PostMapping("/megatop/download")
-    public @ResponseBody String downloadData(@RequestParam(value = "downloadLabel", required = false) String label,
-                               @RequestParam(value = "format", required = false) String format,
-                               HttpServletResponse response) throws IOException {
-        megatopService.exportToFile(label,response);
-        return "index";
+    public @ResponseBody String megatopDownload(@RequestParam(value = "downloadLabel", required = false) String label,
+                                                @RequestParam(value = "format", required = false) String format,
+                                                HttpServletResponse response) throws IOException {
+        String[] additionalParam = new String[]{label};
+        ArrayList<MegatopDTO> megatopDTOS = megatopService.getDto(additionalParam);
+        megatopService.download(megatopDTOS, response, format);
+        return "";
     }
 
-    @PostMapping("/simpleReport")
-    public @ResponseBody String excelSimpleReport(@RequestParam("file") MultipartFile[] multipartFile) {
-        return processFiles("simple", multipartFile);
+    @PostMapping("/simple/upload/report")
+    public @ResponseBody String uploadSimpleReport(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
+        List<File> files = getFiles(multipartFile);
+        ArrayList<SimpleDTO> simpleDTOS = simpleService.readFiles(files);
+        String[] additionalParam = new String[]{files.get(0).getName()};
+        simpleService.download(simpleDTOS, response, "excel", additionalParam);
+        return "";
     }
 
-
-    @PostMapping("/edadeal")
-    public @ResponseBody String excelEdadeal(@RequestParam("file") MultipartFile[] multipartFile) {
-        return processFiles("edadeal", multipartFile);
+    @PostMapping("/av/upload/task")
+    public @ResponseBody String uploadAvTask(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
+        avTaskService.readFiles(getFiles(multipartFile));
+        return "";
     }
 
-    @PostMapping("/lenta")
-    public @ResponseBody String excelLentaTask(@RequestParam("file") MultipartFile[] multipartFile) {
-        return processFiles("lenta", multipartFile);
+    @PostMapping("/av/upload/report")
+    public @ResponseBody String uploadAvReport(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
+        avReportService.readFiles(getFiles(multipartFile));
+        return "";
     }
 
+    @PostMapping("/av/upload/handbook")
+    public @ResponseBody String uploadAvHandbook(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
+        ArrayList<AvHandbook> handbooks = handbookService.readFiles(getFiles(multipartFile));
+        return handbookService.save(handbooks);
+    }
 
-    @PostMapping("/lentaReport")
-    public @ResponseBody String excelLentaReport(@ModelAttribute("lenta") Lenta lenta
-            , @RequestParam("file") MultipartFile multipartFile) {
-        if (ifExist(multipartFile)) {
-            String filePath = saveFileAndGetPath(multipartFile);
-            try {
-                multipartFile.transferTo(new File(filePath));
-                LentaService lentaService = new LentaService(new DataDownload());
-                return lentaService.exportReport(filePath, new File(filePath), response, lenta.getAfterDate());
-            } catch (IllegalStateException | IOException e) {
-                log.error("Error while uploading file: {}", e.getMessage());
-                return "File uploaded failed: " + getOrgName(multipartFile);
-            }
+    @PostMapping("/av/download/report")
+    public @ResponseBody String avDownloadReport(@RequestParam(value = "report_no", required = false) String report_no,
+                                                 @RequestParam(value = "format", required = false) String format,
+                                                 @RequestParam(value = "delete", required = false) String delete,
+                                                 HttpServletResponse response) throws IOException {
+        if (delete != null) {
+            avReportService.deleteReport(report_no);
+            return "";
+        } else {
+            String[] additionalParam = new String[]{report_no};
+            ArrayList<CsvAvReportEntity> avDataEntityArrayList = avReportService.getDto(additionalParam);
+            avReportService.download(avDataEntityArrayList, response, "csv");
+            return "";
         }
+    }
+
+    @PostMapping("av/download/task")
+    public @ResponseBody String avDownloadTask(@RequestParam(value = "task_no", required = false) String task_no,
+                                               @RequestParam(value = "retailNetworkCode", required = false) String retailNetworkCode,
+                                               @RequestParam(value = "format", required = false) String format,
+                                               @RequestParam(value = "delete", required = false) String delete,
+                                               HttpServletResponse response) throws IOException {
+        if (delete != null) {
+            avTaskService.deleteTask(task_no);
+            return "";
+        } else {
+            String[] additionalParam = new String[]{task_no, retailNetworkCode, format};
+            ArrayList<AvDataEntity> avDataEntityArrayList = avTaskService.getDto(additionalParam);
+            avTaskService.download(avDataEntityArrayList, response, "csv", additionalParam);
+            return "";
+        }
+    }
+
+    @PostMapping("/lenta/upload/edadeal")
+    public @ResponseBody String uploadEdadeal(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
+        ArrayList<List<Object>> list = edadealService.readFiles(getFiles(multipartFile));
+        edadealService.download(list, response, "excel");
+        return "";
+    }
+
+    @PostMapping("/lenta/upload/task")
+    public @ResponseBody String uploadLentaTask(@RequestParam("file") MultipartFile[] multipartFile,
+                                                @RequestParam(value = "lenta", required = false) String lenta) throws IOException {
+        ArrayList<LentaTaskDTO> collection = lentaTaskService.readFiles(getFiles(multipartFile));
+        lentaTaskService.download(collection, response, "excel");
+        return "";
+    }
+
+
+    @PostMapping("/lenta/upload/report")
+    public @ResponseBody String uploadLentaReport(@ModelAttribute("lenta") Lenta lenta,
+                                                  @RequestParam("file") MultipartFile[] multipartFile) throws IOException {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        String date = formatter.format(lenta.getAfterDate());
+        String[] additionalParam = new String[]{"report", date};
+        ArrayList<LentaReportDTO> reportCollection = lentaReportService.readFiles(getFiles(multipartFile), additionalParam);
+        lentaReportService.download(reportCollection, response, "excel");
         return "/clients/lenta";
     }
 
-
-    private String processFiles(String action, MultipartFile[] multipartFile, String... additionalParams) {
-        FileProcessingService processingService = (FileProcessingService) processingServices.get(action);
-        if (processingService == null) {
-            log.warn("Unsupported action: {}", action);
-            return ("Unsupported action: {}" + action);
-        }
-        for (MultipartFile file : multipartFile) {
-            if (ifExist(file)) {
-                String processSingleFile = processSingleFile(additionalParams, file, processingService);
-                String filePath = getFilePath(file);
-                cleanupTempFile(new File(filePath));
-                if (processSingleFile != null) return processSingleFile;
-            }
-        }
-        return "index";
+    @NotNull
+    private List<File> getFiles(MultipartFile[] multipartFiles) {
+        return Arrays.stream(multipartFiles)
+                .filter(this::ifExist)
+                .map(this::saveFileAndGetPath)
+                .filter(Objects::nonNull)
+                .map(Path::toFile)
+                .collect(Collectors.toList());
     }
 
-    @Nullable
-    private String processSingleFile(String[] additionalParams, MultipartFile file, FileProcessingService processingService) {
-        String filePath = saveFileAndGetPath(file);
-        // Создаем директорию, если она не существует
-        createTempDirectory();
+    private Path saveFileAndGetPath (MultipartFile file) {
         try {
-            processingService.export(filePath, new File(filePath), response, additionalParams);
-        } catch (IllegalStateException | IOException e) {
-            log.error("Error while uploading file: {}", e.getMessage());
-            // Если обработка не удалась, файл остается на месте
-            return "File uploaded failed: " + getOrgName(file);
-        }
-        return null;
-    }
-
-    private String saveFileAndGetPath(MultipartFile file) {
-        try {
-            String filePath = getFilePath(file);
-            File transferTo = new File(filePath);
+            Path filePath = getFilePath(file);
+            File transferTo = new File(filePath.toAbsolutePath().toString());
             createTempDirectory();
 
             try (OutputStream os = new FileOutputStream(transferTo)) {
                 os.write(file.getBytes());
-                log.info("File uploaded successfully: {}", getOrgName(file));
+                log.info("File uploaded successfully: {}", file.getOriginalFilename());
                 return filePath;
             } catch (IOException e) {
                 log.error("Error saving file: {}", e.getMessage());
@@ -184,7 +239,6 @@ public class FileController {
             throw new RuntimeException("Error creating file path", e);
         }
     }
-
 
     private void createTempDirectory() {
         if (TEMP_PATH == null) {
@@ -200,30 +254,19 @@ public class FileController {
         }
     }
 
-    private void cleanupTempFile(File transferTo) {
-        if (transferTo.delete()) {
-            log.info("File removed successfully: {}", transferTo.getName());
-        } else {
-            log.error("Failed to remove file: {}", transferTo.getName());
-        }
+    private boolean ifExist(MultipartFile file) {
+        return file != null && !file.isEmpty();
     }
 
-    private boolean ifExist(MultipartFile multipartFile) {
-        return multipartFile != null && !Objects.requireNonNull(multipartFile.getOriginalFilename()).isEmpty();
-    }
-
-    private String getFilePath(MultipartFile multipartFile) {
-        String orgName = getOrgName(multipartFile);
+    private Path getFilePath(MultipartFile multipartFile) {
+        String orgName = multipartFile.getOriginalFilename();
+        assert orgName != null;
         String extension = getExtension(orgName);
-        return TEMP_PATH + "/" + orgName.replace("." + extension, "-" + "out." + extension);
+        return Path.of(TEMP_PATH + "/" + orgName.replace("." + extension, "-" + "out." + extension));
     }
 
     private String getExtension(String orgName) {
         return orgName.lastIndexOf(".") == -1 ? "" : orgName.substring(orgName.lastIndexOf(".") + 1);
-    }
-
-    private String getOrgName(MultipartFile multipartFile) {
-        return multipartFile.getOriginalFilename();
     }
 
 }

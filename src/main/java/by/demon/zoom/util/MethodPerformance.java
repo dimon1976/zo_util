@@ -1,22 +1,26 @@
 package by.demon.zoom.util;
 
-import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
+import java.time.Instant;
 
 public class MethodPerformance {
-
-    public static Long start() {
-        return System.nanoTime();
+    private static final Logger LOG = LoggerFactory.getLogger(MethodPerformance.class);
+    public static Instant start() {
+        return Instant.now();
     }
 
-    public static void finish(Long startTime, String text) {
-        long endTime = System.nanoTime();
-        long duration = endTime - startTime;
+    public static void finish(Instant startTime, String text) {
+        Instant endTime = Instant.now();
+        Duration duration = Duration.between(startTime, endTime);
 
         // Рассчитываем время выполнения в минутах и секундах
-        long minutes = TimeUnit.NANOSECONDS.toMinutes(duration);
-        long seconds = TimeUnit.NANOSECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(minutes);
+        long minutes = duration.toMinutes();
+        long seconds = duration.getSeconds() - minutes * 60;
 
-        // Выводим время выполнения в консоль
-        System.out.printf("Время выполнения %s: %d минут, %d секунд%n", text, minutes, seconds);
+        // Выводим время выполнения через логгер
+        LOG.info("Время выполнения {}: {} минут, {} секунд", text, minutes, seconds);
     }
 }

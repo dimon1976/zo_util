@@ -1,10 +1,15 @@
 package by.demon.zoom.service;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-public interface FileProcessingService {
+public interface FileProcessingService<T> {
 
-    String export(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException;
+    ArrayList<T> readFiles(List<File> files, String... additionalParams) throws IOException;
+
+    String save(ArrayList<T> collection);
+
+
 }

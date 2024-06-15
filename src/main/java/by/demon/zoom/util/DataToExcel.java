@@ -35,10 +35,6 @@ public class DataToExcel<T> {
         symbols.setDecimalSeparator(',');
     }
 
-//    public void exportToExcel(List<String> headers, Collection<T> dataset, OutputStream out, short skip) {
-//        exportToExcel(headers, dataset, out, skip);
-//    }
-
     public void exportToExcel(List<String> headers, List<List<Object>> dataset, OutputStream out, short skip) {
         exportObjectToExcel(headers, dataset, out, skip);
     }
@@ -72,7 +68,7 @@ public class DataToExcel<T> {
         }
     }
 
-    private void exportObjectToExcel(List<String> headers, List<List<Object>> dataset, OutputStream out, int skip) {
+    public void exportObjectToExcel(List<String> headers, List<List<Object>> dataset, OutputStream out, int skip) {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             XSSFSheet sheet = workbook.createSheet(Globals.SHEET_NAME);
             sheet.setDefaultColumnWidth(DEFAULT_COLUMN_WIDTH);
@@ -145,10 +141,16 @@ public class DataToExcel<T> {
             cell.getRow().setHeightInPoints(60);
             cell.getSheet().setColumnWidth(cell.getColumnIndex(), (short) (35.7 * 80));
         } else if (value instanceof Number) {
-            DecimalFormat decimalFormat = new DecimalFormat(PATTERN_NUMBER, symbols);
-            decimalFormat.setParseBigDecimal(true);
-            cell.setCellValue(((Number) value).doubleValue());
-            cellStyle.setDataFormat(cell.getCellStyle().getDataFormat());
+            Number number = (Number) value;
+           // Проверка на 0.0 до применения форматирования
+            if (number.doubleValue() == 0.0) {
+                cell.setBlank();
+            } else {
+                DecimalFormat decimalFormat = new DecimalFormat(PATTERN_NUMBER, symbols);
+                decimalFormat.setParseBigDecimal(true);
+                cell.setCellValue(((Number) value).doubleValue());
+                cellStyle.setDataFormat(cell.getCellStyle().getDataFormat());
+            }
         } else {
             cell.setCellType(CellType.STRING);
             cell.setCellValue(String.valueOf(value));

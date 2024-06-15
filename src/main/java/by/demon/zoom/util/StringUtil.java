@@ -8,7 +8,7 @@ public class StringUtil {
 
     public static String cleanAndReplace(String str, String replacement) {
         if (str == null) {
-            return null;
+            return "";
         }
         // Удаление и замена символов
         String cleanedStr = str.replaceAll("[^\\d.,-]", "").trim();

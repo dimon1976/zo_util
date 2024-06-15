@@ -28,6 +28,4 @@ public class EdadealDTO {
     private String date;
     private String position;
     private String urlParent;
-
-
 }

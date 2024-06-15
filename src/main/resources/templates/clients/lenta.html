@@ -3,88 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Lenta</title>
-    <link href="../../static/css/global.css" rel="stylesheet">
 </head>
 <body>
 <div th:replace="/include/_header :: content"></div>
-<!--<div class="container">-->
-<!--    <div class="row">-->
-<!--        <div class="col-sm-3">-->
-<!--            <div th:replace="/include/sidebar :: sidebar"></div>-->
-<!--        </div>-->
-<!--        <div class="col-sm-9">-->
-<!--            <div class="row">-->
-<!--                <blockquote class="blockquote">-->
-<!--                    <p>Lenta</p>-->
-<!--                </blockquote>-->
-<!--                <div class="col-6 col-sm-4">-->
-<!--                    <form th:action="@{/excel/lenta}" th:method="post" enctype="multipart/form-data">-->
-<!--                        <label for="lentaTask" class="form-label">Обработка задания клиента lenta</label>-->
-<!--                        <div class="row mb-3">-->
-<!--                            &lt;!&ndash;                            <br>&ndash;&gt;-->
-<!--                            <input type="file" class="form-control" name="file" id="lentaTask">-->
-<!--                        </div>-->
-<!--                        &lt;!&ndash;                        <br>&ndash;&gt;-->
-<!--                        <div class="row">-->
-<!--                            <div class="col-6 col-sm-8">-->
-<!--                                <button class="btn btn-primary">-->
-<!--                                    Загрузить-->
-<!--                                </button>-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                    </form>-->
-<!--                </div>-->
-<!--                <div class="col-6 col-sm-8">-->
-<!--                    <form th:action="@{/excel/lentaReport}" th:method="post" th:object="${lenta}"-->
-<!--                          enctype="multipart/form-data">-->
-<!--                        <label for="lentaReport" class="form-label">Обработка отчета клиента lenta</label>-->
-<!--                        <div class="input-group mb-3">-->
-<!--                            <input type="file" class="form-control" name="file" id="lentaReport" placeholder="file">-->
-<!--                            <span class="input-group-text"> Удалить акции старше </span>-->
-<!--                            <label>-->
-<!--                                <span class="datepicker-toggle">-->
-<!--                                <span class="datepicker-toggle-button">-->
-<!--                                <input type="date" th:field="${lenta.afterDate}"/>-->
-<!--                                </span>-->
-<!--                                    </span>-->
-<!--                            </label>-->
-<!--                        </div>-->
-<!--                        <div class="row">-->
-<!--                            <div class="col-6 col-sm-8">-->
-<!--                                <button type="submit" class="btn btn-primary">-->
-<!--                                    Загрузить-->
-<!--                                </button>-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                    </form>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--            <br>-->
-<!--            <div class="row">-->
-<!--                <div class="col-6 col-sm-8">-->
-<!--                    <form th:action="@{/excel/edadeal}" th:method="post" th:object="${edadeal}"-->
-<!--                          enctype="multipart/form-data">-->
-<!--                        <label for="edadeal" class="form-label">Обработка выгрузки едадила</label>-->
-<!--                        <div class="">-->
-<!--                            <input type="file" class="form-control" name="file" id="edadeal" placeholder="file" aria-describedby="edadelAria">-->
-<!--                            <div id="edadelAria" class="form-text">Удалить все строки содержащие цены "от" и склеить продавец + модель в ID-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                        <div class="row">-->
-<!--                            <div class="col-6 col-sm-8">-->
-<!--                                <button type="submit" class="btn btn-primary">-->
-<!--                                    Загрузить-->
-<!--                                </button>-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                    </form>-->
-<!--                </div>-->
-
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
-<!--</div>-->
-
 <div class="container">
     <div class="row">
         <div class="col-sm-3">
@@ -94,7 +15,7 @@
             <h2 class="display-4 mb-4">Lenta</h2>
             <div class="row">
                 <div class="col-12 col-sm-6">
-                    <form th:action="@{/excel/lenta}" th:method="post" enctype="multipart/form-data">
+                    <form th:action="@{/excel/lenta/upload/task}" th:method="post" enctype="multipart/form-data">
                         <h4>Обработка задания клиента Lenta</h4>
                         <div class="mb-3">
                             <label for="lentaTask" class="form-label">Выберите файл:</label>
@@ -102,7 +23,7 @@
                         </div>
                         <div class="row">
                             <div class="col-12">
-                                <button class="btn btn-primary">
+                                <button class="btn btn-primary" name="lenta" value="task">
                                     Загрузить
                                 </button>
                             </div>
@@ -110,7 +31,7 @@
                     </form>
                 </div>
                 <div class="col-12 col-sm-6">
-                    <form th:action="@{/excel/lentaReport}" th:method="post" th:object="${lenta}" enctype="multipart/form-data">
+                    <form th:action="@{/excel/lenta/upload/report}" th:method="post" th:object="${lenta}" enctype="multipart/form-data">
                         <h4>Обработка отчета клиента Lenta</h4>
                         <div class="mb-3">
                             <label for="lentaReport" class="form-label">Выберите файл отчета:</label>
@@ -118,11 +39,11 @@
                         </div>
                         <div class="input-group mb-3">
                             <span class="input-group-text"> Удалить акции старше </span>
-                            <input type="date" class="form-control" th:field="${lenta.afterDate}" />
+                            <input type="date" class="form-control" th:field="${lenta.afterDate}"/>
                         </div>
                         <div class="row">
                             <div class="col-12">
-                                <button type="submit" class="btn btn-primary">
+                                <button type="submit" class="btn btn-primary" name="lenta" value="report">
                                     Загрузить
                                 </button>
                             </div>
@@ -132,17 +53,17 @@
             </div>
             <div class="row mt-3">
                 <div class="col-12">
-                    <form th:action="@{/excel/edadeal}" th:method="post" th:object="${edadeal}" enctype="multipart/form-data">
+                    <form th:action="@{/excel/lenta/upload/edadeal}" th:method="post" enctype="multipart/form-data">
                         <h4>Обработка выгрузки Едадила</h4>
                         <div class="mb-3">
                             <label for="edadeal" class="form-label">Выберите файл выгрузки:</label>
-                            <input type="file" class="form-control" name="file" id="edadeal" placeholder="file" aria-describedby="edadelAria">
-                            <div id="edadelAria" class="form-text">Удалить все строки содержащие цены "от" и склеить продавец + модель в ID
+                            <input type="file" class="form-control" name="file" id="edadeal" placeholder="file" aria-describedby="edadealAria">
+                            <div id="edadealAria" class="form-text">Удалить все строки содержащие цены "от" и склеить продавец + модель в ID
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-12">
-                                <button type="submit" class="btn btn-primary">
+                                <button type="submit" class="btn btn-primary" name="lenta" value="edadeal">
                                     Загрузить
                                 </button>
                             </div>

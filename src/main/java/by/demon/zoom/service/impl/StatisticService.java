@@ -8,54 +8,104 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static by.demon.zoom.mapper.MappingUtils.ifExistCompetitor;
 import static by.demon.zoom.mapper.MappingUtils.listUsers;
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
+import static java.util.stream.Collectors.joining;
 
 @Service
-public class StatisticService implements FileProcessingService {
+public class StatisticService implements FileProcessingService<List<Object>> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(StatisticService.class);
-
-    private static final List<String> HEADER = Arrays.asList("Клиент", "ID связи", "ID клиента", "Верхняя категория клиента", "Категория клиента", "Бренд клиента",
-            "Модель клиента", "Код производителя клиента", "Штрих-код клиента", "Статус клиента", "Цена конкурента",
-            "Модель конкурента", "Код производителя конкурента", "ID конкурента", "Конкурент", "Конкурент вкл.");
-
-    private final DataToExcel<Object> dataToExcel;
+    private static final Logger log = LoggerFactory.getLogger(StatisticService.class);
     private final DataDownload dataDownload;
+    private final DataToExcel<List<Object>> dataToExcel;
 
-    public StatisticService(DataToExcel<Object> dataToExcel, DataDownload dataDownload) {
-        this.dataToExcel = dataToExcel;
+    // Изменяемый список
+    private static final List<String> header = new ArrayList<>(Arrays.asList("Клиент", "ID связи", "ID клиента", "Верхняя категория клиента", "Категория клиента", "Бренд клиента",
+            "Модель клиента", "Код производителя клиента", "Штрих-код клиента", "Статус клиента", "Цена конкурента",
+            "Модель конкурента", "Код производителя конкурента", "ID конкурента", "Конкурент", "Конкурент вкл."));
+
+    public StatisticService(DataDownload dataDownload, DataToExcel<List<Object>> dataToExcel) {
         this.dataDownload = dataDownload;
+        this.dataToExcel = dataToExcel;
     }
 
-    public String export(String filePath, File file, HttpServletResponse response, String... additionalParams) throws IOException {
-        String fileName = file.getName();
-        List<List<Object>> originalWb = readDataFromFile(file);
+    @Override
+    public ArrayList<List<Object>> readFiles(List<File> files, String... additionalParams) {
+
         List<Integer> columns = Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 19, 20, 22, 23, 24);
         List<Integer> newColumn = getColumnList(additionalParams[0], additionalParams[2], additionalParams[3], columns);
-        List<List<Object>> resultTest = getResultList(originalWb, newColumn, additionalParams[1]);
-        try (OutputStream out = Files.newOutputStream(Paths.get(filePath))) {
-            List<String> newHeader = addAdditionalColumnsToString(additionalParams[2], additionalParams[0], additionalParams[3]);
-            short skip = 1;
-            dataToExcel.exportToExcel(newHeader, resultTest, out, skip);
-            dataDownload.download(fileName, filePath, response);
+        ArrayList<List<Object>> allListObj = new ArrayList<>();
+
+        for (File file : files) {
+            try {
+                List<List<Object>> originalWb = readDataFromFile(file);
+                List<List<Object>> resultTest = getResultList(originalWb, newColumn, additionalParams[1]);
+                allListObj.addAll(resultTest);
+                log.info("File {} successfully read", file.getName());
+            } catch (IOException e) {
+                log.error("Error reading data from file: {}", file.getAbsolutePath(), e);
+            } catch (Exception e) {
+                log.error("Error processing file: {}", file.getAbsolutePath(), e);
+            } finally {
+                if (file.exists()) {
+                    if (!file.delete()) {
+                        log.warn("Failed to delete file: {}", file.getAbsolutePath());
+                    }
+                }
+            }
+        }
+        return allListObj;
+    }
+
+    public void download(ArrayList<List<Object>> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
+        Path path = DataDownload.getPath("data", format.equals("excel") ? ".xlsx" : ".csv");
+        List<String> newHeader = addAdditionalColumnsToString(additionalParameters[2], additionalParameters[0], additionalParameters[3]);
+        try {
+            switch (format) {
+                case "excel":
+                    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                        dataToExcel.exportObjectToExcel(newHeader, list, out, 1);
+                        Files.write(path, out.toByteArray());
+                    }
+                    dataDownload.downloadExcel(path, response);
+                    DataDownload.cleanupTempFile(path);
+                    break;
+                case "csv":
+                    List<String> strings = convert(list);
+                    //Пустой заголовок, т.к. лист уже содержит заголовок
+                    List<String> fakeHeader = new ArrayList<>();
+                    dataDownload.downloadCsv(path, strings, fakeHeader, response);
+                    break;
+                default:
+                    log.error("Incorrect format: {}", format);
+                    break;
+            }
+
+            log.info("Data exported successfully to {}: {}", format, path.getFileName().toString());
         } catch (IOException e) {
-            LOG.error("Error exporting data to Excel: {}", e.getMessage(), e);
+            log.error("Error exporting data to {}: {}", format, e.getMessage(), e);
             throw e;
         }
-        LOG.info("Data exported successfully to Excel: {}", filePath);
-        return filePath;
+    }
+
+    private static List<String> convert(List<List<Object>> objectList) {
+        return objectList.stream()
+                .map(row -> row.stream()
+                        .map(String::valueOf)
+                        .collect(joining(";")))
+                .collect(Collectors.toList());
     }
 
 
@@ -77,8 +127,13 @@ public class StatisticService implements FileProcessingService {
         }
     }
 
+    @Override
+    public String save(ArrayList<List<Object>> collection) {
+        return null;
+    }
+
     private static List<String> addAdditionalColumnsToString(String showCompetitorUrl, String showSource, String showDateAdd) {
-        List<String> updatedHeader = new ArrayList<>(HEADER);
+        List<String> updatedHeader = new ArrayList<>(header);
         if (showCompetitorUrl != null) {
             updatedHeader.add("URL");
         }
@@ -90,7 +145,6 @@ public class StatisticService implements FileProcessingService {
         }
         return updatedHeader;
     }
-
 
 
     private static List<List<Object>> getResultList(List<List<Object>> list, List<Integer> columnList, String sourceReplace) {
@@ -111,7 +165,7 @@ public class StatisticService implements FileProcessingService {
                     linked.add("");
                 } else if (sourceReplace != null && j == 28 && !ifExistCompetitor((String) value, listUsers)) {
                     linked.add("manager");
-                } else {
+                }  else {
                     linked.add(value);
                 }
             }

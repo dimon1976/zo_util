@@ -19,7 +19,7 @@ public class DateUtils {
         return LocalDateTime.parse(date, pattern);
     }
 
-    public static LocalDate getDate(String date, DateTimeFormatter pattern) {
+    public static LocalDate getLocalDate(String date, DateTimeFormatter pattern) {
         return LocalDate.parse(date, pattern);
     }
 
