@@ -1,8 +1,8 @@
 package by.demon.zoom.controller;
 
 import by.demon.zoom.domain.Lenta;
-import by.demon.zoom.domain.imp.av.AvDataEntity;
 import by.demon.zoom.domain.av.AvHandbook;
+import by.demon.zoom.domain.imp.av.AvDataEntity;
 import by.demon.zoom.domain.imp.av.CsvAvReportEntity;
 import by.demon.zoom.dto.imp.MegatopDTO;
 import by.demon.zoom.dto.imp.SimpleDTO;
@@ -21,8 +21,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
@@ -104,12 +106,22 @@ public class FileController {
     }
 
     @PostMapping("/megatop/upload")
-    public @ResponseBody String megatopFileUpload(
+    public @ResponseBody ModelAndView megatopFileUpload(
             @RequestParam("file") MultipartFile[] multipartFile,
-            @RequestParam(value = "label", required = false) String label) throws IOException {
-        String[] additionalParam = new String[]{label};
-        megatopService.readFiles(getFiles(multipartFile), additionalParam);
-        return "";
+            @RequestParam(value = "label", required = false) String label,
+            Model model) throws IOException {
+        ModelAndView modelAndView = new ModelAndView("uploadStatus");
+        try {
+            String[] additionalParam = new String[]{label};
+            megatopService.readFiles(getFiles(multipartFile), additionalParam);
+            model.addAttribute("status", "success");
+            model.addAttribute("message", "Files processed successfully");
+        } catch (IOException e) {
+            log.error("Error processing files", e);
+            model.addAttribute("status", "error");
+            model.addAttribute("message", "Failed to process files: " + e.getMessage());
+        }
+        return modelAndView;
     }
 
 
@@ -124,30 +136,67 @@ public class FileController {
     }
 
     @PostMapping("/simple/upload/report")
-    public @ResponseBody String uploadSimpleReport(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
-        List<File> files = getFiles(multipartFile);
-        ArrayList<SimpleDTO> simpleDTOS = simpleService.readFiles(files);
-        String[] additionalParam = new String[]{files.get(0).getName()};
-        simpleService.download(simpleDTOS, response, "excel", additionalParam);
-        return "";
+    public @ResponseBody ModelAndView uploadSimpleReport(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
+        ModelAndView modelAndView = new ModelAndView("uploadStatus");
+        try {
+            List<File> files = getFiles(multipartFile);
+            ArrayList<SimpleDTO> simpleDTOS = simpleService.readFiles(files);
+            String[] additionalParam = new String[]{files.get(0).getName()};
+            simpleService.download(simpleDTOS, response, "excel", additionalParam);
+            modelAndView.addObject("status", "success");
+            modelAndView.addObject("message", "Files processed successfully");
+        } catch (IOException e) {
+            log.error("Error processing files", e);
+            modelAndView.addObject("status", "error");
+            modelAndView.addObject("message", "Failed to process files: " + e.getMessage());
+        }
+        return modelAndView;
     }
 
     @PostMapping("/av/upload/task")
-    public @ResponseBody String uploadAvTask(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
-        avTaskService.readFiles(getFiles(multipartFile));
-        return "";
+    public @ResponseBody ModelAndView uploadAvTask(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
+        ModelAndView modelAndView = new ModelAndView("uploadStatus");
+        try {
+            avTaskService.readFiles(getFiles(multipartFile));
+            modelAndView.addObject("status", "success");
+            modelAndView.addObject("message", "Files processed successfully");
+        } catch (IOException e) {
+            log.error("Error processing files", e);
+            modelAndView.addObject("status", "error");
+            modelAndView.addObject("message", "Failed to process files: " + e.getMessage());
+        }
+        return modelAndView;
     }
 
     @PostMapping("/av/upload/report")
-    public @ResponseBody String uploadAvReport(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
-        avReportService.readFiles(getFiles(multipartFile));
-        return "";
+    public @ResponseBody ModelAndView uploadAvReport(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
+        ModelAndView modelAndView = new ModelAndView("uploadStatus");
+        try {
+            avReportService.readFiles(getFiles(multipartFile));
+            modelAndView.addObject("status", "success");
+            modelAndView.addObject("message", "Files processed successfully");
+        } catch (IOException e) {
+            log.error("Error processing files", e);
+            modelAndView.addObject("status", "error");
+            modelAndView.addObject("message", "Failed to process files: " + e.getMessage());
+        }
+        return modelAndView;
     }
 
     @PostMapping("/av/upload/handbook")
-    public @ResponseBody String uploadAvHandbook(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
-        ArrayList<AvHandbook> handbooks = handbookService.readFiles(getFiles(multipartFile));
-        return handbookService.save(handbooks);
+    public @ResponseBody ModelAndView uploadAvHandbook(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
+        ModelAndView modelAndView = new ModelAndView("uploadStatus");
+        try {
+            ArrayList<AvHandbook> handbooks = handbookService.readFiles(getFiles(multipartFile));
+            handbookService.save(handbooks);
+            modelAndView.addObject("status", "success");
+            modelAndView.addObject("message", "Files processed successfully");
+        } catch (IOException e) {
+            log.error("Error processing files", e);
+            modelAndView.addObject("status", "error");
+            modelAndView.addObject("message", "Failed to process files: " + e.getMessage());
+        }
+        return modelAndView;
     }
 
     @PostMapping("/av/download/report")
@@ -184,30 +233,57 @@ public class FileController {
     }
 
     @PostMapping("/lenta/upload/edadeal")
-    public @ResponseBody String uploadEdadeal(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
-        ArrayList<List<Object>> list = edadealService.readFiles(getFiles(multipartFile));
-        edadealService.download(list, response, "excel");
-        return "";
+    public @ResponseBody ModelAndView uploadEdadeal(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
+        ModelAndView modelAndView = new ModelAndView("uploadStatus");
+        try {
+            ArrayList<List<Object>> list = edadealService.readFiles(getFiles(multipartFile));
+            edadealService.download(list, response, "excel");
+            modelAndView.addObject("status", "success");
+            modelAndView.addObject("message", "Files processed successfully");
+        } catch (IOException e) {
+            log.error("Error processing files", e);
+            modelAndView.addObject("status", "error");
+            modelAndView.addObject("message", "Failed to process files: " + e.getMessage());
+        }
+        return modelAndView;
     }
 
     @PostMapping("/lenta/upload/task")
-    public @ResponseBody String uploadLentaTask(@RequestParam("file") MultipartFile[] multipartFile,
+    public @ResponseBody ModelAndView uploadLentaTask(@RequestParam("file") MultipartFile[] multipartFile,
                                                 @RequestParam(value = "lenta", required = false) String lenta) throws IOException {
-        ArrayList<LentaTaskDTO> collection = lentaTaskService.readFiles(getFiles(multipartFile));
-        lentaTaskService.download(collection, response, "excel");
-        return "";
+        ModelAndView modelAndView = new ModelAndView("uploadStatus");
+        try {
+            ArrayList<LentaTaskDTO> collection = lentaTaskService.readFiles(getFiles(multipartFile));
+            lentaTaskService.download(collection, response, "excel");
+            modelAndView.addObject("status", "success");
+            modelAndView.addObject("message", "Files processed successfully");
+        } catch (IOException e) {
+            log.error("Error processing files", e);
+            modelAndView.addObject("status", "error");
+            modelAndView.addObject("message", "Failed to process files: " + e.getMessage());
+        }
+        return modelAndView;
     }
 
 
     @PostMapping("/lenta/upload/report")
-    public @ResponseBody String uploadLentaReport(@ModelAttribute("lenta") Lenta lenta,
+    public @ResponseBody ModelAndView uploadLentaReport(@ModelAttribute("lenta") Lenta lenta,
                                                   @RequestParam("file") MultipartFile[] multipartFile) throws IOException {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-        String date = formatter.format(lenta.getAfterDate());
-        String[] additionalParam = new String[]{"report", date};
-        ArrayList<LentaReportDTO> reportCollection = lentaReportService.readFiles(getFiles(multipartFile), additionalParam);
-        lentaReportService.download(reportCollection, response, "excel");
-        return "/clients/lenta";
+        ModelAndView modelAndView = new ModelAndView("uploadStatus");
+        try {
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+            String date = formatter.format(lenta.getAfterDate());
+            String[] additionalParam = new String[]{"report", date};
+            ArrayList<LentaReportDTO> reportCollection = lentaReportService.readFiles(getFiles(multipartFile), additionalParam);
+            lentaReportService.download(reportCollection, response, "excel");
+            modelAndView.addObject("status", "success");
+            modelAndView.addObject("message", "Files processed successfully");
+        } catch (IOException e) {
+            log.error("Error processing files", e);
+            modelAndView.addObject("status", "error");
+            modelAndView.addObject("message", "Failed to process files: " + e.getMessage());
+        }
+        return modelAndView;
     }
 
     @NotNull

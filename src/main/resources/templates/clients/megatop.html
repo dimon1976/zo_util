@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Megatop</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
 </head>
 <body>
 <div th:replace="/include/_header :: content"></div>
@@ -13,10 +14,21 @@
         </div>
         <div class="col-sm-9">
             <h2 class="display-4 mb-4">Megatop</h2>
+
+            <!-- Блок для отображения ошибок -->
+            <div th:if="${status == 'error'}" class="alert alert-danger">
+                <p th:text="${message}"></p>
+            </div>
+
+            <!-- Блок для отображения успешного сообщения -->
+            <div th:if="${status == 'success'}" class="alert alert-success">
+                <p th:text="${message}"></p>
+            </div>
+
             <div class="row">
                 <div class="col-12 col-sm-6">
                     <h4>Upload Files</h4>
-                    <form th:action="@{/excel/megatop/upload}"  method="post"
+                    <form th:action="@{/excel/megatop/upload}" method="post"
                           enctype="multipart/form-data" class="mb-3">
                         <div class="mb-3">
                             <label for="files" class="form-label">Files:</label>
@@ -61,14 +73,13 @@
     </div>
 </div>
 
-
-
-
-
-    <script>
-        document.getElementsByName('labelSelect')[0].addEventListener('change', function () {
-            const customLabelInput = document.getElementById('customLabel');
+<script>
+    document.getElementById('labelSelect').addEventListener('change', function () {
+        const customLabelInput = document.getElementById('customLabel');
+        if (customLabelInput) {
             customLabelInput.style.display = this.value === 'Custom' ? 'inline' : 'none';
-        });
-    </script>
+        }
+    });
+</script>
 </body>
+</html>

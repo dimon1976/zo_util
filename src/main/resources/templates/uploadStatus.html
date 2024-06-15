@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload Status</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+</head>
+<body>
+<div th:replace="/include/_header :: content"></div>
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-sm-12">
+            <h2 class="display-4 mb-4">Upload Status</h2>
+
+            <!-- Блок для отображения ошибок -->
+            <div th:if="${status == 'error'}" class="alert alert-danger">
+                <p th:text="${message}"></p>
+            </div>
+
+            <!-- Блок для отображения успешного сообщения -->
+            <div th:if="${status == 'success'}" class="alert alert-success">
+                <p th:text="${message}"></p>
+            </div>
+
+            <a href="/" class="btn btn-primary mt-3">Back to Home</a>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

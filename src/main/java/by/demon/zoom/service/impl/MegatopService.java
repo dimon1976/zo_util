@@ -91,8 +91,13 @@ public class MegatopService implements FileProcessingService<Megatop> {
     }
 
     public ArrayList<MegatopDTO> getDto(String... additionalParameters) {
-        List<Megatop> megatopByLabel = getMegatopByLabel(additionalParameters[0]);
-        return getMegatopDTOList(megatopByLabel);
+        try {
+            List<Megatop> megatopByLabel = getMegatopByLabel(additionalParameters[0]);
+            return getMegatopDTOList(megatopByLabel);
+        } catch (Exception e) {
+            log.error("Error getting DTOs for label: {}", additionalParameters[0], e);
+            throw e;
+        }
     }
 
     @Override
@@ -147,7 +152,7 @@ public class MegatopService implements FileProcessingService<Megatop> {
         try {
             megatopRepository.saveAll(megatopList);
             log.info("Saved {} Megatop objects", megatopList.size());
-            return "";
+            return "Data saved successfully";
         } catch (Exception e) {
             log.error("Failed to save Megatop objects", e);
             throw new RuntimeException("Failed to save Megatop objects", e);
@@ -179,7 +184,9 @@ public class MegatopService implements FileProcessingService<Megatop> {
     private ArrayList<Megatop> getMegatopList(List<List<Object>> lists, String label, File file) {
         return lists.stream()
                 .filter(str -> !"Категория 1".equals(str.get(0)))
-                .map(str -> createMegatopFromList(str, Timestamp.from(Instant.now()), label, file)).distinct().collect(Collectors.toCollection(ArrayList::new));
+                .map(str -> createMegatopFromList(str, Timestamp.from(Instant.now()), label, file))
+                .distinct()
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     private Megatop createMegatopFromList(List<Object> str, Timestamp instant, String label, File file) {
