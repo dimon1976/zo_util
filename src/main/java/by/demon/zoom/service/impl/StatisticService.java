@@ -90,7 +90,7 @@ public class StatisticService implements FileProcessingService<List<Object>> {
     public void download(ArrayList<List<Object>> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
         List<String> newHeader = addAdditionalColumnsToString(additionalParameters[2], additionalParameters[0], additionalParameters[3]);
         Path path = DataDownload.getPath("data", format.equals("excel") ? ".xlsx" : ".csv");
-        FileDownloadUtil.downloadFile(newHeader, list, response, format, path, dataToExcel);
+        FileDownloadUtil.downloadObjectFile(newHeader, list, response, format, path, dataToExcel);
     }
 
 
