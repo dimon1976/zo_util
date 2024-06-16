@@ -10,92 +10,89 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
+import static by.demon.zoom.util.FileDownloadUtil.downloadFile;
 
 @Service
 public class VlookService implements FileProcessingService<VlookBarDTO> {
 
     private static final Logger log = LoggerFactory.getLogger(VlookService.class);
-    private final DataDownload dataDownload;
     private final DataToExcel<VlookBarDTO> dataToExcel;
     private final List<String> header = Arrays.asList("ID", "BAR", "URL");
 
-    public VlookService(DataDownload dataDownload, DataToExcel<VlookBarDTO> dataToExcel) {
-        this.dataDownload = dataDownload;
+    public VlookService( DataToExcel<VlookBarDTO> dataToExcel) {
         this.dataToExcel = dataToExcel;
     }
 
-
     @Override
-    public ArrayList<VlookBarDTO> readFiles(List<File> files, String... additionalParams) {
+    public ArrayList<VlookBarDTO> readFiles(List<File> files, String... additionalParams) throws IOException {
         Map<String, Set<String>> mapOne = new HashMap<>();
         Map<String, Set<String>> mapTwo = new HashMap<>();
         ArrayList<VlookBarDTO> result = new ArrayList<>();
-        for (File file : files) {
-            try {
-                readDataFromFile(file)
-                        .forEach(objects -> {
-                            try {
-                                addMapOne(objects, mapOne);
-                                addMapTwo(objects, mapTwo);
-                            } catch (Exception e) {
-                                log.error("Error processing data:", e);
-                            }
-                        });
+        List<String> errorMessages = new ArrayList<>();
 
-                mapTwo.forEach((keyTwo, value) -> mapOne.getOrDefault(keyTwo, Collections.emptySet())
-                        .forEach(keyOne -> value.forEach(url -> result.add(new VlookBarDTO(keyOne, keyTwo, url)))));
+        int threadCount = Runtime.getRuntime().availableProcessors();
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
 
-            } catch (IOException e) {
-                log.error("Error reading data from file: {}", file.getAbsolutePath(), e);
-            } finally {
-                // Удаление временного файла после обработки
-                if (file.exists()) {
-                    boolean deleted = file.delete();
-                    if (!deleted) {
-                        log.warn("Failed to delete file: {}", file.getAbsolutePath());
+        List<Future<?>> futures = files.stream()
+                .map(file -> executorService.submit(() -> {
+                    try {
+                        readDataFromFile(file)
+                                .forEach(objects -> {
+                                    try {
+                                        addMapOne(objects, mapOne);
+                                        addMapTwo(objects, mapTwo);
+                                    } catch (Exception e) {
+                                        log.error("Error processing data:", e);
+                                    }
+                                });
+
+                        mapTwo.forEach((keyTwo, value) -> mapOne.getOrDefault(keyTwo, Collections.emptySet())
+                                .forEach(keyOne -> value.forEach(url -> result.add(new VlookBarDTO(keyOne, keyTwo, url)))));
+
+                        log.info("File {} successfully read", file.getName());
+                        Files.delete(file.toPath());
+                    } catch (Exception e) {
+                        log.error("Failed to process file: {}", file.getName(), e);
+                        errorMessages.add("Failed to process file: " + file.getName() + " - " + e.getMessage());
                     }
-                }
+                }))
+                .collect(Collectors.toList());
+
+        for (Future<?> future : futures) {
+            try {
+                future.get();
+            } catch (InterruptedException | ExecutionException e) {
+                log.error("Error processing file", e);
+                errorMessages.add("Error processing file: " + e.getMessage());
             }
         }
+
+        executorService.shutdown();
+
+        if (!errorMessages.isEmpty()) {
+            throw new IOException("Some files failed to process: " + String.join(", ", errorMessages));
+        }
+
         return result;
     }
 
     public void download(ArrayList<VlookBarDTO> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
         Path path = DataDownload.getPath("data", format.equals("excel") ? ".xlsx" : ".csv");
-        try {
-            switch (format) {
-                case "excel":
-                    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-                        dataToExcel.exportToExcel(header, list, out, 0);
-                        Files.write(path, out.toByteArray());
-                    }
-                    dataDownload.downloadExcel(path, response);
-                    DataDownload.cleanupTempFile(path);
-                    break;
-                case "csv":
-                    List<String> strings = convert(list);
-                    dataDownload.downloadCsv(path, strings, header, response);
-                    break;
-                default:
-                    log.error("Incorrect format: {}", format);
-                    break;
-            }
-
-            log.info("Data exported successfully to {}: {}", format, path.getFileName().toString());
-        } catch (IOException e) {
-            log.error("Error exporting data to {}: {}", format, e.getMessage(), e);
-            throw e;
-        }
+        downloadFile(header, list, response, format, path, dataToExcel);
     }
+
 
     private static List<String> convert(List<VlookBarDTO> objectList) {
         return objectList.stream()
@@ -127,9 +124,9 @@ public class VlookService implements FileProcessingService<VlookBarDTO> {
         }
     }
 
-    private void lengthCheck(Map<String, Set<String>> hashMap, String data, String verification) {
-        if (verification.length() == 13) {
-            hashMap.computeIfAbsent(verification, k -> new HashSet<>()).add(data);
+    private void lengthCheck(Map<String, Set<String>> map, String key, String value) {
+        if (value.length() == 13) {
+            map.computeIfAbsent(value, k -> new HashSet<>()).add(key);
         }
     }
 
@@ -150,5 +147,4 @@ public class VlookService implements FileProcessingService<VlookBarDTO> {
             }
         }
     }
-
 }

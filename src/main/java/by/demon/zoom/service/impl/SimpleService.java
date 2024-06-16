@@ -5,7 +5,6 @@ import by.demon.zoom.dto.CsvRow;
 import by.demon.zoom.dto.imp.SimpleDTO;
 import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.service.FileProcessingService;
-import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.DataToExcel;
 import by.demon.zoom.util.StringUtil;
 import org.slf4j.Logger;
@@ -13,22 +12,25 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
+import static by.demon.zoom.util.FileDownloadUtil.downloadFile;
 import static by.demon.zoom.util.Globals.TEMP_PATH;
 
 @Service
 public class SimpleService implements FileProcessingService<SimpleDTO> {
 
     private static final Logger log = LoggerFactory.getLogger(SimpleService.class);
-    private final DataDownload dataDownload;
     private final DataToExcel<SimpleDTO> dataToExcel;
 
     private final List<String> header = Arrays.asList("ID", "Категория 1", "Категория 2", "Категория 3", "Бренд", "Модель", "Цена Simplewine на дату парсинга", "Город", "Конкурент", "Время выкачки"
@@ -36,36 +38,49 @@ public class SimpleService implements FileProcessingService<SimpleDTO> {
             , "Комментарий", "Наименование товара конкурента", "Год конкурента", "Аналог", "Адрес конкурента"
             , "Статус товара (В наличии/Под заказ/Нет в наличии)", "Промо (да/нет)", "Ссылка конкурент", "Ссылка Симпл", "Скриншот");
 
-    public SimpleService(DataDownload dataDownload, DataToExcel<SimpleDTO> dataToExcel) {
-        this.dataDownload = dataDownload;
+    public SimpleService(DataToExcel<SimpleDTO> dataToExcel) {
         this.dataToExcel = dataToExcel;
     }
 
     @Override
     public ArrayList<SimpleDTO> readFiles(List<File> files, String... additionalParams) throws IOException {
-        ArrayList<SimpleDTO> allUrlDTOs = new ArrayList<>(); // Создаем переменную для сохранения всех DTO
-        for (File file : files) {
-            try {
-                List<List<Object>> lists = readDataFromFile(file);
-                Collection<Product> productList = getProductList(lists);
-                Collection<SimpleDTO> collect = getSimpleDTOList(productList);
-                allUrlDTOs.addAll(collect);
-                log.info("File {} successfully read", file.getName());
+        ArrayList<SimpleDTO> allUrlDTOs = new ArrayList<>();
+        List<String> errorMessages = new ArrayList<>();
 
-            } catch (IOException e) {
-                log.error("Error reading data from file: {}", file.getAbsolutePath(), e);
-
-            } catch (Exception e) {
-                log.error("Error processing file: {}", file.getAbsolutePath(), e);
-
-            } finally {
-                if (file.exists()) {
-                    if (!file.delete()) {
-                        log.warn("Failed to delete file: {}", file.getAbsolutePath());
+        int threadCount = Runtime.getRuntime().availableProcessors();
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        List<Future<ArrayList<SimpleDTO>>> futures = files.stream()
+                .map(file -> executorService.submit(() -> {
+                    try {
+                        log.info("Processing file: {}", file.getName());
+                        List<List<Object>> lists = readDataFromFile(file);
+                        Files.delete(file.toPath());
+                        Collection<Product> productList = getProductList(lists);
+                        Collection<SimpleDTO> collect = getSimpleDTOList(productList);
+                        log.info("File {} successfully read", file.getName());
+                        return new ArrayList<>(collect);
+                    } catch (Exception e) {
+                        log.error("Error processing file: {}", file.getAbsolutePath(), e);
+                        errorMessages.add("Failed to process file: " + file.getName() + " - " + e.getMessage());
+                        return new ArrayList<SimpleDTO>();
                     }
-                }
+                }))
+                .collect(Collectors.toList());
+
+        for (Future<ArrayList<SimpleDTO>> future : futures) {
+            try {
+                allUrlDTOs.addAll(future.get());
+            } catch (InterruptedException | ExecutionException e) {
+                log.error("Error processing file", e);
+                errorMessages.add("Error processing file: " + e.getMessage());
             }
         }
+        executorService.shutdown();
+
+        if (!errorMessages.isEmpty()) {
+            throw new IOException("Some files failed to process: " + String.join(", ", errorMessages));
+        }
+
         return allUrlDTOs;
     }
 
@@ -73,30 +88,7 @@ public class SimpleService implements FileProcessingService<SimpleDTO> {
         String orgName = additionalParameters[0];
         String s = orgName.lastIndexOf(".") == -1 ? "" : orgName.substring(0, orgName.lastIndexOf("."));
         Path path = Path.of(TEMP_PATH, s + (format.equals("excel") ? ".xlsx" : ".csv"));
-        try {
-            switch (format) {
-                case "excel":
-                    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-                        dataToExcel.exportToExcel(header, list, out, 0);
-                        Files.write(path, out.toByteArray());
-                    }
-                    dataDownload.downloadExcel(path, response);
-                    DataDownload.cleanupTempFile(path);
-                    break;
-                case "csv":
-                    List<String> strings = convert(list);
-                    dataDownload.downloadCsv(path, strings, header, response);
-                    break;
-                default:
-                    log.error("Incorrect format: {}", format);
-                    break;
-            }
-
-            log.info("Data exported successfully to {}: {}", format, path.getFileName().toString());
-        } catch (IOException e) {
-            log.error("Error exporting data to {}: {}", format, e.getMessage(), e);
-            throw e;
-        }
+        downloadFile(header, list, response, format, path, dataToExcel);
     }
 
     private static List<String> convert(List<SimpleDTO> objectList) {

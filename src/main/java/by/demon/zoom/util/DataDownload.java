@@ -25,7 +25,7 @@ public class DataDownload {
 
     private static final Logger LOG = LoggerFactory.getLogger(DataDownload.class);
 
-    public void downloadExcel(Path path, HttpServletResponse response) throws IOException {
+    public static void downloadExcel(Path path, HttpServletResponse response) throws IOException {
         if (path.getFileName() == null) {
             handleInvalidFilename(response);
             return;
@@ -45,7 +45,7 @@ public class DataDownload {
         }
     }
 
-    public void downloadCsv(Path path, List<String> data, List<String> header, HttpServletResponse response) throws IOException {
+    public static void downloadCsv(Path path, List<String> data, List<String> header, HttpServletResponse response) throws IOException {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              OutputStream outputStream = new BufferedOutputStream(baos)) {
 
@@ -78,26 +78,26 @@ public class DataDownload {
     }
 
 
-    private void handleInvalidFilename(HttpServletResponse response) throws IOException {
+    private static void handleInvalidFilename(HttpServletResponse response) throws IOException {
         LOG.error("Filename is null");
         response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Filename is null");
     }
 
-    private void setResponseHeaders(HttpServletResponse response, String filename, String contentType) {
+    private static void setResponseHeaders(HttpServletResponse response, String filename, String contentType) {
         // Правильно закодировать имя файла для URL-совместимости
         String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8);
         response.setHeader("Content-Disposition", "attachment; filename*=UTF-8''" + encodedFilename);
         response.setContentType(contentType);
     }
 
-    private void writeCsvData(CSVWriter csvWriter, List<String> data) {
+    private static void writeCsvData(CSVWriter csvWriter, List<String> data) {
         for (String line : data) {
             String[] values = line.split(";");
             csvWriter.writeNext(values);
         }
     }
 
-    private void handleDownloadError(IOException ex) throws IOException {
+    private static void handleDownloadError(IOException ex) throws IOException {
         LOG.error("Error during file download: {}", ex.getMessage());
         throw ex;
     }

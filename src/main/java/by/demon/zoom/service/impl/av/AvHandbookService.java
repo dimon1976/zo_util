@@ -11,13 +11,16 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
 
 @Service
 public class AvHandbookService implements FileProcessingService<AvHandbook> {
-
 
     private final static Logger log = LoggerFactory.getLogger(AvHandbookService.class);
     private final AvHandbookRepository handbookRepository;
@@ -26,40 +29,52 @@ public class AvHandbookService implements FileProcessingService<AvHandbook> {
         this.handbookRepository = handbookRepository;
     }
 
-
     @Override
     public ArrayList<AvHandbook> readFiles(List<File> files, String... additionalParams) throws IOException {
         ArrayList<AvHandbook> handbookList = new ArrayList<>();
-        for (File file : files) {
-            try {
-                List<List<Object>> lists = readDataFromFile(file);
-                Collection<AvHandbook> handbook = getObjectList(lists);
-                System.out.println();
-                handbookList.addAll(handbook);
-                log.info("File {} successfully read", file.getName());
-                Files.delete(file.toPath());
+        List<String> errorMessages = new ArrayList<>();
 
-            } catch (IOException e) {
-                log.error("Error reading data from file: {}", file.getAbsolutePath(), e);
+        int threadCount = Runtime.getRuntime().availableProcessors();
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
 
-            } catch (Exception e) {
-                log.error("Error processing file: {}", file.getAbsolutePath(), e);
-
-            } finally {
-                if (file.exists()) {
-                    if (!file.delete()) {
-                        log.warn("Failed to delete file: {}", file.getAbsolutePath());
+        List<Future<ArrayList<AvHandbook>>> futures = files.stream()
+                .map(file -> executorService.<ArrayList<AvHandbook>>submit(() -> {
+                    try {
+                        log.info("Processing file: {}", file.getName());
+                        List<List<Object>> lists = readDataFromFile(file);
+                        Collection<AvHandbook> handbook = getObjectList(lists);
+                        log.info("File {} successfully read", file.getName());
+                        Files.delete(file.toPath());
+                        return new ArrayList<>(handbook);
+                    } catch (Exception e) {
+                        log.error("Failed to process file: {}", file.getName(), e);
+                        errorMessages.add("Failed to process file: " + file.getName() + " - " + e.getMessage());
+                        return new ArrayList<>();
                     }
-                }
+                }))
+                .collect(Collectors.toList());
+
+        for (Future<ArrayList<AvHandbook>> future : futures) {
+            try {
+                handbookList.addAll(future.get());
+            } catch (InterruptedException | ExecutionException e) {
+                log.error("Error processing file", e);
+                errorMessages.add("Error processing file: " + e.getMessage());
             }
         }
+
+        executorService.shutdown();
+
+        if (!errorMessages.isEmpty()) {
+            throw new IOException("Some files failed to process: " + String.join(", ", errorMessages));
+        }
+
         return handbookList;
     }
 
     @Override
     public String save(ArrayList<AvHandbook> collection) {
         try {
-            // Удалять только необходимые записи
             List<AvHandbook> existingHandbooks = handbookRepository.findAll();
             List<AvHandbook> handbooksToDelete = existingHandbooks.stream()
                     .filter(h -> !collection.contains(h))
@@ -68,7 +83,6 @@ public class AvHandbookService implements FileProcessingService<AvHandbook> {
 
             log.info("Deleted {} existing handbooks from the table", handbooksToDelete.size());
 
-            // Сохранение только новых или измененных записей
             List<AvHandbook> handbooksToSave = collection.stream()
                     .filter(h -> !existingHandbooks.contains(h) || !h.equals(existingHandbooks.get(existingHandbooks.indexOf(h))))
                     .collect(Collectors.toList());
@@ -89,8 +103,8 @@ public class AvHandbookService implements FileProcessingService<AvHandbook> {
 
     private Collection<AvHandbook> getObjectList(List<List<Object>> lists) {
         return lists.stream()
-                .filter(Objects::nonNull) // Убедитесь, что список не пуст
-                .filter(list -> list.size() > 0) // Убедитесь, что список не является нулевым и имеет хотя бы один элемент
+                .filter(Objects::nonNull)
+                .filter(list -> list.size() > 0)
                 .map(this::createObjectFromList)
                 .collect(Collectors.toCollection(HashSet::new));
     }
@@ -114,5 +128,4 @@ public class AvHandbookService implements FileProcessingService<AvHandbook> {
     public List<String> getRetailNetworkCode() {
         return handbookRepository.findDistinctByRetailNetworkCode();
     }
-
 }
