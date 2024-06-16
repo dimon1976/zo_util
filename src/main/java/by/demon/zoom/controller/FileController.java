@@ -35,7 +35,6 @@ import java.util.List;
 @RequestMapping("/excel")
 public class FileController {
 
-    private final HttpServletResponse response;
     private final UrlService urlService;
     private final StatisticService statisticService;
     private final VlookService vlookService;
@@ -51,8 +50,7 @@ public class FileController {
     @Value("${temp.path}")
     private String TEMP_PATH;
 
-    public FileController(HttpServletResponse response, UrlService urlService, StatisticService statisticService, VlookService vlookService, MegatopService megatopService, LentaReportService lentaReportService, LentaTaskService lentaTaskService, SimpleService simpleService, EdadealService edadealService, AvReportService avReportService, AvTaskService avTaskService, AvHandbookService handbookService) {
-        this.response = response;
+    public FileController(UrlService urlService, StatisticService statisticService, VlookService vlookService, MegatopService megatopService, LentaReportService lentaReportService, LentaTaskService lentaTaskService, SimpleService simpleService, EdadealService edadealService, AvReportService avReportService, AvTaskService avTaskService, AvHandbookService handbookService) {
         this.urlService = urlService;
         this.statisticService = statisticService;
         this.vlookService = vlookService;
@@ -67,35 +65,32 @@ public class FileController {
     }
 
     @PostMapping("/getUrl/")
-    public @ResponseBody String getUrl(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
+    public void getUrl(@RequestParam("file") MultipartFile[] multipartFile, HttpServletResponse response) throws IOException {
         ArrayList<UrlDTO> urlDTOS = urlService.readFiles(FileUploadHandler.getFiles(multipartFile));
         urlService.download(urlDTOS, response, "excel");
-        return "";
     }
 
     @PostMapping("/stat/")
-    public @ResponseBody String uploadStatisticFile(@RequestParam("file") MultipartFile[] multipartFile,
-                                                    @RequestParam(value = "showSource", required = false) String showSource,
-                                                    @RequestParam(value = "sourceReplace", required = false) String sourceReplace,
-                                                    @RequestParam(value = "showCompetitorUrl", required = false) String showCompetitorUrl,
-                                                    @RequestParam(value = "showDateAdd", required = false) String showDateAdd) throws IOException {
+    public void uploadStatisticFile(@RequestParam("file") MultipartFile[] multipartFile,
+                                    @RequestParam(value = "showSource", required = false) String showSource,
+                                    @RequestParam(value = "sourceReplace", required = false) String sourceReplace,
+                                    @RequestParam(value = "showCompetitorUrl", required = false) String showCompetitorUrl,
+                                    @RequestParam(value = "showDateAdd", required = false) String showDateAdd,
+                                    HttpServletResponse response) throws IOException {
         String[] additionalParam = new String[]{showSource, sourceReplace, showCompetitorUrl, showDateAdd};
         ArrayList<List<Object>> lists = statisticService.readFiles(FileUploadHandler.getFiles(multipartFile), additionalParam);
         statisticService.download(lists, response, "excel", additionalParam);
-        return "";
     }
 
     @PostMapping("/vlook")
-    public ModelAndView uploadVlook(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
-        return processFileUpload(multipartFile, files -> {
-            ArrayList<VlookBarDTO> vlookBarDTOS = vlookService.readFiles(files);
-            vlookService.download(vlookBarDTOS, response, "csv");
-        });
+    public void uploadVlook(@RequestParam("file") MultipartFile[] multipartFile, HttpServletResponse response) throws IOException {
+        ArrayList<VlookBarDTO> vlookBarDTOS = vlookService.readFiles(FileUploadHandler.getFiles(multipartFile));
+        vlookService.download(vlookBarDTOS, response, "csv");
     }
 
     @PostMapping("/megatop/upload")
     public ModelAndView megatopFileUpload(@RequestParam("file") MultipartFile[] multipartFile,
-                                          @RequestParam(value = "label", required = false) String label) throws IOException {
+                                          @RequestParam(value = "label", required = false) String label) {
         return processFileUpload(multipartFile, files -> {
             String[] additionalParam = new String[]{label};
             megatopService.readFiles(files, additionalParam);
@@ -103,36 +98,34 @@ public class FileController {
     }
 
     @PostMapping("/megatop/download")
-    public @ResponseBody String megatopDownload(@RequestParam(value = "downloadLabel", required = false) String label,
-                                                @RequestParam(value = "format", required = false) String format,
-                                                HttpServletResponse response) throws IOException {
+    public void megatopDownload(@RequestParam(value = "downloadLabel", required = false) String label,
+                                @RequestParam(value = "format", required = false) String format,
+                                HttpServletResponse response) throws IOException {
         String[] additionalParam = new String[]{label};
         ArrayList<MegatopDTO> megatopDTOS = megatopService.getDto(additionalParam);
         megatopService.download(megatopDTOS, response, format);
-        return "";
     }
 
     @PostMapping("/simple/upload/report")
-    public ModelAndView uploadSimpleReport(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
-        return processFileUpload(multipartFile, files -> {
-            ArrayList<SimpleDTO> simpleDTOS = simpleService.readFiles(files);
-            String[] additionalParam = new String[]{files.get(0).getName()};
-            simpleService.download(simpleDTOS, response, "excel", additionalParam);
-        });
+    public void uploadSimpleReport(@RequestParam("file") MultipartFile[] multipartFile, HttpServletResponse response) throws IOException {
+        List<File> files = FileUploadHandler.getFiles(multipartFile);
+        ArrayList<SimpleDTO> simpleDTOS = simpleService.readFiles(files);
+        String[] additionalParam = new String[]{files.get(0).getName()};
+        simpleService.download(simpleDTOS, response, "excel", additionalParam);
     }
 
     @PostMapping("/av/upload/task")
-    public ModelAndView uploadAvTask(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
+    public ModelAndView uploadAvTask(@RequestParam("file") MultipartFile[] multipartFile) {
         return processFileUpload(multipartFile, avTaskService::readFiles);
     }
 
     @PostMapping("/av/upload/report")
-    public ModelAndView uploadAvReport(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
+    public ModelAndView uploadAvReport(@RequestParam("file") MultipartFile[] multipartFile) {
         return processFileUpload(multipartFile, avReportService::readFiles);
     }
 
     @PostMapping("/av/upload/handbook")
-    public ModelAndView uploadAvHandbook(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
+    public ModelAndView uploadAvHandbook(@RequestParam("file") MultipartFile[] multipartFile) {
         return processFileUpload(multipartFile, files -> {
             ArrayList<AvHandbook> handbooks = handbookService.readFiles(files);
             handbookService.save(handbooks);
@@ -140,32 +133,29 @@ public class FileController {
     }
 
     @PostMapping("/lenta/upload/edadeal")
-    public ModelAndView uploadEdadeal(@RequestParam("file") MultipartFile[] multipartFile) throws IOException {
-        return processFileUpload(multipartFile, files -> {
-            ArrayList<List<Object>> list = edadealService.readFiles(files);
-            edadealService.download(list, response, "excel");
-        });
+    public void uploadEdadeal(@RequestParam("file") MultipartFile[] multipartFile, HttpServletResponse response) throws IOException {
+        ArrayList<List<Object>> list = edadealService.readFiles(FileUploadHandler.getFiles(multipartFile));
+        edadealService.download(list, response, "excel");
     }
 
     @PostMapping("/lenta/upload/task")
-    public ModelAndView uploadLentaTask(@RequestParam("file") MultipartFile[] multipartFile,
-                                        @RequestParam(value = "lenta", required = false) String lenta) throws IOException {
-        return processFileUpload(multipartFile, files -> {
-            ArrayList<LentaTaskDTO> collection = lentaTaskService.readFiles(files);
-            lentaTaskService.download(collection, response, "excel");
-        });
+    public void uploadLentaTask(@RequestParam("file") MultipartFile[] multipartFile,
+                                @RequestParam(value = "lenta", required = false) String lenta,
+                                HttpServletResponse response) throws IOException {
+        ArrayList<LentaTaskDTO> collection = lentaTaskService.readFiles(FileUploadHandler.getFiles(multipartFile));
+        lentaTaskService.download(collection, response, "excel");
     }
 
     @PostMapping("/lenta/upload/report")
-    public ModelAndView uploadLentaReport(@ModelAttribute("lenta") Lenta lenta,
-                                          @RequestParam("file") MultipartFile[] multipartFile) throws IOException {
-        return processFileUpload(multipartFile, files -> {
-            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-            String date = formatter.format(lenta.getAfterDate());
-            String[] additionalParam = new String[]{"report", date};
-            ArrayList<LentaReportDTO> reportCollection = lentaReportService.readFiles(files, additionalParam);
-            lentaReportService.download(reportCollection, response, "excel");
-        });
+    public void uploadLentaReport(@ModelAttribute("lenta") Lenta lenta,
+                                  @RequestParam("file") MultipartFile[] multipartFile,
+                                  HttpServletResponse response) throws IOException {
+        List<File> files = FileUploadHandler.getFiles(multipartFile);
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        String date = formatter.format(lenta.getAfterDate());
+        String[] additionalParam = new String[]{"report", date};
+        ArrayList<LentaReportDTO> reportCollection = lentaReportService.readFiles(files, additionalParam);
+        lentaReportService.download(reportCollection, response, "excel");
     }
 
     private ModelAndView processFileUpload(MultipartFile[] multipartFiles, ConsumerWithIOException<List<File>> processFiles) {

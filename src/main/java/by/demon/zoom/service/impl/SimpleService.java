@@ -1,7 +1,6 @@
 package by.demon.zoom.service.impl;
 
 import by.demon.zoom.domain.Product;
-import by.demon.zoom.dto.CsvRow;
 import by.demon.zoom.dto.imp.SimpleDTO;
 import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.service.FileProcessingService;
@@ -16,7 +15,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -24,7 +26,7 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
-import static by.demon.zoom.util.FileDownloadUtil.downloadFile;
+import static by.demon.zoom.util.FileUtil.downloadFile;
 import static by.demon.zoom.util.Globals.TEMP_PATH;
 
 @Service
@@ -89,13 +91,6 @@ public class SimpleService implements FileProcessingService<SimpleDTO> {
         String s = orgName.lastIndexOf(".") == -1 ? "" : orgName.substring(0, orgName.lastIndexOf("."));
         Path path = Path.of(TEMP_PATH, s + (format.equals("excel") ? ".xlsx" : ".csv"));
         downloadFile(header, list, response, format, path, dataToExcel);
-    }
-
-    private static List<String> convert(List<SimpleDTO> objectList) {
-        return objectList.stream()
-                .filter(Objects::nonNull)
-                .map(CsvRow::toCsvRow)
-                .collect(Collectors.toList());
     }
 
     @Override

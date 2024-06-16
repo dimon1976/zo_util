@@ -2,11 +2,9 @@ package by.demon.zoom.service.impl;
 
 import by.demon.zoom.dao.MegatopRepository;
 import by.demon.zoom.domain.Megatop;
-import by.demon.zoom.dto.CsvRow;
 import by.demon.zoom.dto.imp.MegatopDTO;
 import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.service.FileProcessingService;
-import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.DataToExcel;
 import by.demon.zoom.util.DateUtils;
 import by.demon.zoom.util.StringUtil;
@@ -34,7 +32,8 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
-import static by.demon.zoom.util.FileDownloadUtil.downloadFile;
+import static by.demon.zoom.util.FileUtil.downloadFile;
+import static by.demon.zoom.util.FileUtil.getPath;
 
 @Service
 public class MegatopService implements FileProcessingService<Megatop> {
@@ -110,8 +109,8 @@ public class MegatopService implements FileProcessingService<Megatop> {
         }
     }
 
-    public void download(ArrayList<MegatopDTO> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
-        Path path = DataDownload.getPath("data", format.equals("excel") ? ".xlsx" : ".csv");
+    public void download(ArrayList<MegatopDTO> list, HttpServletResponse response, String format) throws IOException {
+        Path path = getPath("data", format.equals("excel") ? ".xlsx" : ".csv");
         downloadFile(header, list, response, format, path, dataToExcel);
     }
 
@@ -197,12 +196,5 @@ public class MegatopService implements FileProcessingService<Megatop> {
     public List<String> getLatestLabels() {
         Pageable pageable = PageRequest.of(0, 30);
         return megatopRepository.findTop10DistinctLabels(pageable);
-    }
-
-    private static List<String> convert(List<MegatopDTO> objectList) {
-        return objectList.stream()
-                .filter(Objects::nonNull)
-                .map(CsvRow::toCsvRow)
-                .collect(Collectors.toList());
     }
 }

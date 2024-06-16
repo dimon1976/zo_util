@@ -4,7 +4,6 @@ import by.demon.zoom.dao.AvTaskRepository;
 import by.demon.zoom.domain.imp.av.AvDataEntity;
 import by.demon.zoom.dto.CsvRow;
 import by.demon.zoom.service.FileProcessingService;
-import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.DataToExcel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +26,8 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
-import static by.demon.zoom.util.FileDownloadUtil.downloadFile;
+import static by.demon.zoom.util.FileUtil.downloadFile;
+import static by.demon.zoom.util.FileUtil.getPath;
 import static by.demon.zoom.util.Globals.TEMP_PATH;
 
 @Service
@@ -46,7 +46,7 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
 
     public void download(ArrayList<AvDataEntity> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
         String fileName = "av_task_data";
-        Path path = DataDownload.getPath(fileName, format.equals("excel") ? ".xlsx" : ".csv");
+        Path path = getPath(fileName, format.equals("excel") ? ".xlsx" : ".csv");
         if (additionalParameters[1].equals("ЯНДЕКС_М_ОНЛ")) {
             path = Path.of(TEMP_PATH, "task_y.csv");
         }

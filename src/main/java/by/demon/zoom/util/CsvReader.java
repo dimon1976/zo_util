@@ -29,29 +29,34 @@ public class CsvReader {
 
 
     public static List<List<Object>> readCSV(File file) throws IOException, CsvValidationException {
-        LOG.info(String.format("Processing file: %s", file.getName()));
-        Path path = getPath(file.getName());
-        String charset = getCharset(path.toFile());
-        char delimiter = findDelimiter(getFirstRowsInFile(file, charset));
-        CSVParser parser = new CSVParserBuilder().withSeparator(delimiter).build();
-        List<List<Object>> csvData = new ArrayList<>();
+        LOG.info("Processing file: {}", file.getName());
 
-        try (Reader reader = Files.newBufferedReader(path, Charset.forName(charset));
-             CSVReader csvReader = new CSVReaderBuilder(reader).withSkipLines(0).withCSVParser(parser).build()) {
+        Path path = getPath(file.getName());
+        String charset = detectCharset(path.toFile());
+        char delimiter = findDelimiter(getFirstRows(path, charset));
+
+        List<List<Object>> csvData = new ArrayList<>();
+        try (CSVReader csvReader = createCsvReader(path, charset, delimiter)) {
             String[] nextLine;
             while ((nextLine = csvReader.readNext()) != null) {
-                List<Object> row = new ArrayList<>(Arrays.asList(nextLine));
-                csvData.add(row);
+                csvData.add(new ArrayList<>(Arrays.asList(nextLine)));
             }
         } catch (IOException | CsvValidationException e) {
-            LOG.error("Error reading CSV file: {}", e.getMessage());
+            LOG.error("Error reading CSV file: {}", e.getMessage(), e);
             throw e;
         }
+
         return csvData;
     }
 
 
-    private static String getCharset(File file) throws IOException {
+    private static CSVReader createCsvReader(Path path, String charset, char delimiter) throws IOException {
+        CSVParser parser = new CSVParserBuilder().withSeparator(delimiter).build();
+        Reader reader = Files.newBufferedReader(path, Charset.forName(charset));
+        return new CSVReaderBuilder(reader).withSkipLines(0).withCSVParser(parser).build();
+    }
+
+    private static String detectCharset(File file) throws IOException {
         try (InputStream fis = Files.newInputStream(Paths.get(file.getAbsolutePath()))) {
             UniversalDetector detector = new UniversalDetector();
             byte[] buf = new byte[4096];
@@ -63,27 +68,27 @@ public class CsvReader {
             String encoding = detector.getDetectedCharset();
             LOG.info(encoding != null ? "Detected encoding: " + encoding : "No encoding detected.");
             detector.reset();
-            return encoding;
+            return encoding != null ? encoding : Charset.defaultCharset().name();
         }
     }
 
 
     private static char findDelimiter(String string) {
         char[] possibleDelimiters = {';', ',', '\t'};
-        string = removeCharacters(string);
-        Map<Character, Integer> map = new HashMap<>();
-        for (char possibleDelimiter : possibleDelimiters) {
-            int count = countCharacter(string, possibleDelimiter);
-            if (count > max) {
-                max = count;
-            }
-            map.put(possibleDelimiter, count);
+        Map<Character, Integer> delimiterCounts = new HashMap<>();
+
+        for (char delimiter : possibleDelimiters) {
+            int count = countCharacter(string, delimiter);
+            delimiterCounts.put(delimiter, count);
         }
-        return Collections.max(map.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
+
+        return delimiterCounts.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .orElseThrow(() -> new IllegalStateException("No delimiter found"))
+                .getKey();
     }
 
-    private static String getFirstRowsInFile(File file, String charset) throws IOException {
-        Path path = Path.of(file.getAbsolutePath());
+    private static String getFirstRows(Path path, String charset) throws IOException {
         return Files.readAllLines(path, Charset.forName(charset)).stream()
                 .limit(5)
                 .collect(Collectors.joining());

@@ -1,9 +1,7 @@
 package by.demon.zoom.service.impl;
 
-import by.demon.zoom.dto.CsvRow;
 import by.demon.zoom.dto.imp.UrlDTO;
 import by.demon.zoom.service.FileProcessingService;
-import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.DataToExcel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +15,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,7 +22,8 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
-import static by.demon.zoom.util.FileDownloadUtil.downloadFile;
+import static by.demon.zoom.util.FileUtil.downloadFile;
+import static by.demon.zoom.util.FileUtil.getPath;
 
 @Service
 public class UrlService implements FileProcessingService<UrlDTO> {
@@ -82,17 +80,10 @@ public class UrlService implements FileProcessingService<UrlDTO> {
     }
 
     public void download(ArrayList<UrlDTO> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
-        Path path = DataDownload.getPath("data", format.equals("excel") ? ".xlsx" : ".csv");
+        Path path = getPath("data", format.equals("excel") ? ".xlsx" : ".csv");
         downloadFile(header, list, response, format, path, dataToExcel);
     }
 
-
-    private static List<String> convert(List<UrlDTO> objectList) {
-        return objectList.stream()
-                .filter(Objects::nonNull)
-                .map(CsvRow::toCsvRow)
-                .collect(Collectors.toList());
-    }
 
     @Override
     public String save(ArrayList<UrlDTO> collection) {

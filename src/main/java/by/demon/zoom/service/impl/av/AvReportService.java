@@ -5,7 +5,6 @@ import by.demon.zoom.dao.AvTaskRepository;
 import by.demon.zoom.domain.imp.av.CsvAvReportEntity;
 import by.demon.zoom.dto.CsvRow;
 import by.demon.zoom.service.FileProcessingService;
-import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.DataToExcel;
 import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -28,7 +27,8 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
-import static by.demon.zoom.util.FileDownloadUtil.downloadFile;
+import static by.demon.zoom.util.FileUtil.downloadFile;
+import static by.demon.zoom.util.FileUtil.getPath;
 
 @Service
 public class AvReportService implements FileProcessingService<CsvAvReportEntity> {
@@ -50,7 +50,7 @@ public class AvReportService implements FileProcessingService<CsvAvReportEntity>
 
     public void download(ArrayList<CsvAvReportEntity> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
         String fileName = "av_report_data";
-        Path path = DataDownload.getPath(fileName, format.equals("excel") ? ".xlsx" : ".csv");
+        Path path = getPath(fileName, format.equals("excel") ? ".xlsx" : ".csv");
         downloadFile(header, list, response, format, path, dataToExcel);
     }
 

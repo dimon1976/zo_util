@@ -1,14 +1,14 @@
 package by.demon.zoom.service.impl.lenta;
 
 import by.demon.zoom.domain.Lenta;
-import by.demon.zoom.dto.CsvRow;
 import by.demon.zoom.dto.lenta.LentaReportDTO;
 import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.service.FileProcessingService;
-import by.demon.zoom.util.*;
+import by.demon.zoom.util.DataToExcel;
+import by.demon.zoom.util.DateUtils;
+import by.demon.zoom.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
@@ -28,7 +28,8 @@ import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.DateUtils.convertToLocalDateViaInstant;
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
-import static by.demon.zoom.util.FileDownloadUtil.downloadFile;
+import static by.demon.zoom.util.FileUtil.downloadFile;
+import static by.demon.zoom.util.FileUtil.getPath;
 
 @Service
 public class LentaReportService implements FileProcessingService<LentaReportDTO> {
@@ -36,9 +37,6 @@ public class LentaReportService implements FileProcessingService<LentaReportDTO>
     private static final Logger log = LoggerFactory.getLogger(LentaReportService.class);
     private final List<String> header = Arrays.asList("Город", "Товар", "Наименование товара", "Цена", "Сеть", "Акц. Цена 1", "Дата начала промо", "Дата окончания промо", "% скидки", "Механика акции", "Фото (ссылка)", "Доп.цена", "Модель", "Вес Едадил", "Вес Едадил, кг", "Вес Ленты", "Вес Ленты, кг", "Цена Едадил за КГ", "Пересчет к весу Ленты", "Доп. поле");
     private static final DateTimeFormatter LENTA_PATTERN = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-
-    @Value("${out.path}")
-    private String outPath;
 
     private final DataToExcel<LentaReportDTO> dataToExcel;
 
@@ -95,18 +93,10 @@ public class LentaReportService implements FileProcessingService<LentaReportDTO>
     }
 
 
-    public void download(ArrayList<LentaReportDTO> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
+    public void download(ArrayList<LentaReportDTO> list, HttpServletResponse response, String format) throws IOException {
         String fileName = "lenta_report_data";
-        Path path = DataDownload.getPath(fileName, format.equals("excel") ? ".xlsx" : ".csv");
+        Path path = getPath(fileName, format.equals("excel") ? ".xlsx" : ".csv");
         downloadFile(header, list, response, format, path, dataToExcel);
-    }
-
-
-    private static List<String> convert(List<LentaReportDTO> objectList) {
-        return objectList.stream()
-                .filter(Objects::nonNull)
-                .map(CsvRow::toCsvRow)
-                .collect(Collectors.toList());
     }
 
     @Override

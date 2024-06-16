@@ -1,9 +1,7 @@
 package by.demon.zoom.service.impl;
 
 import by.demon.zoom.service.FileProcessingService;
-import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.DataToExcel;
-import by.demon.zoom.util.FileDownloadUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -26,7 +24,8 @@ import java.util.stream.Collectors;
 import static by.demon.zoom.mapper.MappingUtils.ifExistCompetitor;
 import static by.demon.zoom.mapper.MappingUtils.listUsers;
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
-import static java.util.stream.Collectors.joining;
+import static by.demon.zoom.util.FileUtil.downloadObjectFile;
+import static by.demon.zoom.util.FileUtil.getPath;
 
 @Service
 public class StatisticService implements FileProcessingService<List<Object>> {
@@ -89,17 +88,8 @@ public class StatisticService implements FileProcessingService<List<Object>> {
 
     public void download(ArrayList<List<Object>> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
         List<String> newHeader = addAdditionalColumnsToString(additionalParameters[2], additionalParameters[0], additionalParameters[3]);
-        Path path = DataDownload.getPath("data", format.equals("excel") ? ".xlsx" : ".csv");
-        FileDownloadUtil.downloadObjectFile(newHeader, list, response, format, path, dataToExcel);
-    }
-
-
-    private static List<String> convert(List<List<Object>> objectList) {
-        return objectList.stream()
-                .map(row -> row.stream()
-                        .map(String::valueOf)
-                        .collect(joining(";")))
-                .collect(Collectors.toList());
+        Path path = getPath("data", format.equals("excel") ? ".xlsx" : ".csv");
+        downloadObjectFile(newHeader, list, response, format, path, dataToExcel);
     }
 
     private static List<Integer> getColumnList(String showSource, String showCompetitorUrl, String showDateAdd, List<Integer> source) {
