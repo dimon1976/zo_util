@@ -66,7 +66,7 @@ public class LentaTaskService implements FileProcessingService<LentaTaskDTO> {
         return allUrlDTOs;
     }
 
-    public void download(ArrayList<LentaTaskDTO> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
+    public void download(ArrayList<LentaTaskDTO> list, HttpServletResponse response, String format) throws IOException {
         Path path = getPath("data", format.equals("excel") ? ".xlsx" : ".csv");
         try {
             switch (format) {

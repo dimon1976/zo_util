@@ -104,7 +104,7 @@ public class AvHandbookService implements FileProcessingService<AvHandbook> {
     private Collection<AvHandbook> getObjectList(List<List<Object>> lists) {
         return lists.stream()
                 .filter(Objects::nonNull)
-                .filter(list -> list.size() > 0)
+                .filter(list -> !list.isEmpty())
                 .map(this::createObjectFromList)
                 .collect(Collectors.toCollection(HashSet::new));
     }

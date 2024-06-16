@@ -61,7 +61,7 @@ public class EdadealService implements FileProcessingService<List<Object>> {
         return allUrlDTOs;
     }
 
-    public void download(ArrayList<List<Object>> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
+    public void download(ArrayList<List<Object>> list, HttpServletResponse response, String format) throws IOException {
         Path path = getPath("data", format.equals("excel") ? ".xlsx" : ".csv");
         try {
             switch (format) {

@@ -25,7 +25,6 @@ import static by.demon.zoom.util.Globals.TEMP_PATH;
 public class CsvReader {
 
     private static final Logger LOG = LoggerFactory.getLogger(CsvReader.class);
-    private static final int MAX = 0;
 
 
     public static List<List<Object>> readCSV(File file) throws IOException, CsvValidationException {

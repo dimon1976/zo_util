@@ -3,7 +3,6 @@ package by.demon.zoom.service.impl.av;
 import by.demon.zoom.dao.AvReportRepository;
 import by.demon.zoom.dao.AvTaskRepository;
 import by.demon.zoom.domain.imp.av.CsvAvReportEntity;
-import by.demon.zoom.dto.CsvRow;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DataToExcel;
 import org.hibernate.exception.ConstraintViolationException;
@@ -164,14 +163,6 @@ public class AvReportService implements FileProcessingService<CsvAvReportEntity>
                 .filter(str -> !"Номер задания".equals(str.get(0)))
                 .map(this::createReportFromList)
                 .collect(Collectors.toCollection(ArrayList::new));
-    }
-
-    //
-
-    private List<String> convert(List<CsvAvReportEntity> objectList) {
-        return objectList.stream()
-                .map(CsvRow::toCsvRow)
-                .collect(Collectors.toList());
     }
 
 
