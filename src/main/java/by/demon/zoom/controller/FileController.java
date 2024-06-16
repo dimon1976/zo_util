@@ -2,6 +2,8 @@ package by.demon.zoom.controller;
 
 import by.demon.zoom.domain.Lenta;
 import by.demon.zoom.domain.av.AvHandbook;
+import by.demon.zoom.domain.imp.av.AvDataEntity;
+import by.demon.zoom.domain.imp.av.CsvAvReportEntity;
 import by.demon.zoom.dto.imp.MegatopDTO;
 import by.demon.zoom.dto.imp.SimpleDTO;
 import by.demon.zoom.dto.imp.UrlDTO;
@@ -17,7 +19,6 @@ import by.demon.zoom.service.impl.lenta.LentaReportService;
 import by.demon.zoom.service.impl.lenta.LentaTaskService;
 import by.demon.zoom.util.FileUploadHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -46,9 +47,6 @@ public class FileController {
     private final AvReportService avReportService;
     private final AvTaskService avTaskService;
     private final AvHandbookService handbookService;
-
-    @Value("${temp.path}")
-    private String TEMP_PATH;
 
     public FileController(UrlService urlService, StatisticService statisticService, VlookService vlookService, MegatopService megatopService, LentaReportService lentaReportService, LentaTaskService lentaTaskService, SimpleService simpleService, EdadealService edadealService, AvReportService avReportService, AvTaskService avTaskService, AvHandbookService handbookService) {
         this.urlService = urlService;
@@ -130,6 +128,43 @@ public class FileController {
             ArrayList<AvHandbook> handbooks = handbookService.readFiles(files);
             handbookService.save(handbooks);
         });
+    }
+
+    @PostMapping("/av/download/report")
+    public ModelAndView avDownloadReport(@RequestParam(value = "report_no", required = false) String report_no,
+                                              @RequestParam(value = "format", required = false) String format,
+                                              @RequestParam(value = "delete", required = false) String delete,
+                                              HttpServletResponse response) throws IOException {
+        ModelAndView modelAndView = new ModelAndView("deleteResult");
+        if (delete != null) {
+            int deleteCount = avReportService.deleteReport(report_no);
+            modelAndView.addObject("deleteCount", deleteCount);
+            return modelAndView;
+        } else {
+            String[] additionalParam = new String[]{report_no};
+            ArrayList<CsvAvReportEntity> avDataEntityArrayList = avReportService.getDto(additionalParam);
+            avReportService.download(avDataEntityArrayList, response, "csv");
+            return null;
+        }
+    }
+
+    @PostMapping("av/download/task")
+    public @ResponseBody ModelAndView avDownloadTask(@RequestParam(value = "task_no", required = false) String task_no,
+                                               @RequestParam(value = "retailNetworkCode", required = false) String retailNetworkCode,
+                                               @RequestParam(value = "format", required = false) String format,
+                                               @RequestParam(value = "delete", required = false) String delete,
+                                               HttpServletResponse response) throws IOException {
+        ModelAndView modelAndView = new ModelAndView("deleteResult");
+        if (delete != null) {
+            int deleteCount = avTaskService.deleteTask(task_no);
+            modelAndView.addObject("deleteCount", deleteCount);
+            return modelAndView;
+        } else {
+            String[] additionalParam = new String[]{task_no, retailNetworkCode, format};
+            ArrayList<AvDataEntity> avDataEntityArrayList = avTaskService.getDto(additionalParam);
+            avTaskService.download(avDataEntityArrayList, response, "csv", additionalParam);
+            return null;
+        }
     }
 
     @PostMapping("/lenta/upload/edadeal")

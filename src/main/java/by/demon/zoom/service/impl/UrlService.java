@@ -79,7 +79,7 @@ public class UrlService implements FileProcessingService<UrlDTO> {
         return allUrlDTOs;
     }
 
-    public void download(ArrayList<UrlDTO> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
+    public void download(ArrayList<UrlDTO> list, HttpServletResponse response, String format) throws IOException {
         Path path = getPath("data", format.equals("excel") ? ".xlsx" : ".csv");
         downloadFile(header, list, response, format, path, dataToExcel);
     }

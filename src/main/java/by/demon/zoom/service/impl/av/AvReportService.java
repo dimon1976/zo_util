@@ -48,7 +48,7 @@ public class AvReportService implements FileProcessingService<CsvAvReportEntity>
         this.avTaskRepository = avTaskRepository;
     }
 
-    public void download(ArrayList<CsvAvReportEntity> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
+    public void download(ArrayList<CsvAvReportEntity> list, HttpServletResponse response, String format) throws IOException {
         String fileName = "av_report_data";
         Path path = getPath(fileName, format.equals("excel") ? ".xlsx" : ".csv");
         downloadFile(header, list, response, format, path, dataToExcel);
@@ -77,7 +77,7 @@ public class AvReportService implements FileProcessingService<CsvAvReportEntity>
                 } catch (Exception e) {
                     log.error("Failed to process file: {}", file.getAbsolutePath(), e);
                     errorMessages.add("Failed to process file: " + file.getName() + " - " + e.getMessage());
-                    return new ArrayList<CsvAvReportEntity>();
+                    return new ArrayList<>();
                 }
             }));
         }
@@ -127,11 +127,12 @@ public class AvReportService implements FileProcessingService<CsvAvReportEntity>
     }
 
     @Transactional
-    public void deleteReport(String reportNum) {
+    public int deleteReport(String reportNum) {
         try {
             log.info("Deleting report with number: {}", reportNum);
-            avReportRepository.deleteAllByField(reportNum);
-            log.info("Deleted report with number: {}", reportNum);
+            int deletedCount = avReportRepository.deleteAllByField(reportNum);
+            log.info("Deleted {} report(s) with number: {}", deletedCount, reportNum);
+            return deletedCount;
         } catch (Exception e) {
             log.error("Error deleting report with number: {}", reportNum, e);
             throw new RuntimeException("Error deleting report with number: " + reportNum, e);

@@ -17,16 +17,14 @@ public class DateUtils {
     private static final DateTimeFormatter DATE_PATTERN = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     public static String getDateTimeNow() {
-        String dateTimeNow = LocalDateTime.now().format(FILE_NAME_PATTERN);
-        LOG.info("Current DateTime: {}", dateTimeNow);
-        return dateTimeNow;
+        //        LOG.info("Current DateTime: {}", dateTimeNow);
+        return LocalDateTime.now().format(FILE_NAME_PATTERN);
     }
 
     public static LocalDateTime getDateTime(String date, DateTimeFormatter pattern) {
         try {
-            LocalDateTime dateTime = LocalDateTime.parse(date, pattern);
-            LOG.info("Parsed DateTime: {} using pattern: {}", dateTime, pattern);
-            return dateTime;
+            //            LOG.info("Parsed DateTime: {} using pattern: {}", dateTime, pattern);
+            return LocalDateTime.parse(date, pattern);
         } catch (DateTimeParseException e) {
             LOG.error("Error parsing DateTime: {} with pattern: {}", date, pattern, e);
             throw e;
@@ -35,9 +33,8 @@ public class DateUtils {
 
     public static LocalDate getLocalDate(String date, DateTimeFormatter pattern) {
         try {
-            LocalDate localDate = LocalDate.parse(date, pattern);
-            LOG.info("Parsed LocalDate: {} using pattern: {}", localDate, pattern);
-            return localDate;
+            //            LOG.info("Parsed LocalDate: {} using pattern: {}", localDate, pattern);
+            return LocalDate.parse(date, pattern);
         } catch (DateTimeParseException e) {
             LOG.error("Error parsing LocalDate: {} with pattern: {}", date, pattern, e);
             throw e;
@@ -54,9 +51,8 @@ public class DateUtils {
 
     public static String format(Date date, DateTimeFormatter formatter) {
         if (date != null) {
-            String formattedDate = formatter.format(date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
-            LOG.info("Formatted Date: {} using formatter: {}", formattedDate, formatter);
-            return formattedDate;
+            //            LOG.info("Formatted Date: {} using formatter: {}", formattedDate, formatter);
+            return formatter.format(date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
         }
         LOG.warn("Attempted to format null date");
         return null;
@@ -64,11 +60,10 @@ public class DateUtils {
 
     public static LocalDate convertToLocalDateViaInstant(Date dateToConvert) {
         if (dateToConvert != null) {
-            LocalDate localDate = dateToConvert.toInstant()
+            //            LOG.info("Converted Date to LocalDate: {}", localDate);
+            return dateToConvert.toInstant()
                     .atZone(ZoneId.systemDefault())
                     .toLocalDate();
-            LOG.info("Converted Date to LocalDate: {}", localDate);
-            return localDate;
         }
         LOG.warn("Attempted to convert null date");
         return null;

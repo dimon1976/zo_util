@@ -2,7 +2,6 @@ package by.demon.zoom.service.impl.av;
 
 import by.demon.zoom.dao.AvTaskRepository;
 import by.demon.zoom.domain.imp.av.AvDataEntity;
-import by.demon.zoom.dto.CsvRow;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DataToExcel;
 import org.slf4j.Logger;
@@ -51,13 +50,6 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
             path = Path.of(TEMP_PATH, "task_y.csv");
         }
         downloadFile(header, list, response, format, path, dataToExcel);
-    }
-
-
-    private List<String> convert(List<AvDataEntity> objectList) {
-        return objectList.stream()
-                .map(CsvRow::toCsvRow)
-                .collect(Collectors.toList());
     }
 
     @Override
@@ -123,8 +115,16 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
     }
 
     @Transactional
-    public void deleteTask(String taskNum) {
-        avTaskRepository.deleteAllByField(taskNum);
+    public int deleteTask(String taskNum) {
+        try {
+            log.info("Deleting task with number: {}", taskNum);
+            int deletedCount = avTaskRepository.deleteAllByField(taskNum);
+            log.info("Deleted {} task(s) with number: {}", deletedCount, taskNum);
+            return deletedCount;
+        } catch (Exception e) {
+            log.error("Error deleting task with number: {}", taskNum, e);
+            throw new RuntimeException("Error deleting task with number: " + taskNum, e);
+        }
     }
 
     private ArrayList<AvDataEntity> getTaskList(List<List<Object>> lists) {

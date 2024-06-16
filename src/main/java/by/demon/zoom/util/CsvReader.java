@@ -25,7 +25,7 @@ import static by.demon.zoom.util.Globals.TEMP_PATH;
 public class CsvReader {
 
     private static final Logger LOG = LoggerFactory.getLogger(CsvReader.class);
-    private static int max = 0;
+    private static final int MAX = 0;
 
 
     public static List<List<Object>> readCSV(File file) throws IOException, CsvValidationException {
@@ -92,13 +92,6 @@ public class CsvReader {
         return Files.readAllLines(path, Charset.forName(charset)).stream()
                 .limit(5)
                 .collect(Collectors.joining());
-    }
-
-    private static String removeCharacters(String string) {
-        return string.chars()
-                .filter(ch -> ch != '"')
-                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
-                .toString();
     }
 
     private static int countCharacter(String string, char c) {
