@@ -133,7 +133,7 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
                 .map(this::createTaskFromList)
                 .collect(Collectors.toCollection(ArrayList::new));
     }
-
+//ref
     private AvDataEntity createTaskFromList(List<Object> str) {
         AvDataEntity task = new AvDataEntity();
         task.setJobNumber(getStringValue(str, 0));
