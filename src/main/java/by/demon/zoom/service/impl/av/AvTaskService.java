@@ -10,6 +10,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 import java.io.File;
@@ -34,13 +35,23 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
     private final AvTaskRepository avTaskRepository;
     private final DataToExcel<AvDataEntity> dataToExcel;
     private final static Logger LOGGER = LoggerFactory.getLogger(AvTaskService.class);
-    private final List<String> header = Arrays.asList("Номер задания", "Старт задания", "Окончание задания", "Товар НО", "Категория", "Код товарной категории", "Описание товара", "Комментарий по товару", "Бренд", "Код ценовой зоны", "Код розничной сети", "Розничная сеть", "Регион", "Физический адрес", "Штрихкод",
-            "Количество штук", "Цена конкурента", "Цена акционная/по карте", "Аналог", "Нет товара", "Дата мониторинга", "Фото", "Примечание", "Ссылка на страницу товара");
+    private final List<String> header = Arrays.asList(
+            "Номер задания", "Старт задания", "Окончание задания", "Товар НО", "Категория",
+            "Код товарной категории", "Описание товара", "Комментарий по товару", "Бренд",
+            "Код ценовой зоны", "Код розничной сети", "Розничная сеть", "Регион",
+            "Физический адрес", "Штрихкод", "Количество штук", "Цена конкурента",
+            "Цена акционная/по карте", "Аналог", "Нет товара", "Дата мониторинга",
+            "Фото", "Примечание", "Ссылка на страницу товара"
+    );
 
     public AvTaskService(JdbcTemplate jdbcTemplate, AvTaskRepository avTaskRepository, DataToExcel<AvDataEntity> dataToExcel) {
         this.jdbcTemplate = jdbcTemplate;
         this.avTaskRepository = avTaskRepository;
         this.dataToExcel = dataToExcel;
+    }
+    @PostConstruct
+    public void init() {
+        createTempTableIfNotExists();
     }
 
     public void download(ArrayList<AvDataEntity> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
@@ -56,23 +67,11 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
     public ArrayList<AvDataEntity> readFiles(List<File> files, String... additionalParams) throws IOException {
         ArrayList<AvDataEntity> allTasks = new ArrayList<>();
         List<String> errorMessages = new ArrayList<>();
-
         int threadCount = Runtime.getRuntime().availableProcessors();
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
 
         List<Future<ArrayList<AvDataEntity>>> futures = files.stream()
-                .map(file -> executorService.<ArrayList<AvDataEntity>>submit(() -> {
-                    try {
-                        LOGGER.info("Processing file: {}", file.getName());
-                        List<List<Object>> lists = readDataFromFile(file);
-                        Files.delete(file.toPath());
-                        return getTaskList(lists);
-                    } catch (Exception e) {
-                        LOGGER.error("Failed to process file: {}", file.getName(), e);
-                        errorMessages.add("Failed to process file: " + file.getName() + " - " + e.getMessage());
-                        return new ArrayList<>();
-                    }
-                }))
+                .map(file -> executorService.submit(() -> processFile(file, errorMessages)))
                 .collect(Collectors.toList());
 
         for (Future<ArrayList<AvDataEntity>> future : futures) {
@@ -89,9 +88,23 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
         if (!errorMessages.isEmpty()) {
             throw new IOException("Some files failed to process: " + String.join(", ", errorMessages));
         }
+
         updateTempTableData(allTasks);
         save(allTasks);
         return allTasks;
+    }
+
+    private ArrayList<AvDataEntity> processFile(File file, List<String> errorMessages) {
+        try {
+            LOGGER.info("Processing file: {}", file.getName());
+            List<List<Object>> lists = readDataFromFile(file);
+            Files.delete(file.toPath());
+            return getTaskList(lists);
+        } catch (Exception e) {
+            LOGGER.error("Failed to process file: {}", file.getName(), e);
+            errorMessages.add("Failed to process file: " + file.getName() + " - " + e.getMessage());
+            return new ArrayList<>();
+        }
     }
 
     @Override
@@ -107,11 +120,9 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
     }
 
     public ArrayList<AvDataEntity> getDto(String... additionalParameters) {
-        ArrayList<AvDataEntity> byJobNumberAndRetailerCode = avTaskRepository.findByJobNumberAndRetailerCode(additionalParameters[0], additionalParameters[1] == null ? "" : additionalParameters[1]);
-        for (AvDataEntity entity : byJobNumberAndRetailerCode) {
-            entity.setNumberOfPieces("1");
-        }
-        return byJobNumberAndRetailerCode;
+        ArrayList<AvDataEntity> tasks = avTaskRepository.findByJobNumberAndRetailerCode(additionalParameters[0], Optional.ofNullable(additionalParameters[1]).orElse(""));
+        tasks.forEach(task -> task.setNumberOfPieces("1"));
+        return tasks;
     }
 
     @Transactional
@@ -141,29 +152,28 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
 
     private ArrayList<AvDataEntity> getTaskList(List<List<Object>> lists) {
         return lists.stream()
-                .filter(str -> !"Номер задания".equals(str.get(0)))
+                .filter(row -> !"Номер задания".equals(row.get(0)))
                 .map(this::createTaskFromList)
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    //ref
-    private AvDataEntity createTaskFromList(List<Object> str) {
+    private AvDataEntity createTaskFromList(List<Object> row) {
         AvDataEntity task = new AvDataEntity();
-        task.setJobNumber(getStringValue(str, 0));
-        task.setJobStart(getStringValue(str, 1));
-        task.setJobEnd(getStringValue(str, 2));
-        task.setItemNumber(getStringValue(str, 3));
-        task.setCategory(getStringValue(str, 4));
-        task.setProductCategoryCode(getStringValue(str, 5));
-        task.setProductDescription(getStringValue(str, 6));
-        task.setProductComment(getStringValue(str, 7));
-        task.setBrand(getStringValue(str, 8));
-        task.setPriceZoneCode(getStringValue(str, 9));
-        task.setRetailerCode(getStringValue(str, 10)); // Значение для сверки в отчете
-        task.setRetailChain(getStringValue(str, 11));
-        task.setRegion(getStringValue(str, 12));
-        task.setPhysicalAddress(getStringValue(str, 13));
-        task.setBarcode(getStringValue(str, 14));
+        task.setJobNumber(getStringValue(row, 0));
+        task.setJobStart(getStringValue(row, 1));
+        task.setJobEnd(getStringValue(row, 2));
+        task.setItemNumber(getStringValue(row, 3));
+        task.setCategory(getStringValue(row, 4));
+        task.setProductCategoryCode(getStringValue(row, 5));
+        task.setProductDescription(getStringValue(row, 6));
+        task.setProductComment(getStringValue(row, 7));
+        task.setBrand(getStringValue(row, 8));
+        task.setPriceZoneCode(getStringValue(row, 9));
+        task.setRetailerCode(getStringValue(row, 10));
+        task.setRetailChain(getStringValue(row, 11));
+        task.setRegion(getStringValue(row, 12));
+        task.setPhysicalAddress(getStringValue(row, 13));
+        task.setBarcode(getStringValue(row, 14));
         return task;
     }
 
@@ -171,10 +181,6 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
         return (index >= 0 && index < list.size()) ? String.valueOf(list.get(index)) : "";
     }
 
-    //    public LinkedHashSet<String> getLatestTask() {
-//        // Получаем последние 10 сохраненных заданий из базы данных нативным запросом
-//        return avTaskRepository.findDistinctTopByJobNumber();
-//    }
     @Transactional
     public LinkedHashSet<String> getLatestTask() {
         String selectQuery = "SELECT job_number FROM tmp_av_task_job_number ORDER BY job_number DESC LIMIT 25";
@@ -182,7 +188,7 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
         return new LinkedHashSet<>(jobNumbers);
     }
 
-    @Scheduled(cron = "0 0 0 * * ?") // Настроить cron выражение по необходимости
+    @Scheduled(cron = "0 0 0 * * ?")
     public void updateTempTable() {
         updateTempTableData();
     }
@@ -191,8 +197,7 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
     public void updateTempTableData() {
         try {
             String truncateTableQuery = "TRUNCATE TABLE tmp_av_task_job_number";
-            String insertQuery = "INSERT INTO tmp_av_task_job_number (job_number) " +
-                    "SELECT DISTINCT job_number FROM av_task";
+            String insertQuery = "INSERT INTO tmp_av_task_job_number (job_number) SELECT DISTINCT job_number FROM av_task";
 
             LOGGER.info("Executing TRUNCATE TABLE query");
             jdbcTemplate.execute(truncateTableQuery);
@@ -225,22 +230,38 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
         String insertQuery = "INSERT INTO tmp_av_task_job_number (job_number) VALUES (?)";
 
         try {
-            // Collect unique job numbers
             Set<String> uniqueJobNumbers = allTasks.stream()
                     .map(AvDataEntity::getJobNumber)
                     .collect(Collectors.toSet());
 
-            // Insert each unique job number into the temp table
-            uniqueJobNumbers.forEach(jobNumber -> {
+            for (String jobNumber : uniqueJobNumbers) {
                 try {
                     jdbcTemplate.update(insertQuery, jobNumber);
                     LOGGER.info("Job number {} inserted into tmp_av_task_job_number successfully.", jobNumber);
                 } catch (Exception e) {
                     LOGGER.error("Error inserting job number {}: ", jobNumber, e);
                 }
-            });
+            }
         } catch (Exception e) {
             LOGGER.error("Error updating tmp_av_task_job_number: ", e);
         }
     }
+    @Transactional
+    public void createTempTableIfNotExists() {
+        String createTableQuery = "CREATE TABLE IF NOT EXISTS tmp_av_task_job_number (" +
+                "job_number VARCHAR(255) PRIMARY KEY" +
+                ")";
+        String createIndexQuery = "CREATE INDEX IF NOT EXISTS idx_tmp_av_task_job_number ON tmp_av_task_job_number (job_number)";
+
+        try {
+            jdbcTemplate.execute(createTableQuery);
+            jdbcTemplate.execute(createIndexQuery);
+            LOGGER.info("Temporary table tmp_av_task_job_number created successfully if it did not exist.");
+        } catch (Exception e) {
+            LOGGER.error("Error creating temporary table tmp_av_task_job_number: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to create temporary table tmp_av_task_job_number", e);
+        }
+    }
+
+
 }
