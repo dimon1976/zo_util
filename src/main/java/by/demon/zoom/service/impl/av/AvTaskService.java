@@ -191,11 +191,15 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
     public void updateTempTableData() {
         try {
             String truncateTableQuery = "TRUNCATE TABLE tmp_av_task_job_number";
-            String insertQuery = "INSERT INTO tmp_av_task_job_number SELECT DISTINCT job_number FROM av_task";
+            String insertQuery = "INSERT INTO tmp_av_task_job_number (job_number) " +
+                    "SELECT DISTINCT job_number FROM av_task";
+
             LOGGER.info("Executing TRUNCATE TABLE query");
             jdbcTemplate.execute(truncateTableQuery);
+
             LOGGER.info("Executing INSERT INTO query");
             jdbcTemplate.execute(insertQuery);
+
             LOGGER.info("Temp table data updated successfully");
         } catch (Exception e) {
             LOGGER.error("Error updating temp table data: {}", e.getMessage(), e);
@@ -206,9 +210,11 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
     public void updateTempTableIndex() {
         try {
             updateTempTable();
+
             String createIndexQuery = "CREATE INDEX IF NOT EXISTS idx_tmp_av_task_job_number ON tmp_av_task_job_number (job_number)";
             LOGGER.info("Executing CREATE INDEX query");
             jdbcTemplate.execute(createIndexQuery);
+
             LOGGER.info("Temp table index updated successfully");
         } catch (Exception e) {
             LOGGER.error("Error updating temp table index: {}", e.getMessage(), e);
@@ -216,14 +222,9 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
     }
 
     public void updateTempTableData(ArrayList<AvDataEntity> allTasks) {
-        String truncateTableQuery = "TRUNCATE TABLE tmp_av_task_job_number";
         String insertQuery = "INSERT INTO tmp_av_task_job_number (job_number) VALUES (?)";
 
         try {
-            // Truncate the table
-            jdbcTemplate.execute(truncateTableQuery);
-            LOGGER.info("Table tmp_av_task_job_number truncated successfully.");
-
             // Collect unique job numbers
             Set<String> uniqueJobNumbers = allTasks.stream()
                     .map(AvDataEntity::getJobNumber)
