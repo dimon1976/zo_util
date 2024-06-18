@@ -6,11 +6,13 @@ import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DataToExcel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 import java.io.File;
@@ -31,6 +33,7 @@ import static by.demon.zoom.util.Globals.TEMP_PATH;
 
 @Service
 public class AvTaskService implements FileProcessingService<AvDataEntity> {
+    private final ApplicationContext applicationContext;
     private final JdbcTemplate jdbcTemplate;
     private final AvTaskRepository avTaskRepository;
     private final DataToExcel<AvDataEntity> dataToExcel;
@@ -44,14 +47,16 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
             "Фото", "Примечание", "Ссылка на страницу товара"
     );
 
-    public AvTaskService(JdbcTemplate jdbcTemplate, AvTaskRepository avTaskRepository, DataToExcel<AvDataEntity> dataToExcel) {
+    public AvTaskService(ApplicationContext applicationContext, JdbcTemplate jdbcTemplate, AvTaskRepository avTaskRepository, DataToExcel<AvDataEntity> dataToExcel) {
+        this.applicationContext = applicationContext;
         this.jdbcTemplate = jdbcTemplate;
         this.avTaskRepository = avTaskRepository;
         this.dataToExcel = dataToExcel;
     }
-    @PostConstruct
-    public void init() {
-        createTempTableIfNotExists();
+    @EventListener
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+        AvTaskService proxy = applicationContext.getBean(AvTaskService.class);
+        proxy.createTempTableIfNotExists();
     }
 
     public void download(ArrayList<AvDataEntity> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
