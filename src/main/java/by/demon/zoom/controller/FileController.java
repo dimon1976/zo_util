@@ -166,6 +166,11 @@ public class FileController {
             return null;
         }
     }
+    @PostMapping("av/update-temp-table-index")
+    public String updateTempTableIndex() {
+        avTaskService.updateTempTableIndex();
+        return "/clients/av";
+    }
 
     @PostMapping("/lenta/upload/edadeal")
     public void uploadEdadeal(@RequestParam("file") MultipartFile[] multipartFile, HttpServletResponse response) throws IOException {

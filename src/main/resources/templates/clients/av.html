@@ -3,6 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <title>AV.ru</title>
+    <script>
+        function updateTempTableIndex() {
+            fetch('/excel/av/update-temp-table-index', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    alert('Temp table index updated successfully');
+                } else {
+                    alert('Failed to update temp table index');
+                }
+            }).catch(error => {
+                console.error('Error updating temp table index:', error);
+            });
+        }
+    </script>
 </head>
 <body>
 <div th:replace="/include/_header :: content"></div>
@@ -118,7 +136,13 @@
                         <input type="submit" class="btn btn-primary" value="Delete task" name="delete">
                     </form>
                 </div>
-
+            </div>
+            <div class="row mt-3">
+                <div class="col-12 col-sm-6">
+                    <button class="btn btn-primary" onclick="updateTempTableIndex()">
+                        Обновить индекс временной таблицы
+                    </button>
+                </div>
             </div>
         </div>
     </div>
