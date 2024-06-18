@@ -23,6 +23,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -186,7 +187,8 @@ public class MegatopService implements FileProcessingService<Megatop> {
     }
 
     public String generateLabel() {
-        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy:hh-mm-ss"));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy:HH-mm-ss");
+        return LocalDateTime.now(ZoneId.systemDefault()).format(formatter);
     }
 
     private String getStringValue(List<Object> list, int index) {
