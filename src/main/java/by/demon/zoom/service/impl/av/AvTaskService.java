@@ -195,7 +195,9 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
 
     @Scheduled(cron = "0 0 0 * * ?")
     public void updateTempTable() {
+        LOGGER.info("Scheduled task updateTempTable started");
         updateTempTableData();
+        LOGGER.info("Scheduled task updateTempTable finished");
     }
 
     @Transactional

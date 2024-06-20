@@ -69,9 +69,7 @@ public class ClientsController {
         logger.info("Executing av method");
         try {
             model.addAttribute("reports", avReportService.getLatestReport());
-            Instant start = MethodPerformance.start();
             model.addAttribute("tasks", avTaskService.getLatestTask());
-            MethodPerformance.finish(start, "task");
             model.addAttribute("retailNetworkCode", avHandbookService.getRetailNetworkCode());
         } catch (Exception e) {
             logger.error("Error executing av method", e);
