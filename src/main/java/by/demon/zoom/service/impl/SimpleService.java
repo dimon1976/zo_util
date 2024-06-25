@@ -54,7 +54,6 @@ public class SimpleService implements FileProcessingService<SimpleDTO> {
         List<Future<ArrayList<SimpleDTO>>> futures = files.stream()
                 .map(file -> executorService.submit(() -> {
                     try {
-                        log.info("Processing file: {}", file.getName());
                         List<List<Object>> lists = readDataFromFile(file);
                         Files.delete(file.toPath());
                         Collection<Product> productList = getProductList(lists);

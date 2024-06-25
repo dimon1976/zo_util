@@ -40,7 +40,6 @@ public class AvHandbookService implements FileProcessingService<AvHandbook> {
         List<Future<ArrayList<AvHandbook>>> futures = files.stream()
                 .map(file -> executorService.<ArrayList<AvHandbook>>submit(() -> {
                     try {
-                        log.info("Processing file: {}", file.getName());
                         List<List<Object>> lists = readDataFromFile(file);
                         Collection<AvHandbook> handbook = getObjectList(lists);
                         log.info("File {} successfully read", file.getName());

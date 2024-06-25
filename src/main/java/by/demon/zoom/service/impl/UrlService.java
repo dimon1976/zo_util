@@ -47,7 +47,6 @@ public class UrlService implements FileProcessingService<UrlDTO> {
         List<Future<ArrayList<UrlDTO>>> futures = files.stream()
                 .map(file -> executorService.<ArrayList<UrlDTO>>submit(() -> {
                     try {
-                        log.info("Processing file: {}", file.getName());
                         List<List<Object>> excelData = readDataFromFile(file);
                         Collection<UrlDTO> urlDTOList = getUrlDTOList(excelData);
                         log.info("File {} successfully read", file.getName());

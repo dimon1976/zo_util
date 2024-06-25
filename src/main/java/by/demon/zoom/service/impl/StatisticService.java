@@ -54,7 +54,6 @@ public class StatisticService implements FileProcessingService<List<Object>> {
         List<Future<ArrayList<List<Object>>>> futures = files.stream()
                 .map(file -> executorService.<ArrayList<List<Object>>>submit(() -> {
                     try {
-                        log.info("Processing file: {}", file.getName());
                         List<List<Object>> originalWb = readDataFromFile(file);
                         List<List<Object>> resultTest = getResultList(originalWb, newColumn, additionalParams[1]);
                         log.info("File {} successfully read", file.getName());

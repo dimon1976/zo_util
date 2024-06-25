@@ -65,7 +65,6 @@ public class AvReportService implements FileProcessingService<CsvAvReportEntity>
         for (File file : files) {
             futures.add(executorService.submit(() -> {
                 try {
-                    log.info("Processing file: {}", file.getName());
                     List<List<Object>> lists = readDataFromFile(file);
                     Files.delete(file.toPath());
                     log.info("File {} removed successfully.", file.getAbsolutePath());

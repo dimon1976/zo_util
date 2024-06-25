@@ -101,7 +101,6 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
 
     private ArrayList<AvDataEntity> processFile(File file, List<String> errorMessages) {
         try {
-            LOGGER.info("Processing file: {}", file.getName());
             List<List<Object>> lists = readDataFromFile(file);
             Files.delete(file.toPath());
             return getTaskList(lists);

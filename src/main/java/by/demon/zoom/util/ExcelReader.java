@@ -40,6 +40,7 @@ public class ExcelReader {
         List<List<Object>> result = new ArrayList<>();
         try (FileInputStream fis = new FileInputStream(file);
              Workbook workbook = new HSSFWorkbook(fis)) {
+            LOG.info("Processing file: {}", file.getName());
             processWorkbook(workbook, result);
         } catch (IOException e) {
             LOG.error("Error reading Excel 2003 file: {}", e.getMessage(), e);
@@ -54,6 +55,7 @@ public class ExcelReader {
         IOUtils.setByteArrayMaxOverride(1000000000);
         try (FileInputStream fis = new FileInputStream(file);
              Workbook workbook = new XSSFWorkbook(fis)) {
+            LOG.info("Processing file: {}", file.getName());
             processWorkbook(workbook, result);
         } catch (IOException e) {
             LOG.error("Error reading Excel 2007 file: {}", e.getMessage(), e);

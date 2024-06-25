@@ -64,7 +64,6 @@ public class MegatopService implements FileProcessingService<Megatop> {
         List<Future<ArrayList<Megatop>>> futures = files.stream()
                 .map(file -> executorService.<ArrayList<Megatop>>submit(() -> {
                     try {
-                        log.info("Processing file: {}", file.getName());
                         List<List<Object>> lists = readDataFromFile(file);
                         Files.delete(file.toPath());
                         ArrayList<Megatop> megatopList = getMegatopList(lists, additionalParams[0], file);
