@@ -3,8 +3,6 @@ package by.demon.zoom.util;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.xssf.usermodel.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -25,7 +23,6 @@ import static by.demon.zoom.util.WorkbookStyle.*;
 @Service
 public class DataToExcel<T> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DataToExcel.class);
     private static final short DEFAULT_COLUMN_WIDTH = 15;
     private static final String PATTERN = "yyyy-MM-dd";
     private static final String PATTERN_NUMBER = "0.#";
@@ -35,89 +32,65 @@ public class DataToExcel<T> {
         symbols.setDecimalSeparator(',');
     }
 
-    public void exportToExcel(List<String> headers, List<List<Object>> dataset, OutputStream out, short skip) {
-        exportObjectToExcel(headers, dataset, out, skip);
+    public void exportToExcel(List<String> headers, Collection<T> dataset, OutputStream out, int skip) {
+        export(headers, dataset.iterator(), out, skip);
     }
 
-    /**
-     * @param headers Заголовок
-     * @param dataset Коллекция
-     * @param out     Выходной поток
-     * @param skip    Количество строк для пропуска
-     */
+    public void exportToExcel(List<String> headers, List<List<Object>> dataset, OutputStream out, int skip) {
+        export(headers, dataset.iterator(), out, skip);
+    }
 
-    public void exportToExcel(List<String> headers, Collection<T> dataset, OutputStream out, int skip) {
+    private <E> void export(List<String> headers, Iterator<E> iterator, OutputStream out, int skip) {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-            XSSFSheet sheet = workbook.createSheet(Globals.SHEET_NAME);
-            sheet.setDefaultColumnWidth(DEFAULT_COLUMN_WIDTH);
-
-            XSSFCellStyle headerStyle = createHeaderStyle(workbook);
+            XSSFSheet sheet = createSheetWithHeader(workbook, headers);
             XSSFCellStyle cellStyle = createCellStyle(workbook);
 
-            createHeaderRow(sheet, headers, headerStyle);
-
-            Iterator<T> iterator = dataset.iterator();
             skipRows(iterator, skip);
-
             populateDataRows(sheet, iterator, cellStyle);
 
             workbook.write(out);
         } catch (IOException e) {
-            LOG.error("Error while exporting Excel: {}", e.getMessage());
+            log.error("Error while exporting Excel: {}", e.getMessage(), e);
             throw new RuntimeException("Error while exporting Excel", e);
         }
     }
 
-    public void exportObjectToExcel(List<String> headers, List<List<Object>> dataset, OutputStream out, int skip) {
-        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-            XSSFSheet sheet = workbook.createSheet(Globals.SHEET_NAME);
-            sheet.setDefaultColumnWidth(DEFAULT_COLUMN_WIDTH);
+    private static <E> void populateDataRows(XSSFSheet sheet, Iterator<E> iterator, XSSFCellStyle cellStyle) {
+        int rowIndex = 0;
+        while (iterator.hasNext()) {
+            E data = iterator.next();
+            XSSFRow row = sheet.createRow(++rowIndex);
 
-            XSSFCellStyle headerStyle = createHeaderStyle(workbook);
-            XSSFCellStyle cellStyle = createCellStyle(workbook);
-
-            createHeaderRow(sheet, headers, headerStyle);
-
-            int rowNum = 0;
-            Iterator<List<Object>> iterator = dataset.iterator();
-            skipRows(iterator, skip);
-            while (iterator.hasNext()) {
-                List<Object> rowData = iterator.next();
-                XSSFRow row = sheet.createRow(++rowNum);
-                int colNum = 0;
-                for (Object value : rowData) {
-                    XSSFCell cell = row.createCell(colNum++);
-                    setCellValue(cell, value, cellStyle);
-                }
+            if (data instanceof List) {
+                populateRowWithList(row, (List<?>) data, cellStyle);
+            } else {
+                populateRowWithObject(row, data, cellStyle);
             }
-
-            workbook.write(out);
-        } catch (IOException e) {
-            LOG.error("Error exporting object to Excel: {}", e.getMessage());
-            throw new RuntimeException("Error exporting object to Excel", e);
         }
     }
 
-    private static <T> void populateDataRows(XSSFSheet sheet, Iterator<T> iterator, XSSFCellStyle cellStyle) {
-        int rowIndex = 0;
-        while (iterator.hasNext()) {
-            T data = iterator.next();
-            Field[] fields = data.getClass().getDeclaredFields();
-            XSSFRow row = sheet.createRow(++rowIndex);
-            for (int i = 0; i < fields.length; i++) {
-                XSSFCell cell = row.createCell(i);
-                cell.setCellStyle(cellStyle);
-                Field field = fields[i];
-                String fieldName = field.getName();
-                String getMethodName = "get" + capitalize(fieldName);
-                try {
-                    Method getMethod = data.getClass().getMethod(getMethodName);
-                    Object value = getMethod.invoke(data);
-                    setCellValue(cell, value, cellStyle);
-                } catch (Exception e) {
-                    LOG.error("Error while processing data row: {}", e.getMessage());
-                    throw new RuntimeException("Error while processing data row", e);
-                }
+    private static void populateRowWithList(XSSFRow row, List<?> rowData, XSSFCellStyle cellStyle) {
+        int colNum = 0;
+        for (Object value : rowData) {
+            XSSFCell cell = row.createCell(colNum++);
+            setCellValue(cell, value, cellStyle);
+        }
+    }
+
+    private static <T> void populateRowWithObject(XSSFRow row, T data, XSSFCellStyle cellStyle) {
+        Field[] fields = data.getClass().getDeclaredFields();
+        for (int i = 0; i < fields.length; i++) {
+            XSSFCell cell = row.createCell(i);
+            Field field = fields[i];
+            String fieldName = field.getName();
+            String getMethodName = "get" + capitalize(fieldName);
+            try {
+                Method getMethod = data.getClass().getMethod(getMethodName);
+                Object value = getMethod.invoke(data);
+                setCellValue(cell, value, cellStyle);
+            } catch (Exception e) {
+                log.error("Error while processing data row: {}", e.getMessage(), e);
+                throw new RuntimeException("Error while processing data row", e);
             }
         }
     }
@@ -142,18 +115,37 @@ public class DataToExcel<T> {
             cell.getSheet().setColumnWidth(cell.getColumnIndex(), (short) (35.7 * 80));
         } else if (value instanceof Number) {
             Number number = (Number) value;
-           // Проверка на 0.0 до применения форматирования
             if (number.doubleValue() == 0.0) {
                 cell.setBlank();
             } else {
                 DecimalFormat decimalFormat = new DecimalFormat(PATTERN_NUMBER, symbols);
                 decimalFormat.setParseBigDecimal(true);
-                cell.setCellValue(((Number) value).doubleValue());
+                cell.setCellValue(number.doubleValue());
                 cellStyle.setDataFormat(cell.getCellStyle().getDataFormat());
             }
         } else {
             cell.setCellType(CellType.STRING);
             cell.setCellValue(String.valueOf(value));
         }
+    }
+
+    private static void skipRows(Iterator<?> iterator, int skip) {
+        for (int i = 0; i < skip && iterator.hasNext(); i++) {
+            iterator.next();
+        }
+    }
+
+    private static XSSFSheet createSheetWithHeader(XSSFWorkbook workbook, List<String> headers) {
+        XSSFSheet sheet = workbook.createSheet(Globals.SHEET_NAME);
+        sheet.setDefaultColumnWidth(DEFAULT_COLUMN_WIDTH);
+
+        XSSFCellStyle headerStyle = createHeaderStyle(workbook);
+        XSSFRow headerRow = sheet.createRow(0);
+        for (int i = 0; i < headers.size(); i++) {
+            XSSFCell cell = headerRow.createCell(i);
+            cell.setCellStyle(headerStyle);
+            cell.setCellValue(headers.get(i));
+        }
+        return sheet;
     }
 }

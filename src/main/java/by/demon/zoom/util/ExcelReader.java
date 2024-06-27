@@ -40,6 +40,7 @@ public class ExcelReader {
         List<List<Object>> result = new ArrayList<>();
         try (FileInputStream fis = new FileInputStream(file);
              Workbook workbook = new HSSFWorkbook(fis)) {
+            LOG.info("Processing file: {}", file.getName());
             processWorkbook(workbook, result);
         } catch (IOException e) {
             LOG.error("Error reading Excel 2003 file: {}", e.getMessage(), e);
@@ -54,6 +55,7 @@ public class ExcelReader {
         IOUtils.setByteArrayMaxOverride(1000000000);
         try (FileInputStream fis = new FileInputStream(file);
              Workbook workbook = new XSSFWorkbook(fis)) {
+            LOG.info("Processing file: {}", file.getName());
             processWorkbook(workbook, result);
         } catch (IOException e) {
             LOG.error("Error reading Excel 2007 file: {}", e.getMessage(), e);
@@ -88,22 +90,25 @@ public class ExcelReader {
     public static Object getCellValue(Cell cell) {
         switch (cell.getCellType()) {
             case STRING:
-                return cell.getStringCellValue().replaceAll(";","|");
+                return cell.getStringCellValue().replaceAll(";", "|");
             case NUMERIC:
-                double numericValue = cell.getNumericCellValue();
-                long longValue = (long) numericValue; // Проверяем, является ли значение целым числом
-                if (numericValue == longValue) {
-                    return longValue; // Возвращаем целочисленное значение
-                } else {
-                    DecimalFormat decimalFormat = new DecimalFormat("#,###.#####"); // Форматирование числа с разделителем ","
-                    return decimalFormat.format(numericValue); // Возвращаем числовое значение с десятичной частью
-                }
+                return formatNumericValue(cell.getNumericCellValue());
             case BOOLEAN:
                 return cell.getBooleanCellValue();
             case FORMULA:
                 return cell.getCellFormula();
             default:
                 return "";
+        }
+    }
+
+    private static Object formatNumericValue(double numericValue) {
+        long longValue = (long) numericValue;
+        if (numericValue == longValue) {
+            return longValue;
+        } else {
+            DecimalFormat decimalFormat = new DecimalFormat("#,###.#####");
+            return decimalFormat.format(numericValue);
         }
     }
 }

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Utils for zoomos</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
 <div th:replace="/include/_header :: content"></div>
@@ -87,7 +88,7 @@
             </div>
 
             <div class="row mt-3">
-                <div class="col-12">
+                <div class="col-12 col-sm-6">
                     <form th:action="@{/excel/getUrl/}" th:method="post" enctype="multipart/form-data">
                         <h4>Сбор ссылок</h4>
                         <div class="mb-3">
@@ -103,8 +104,31 @@
                         </div>
                     </form>
                 </div>
+
+                <div class="col-12 col-sm-6">
+                    <form th:action="@{/excel/yandexUrl/upload}" th:method="post" enctype="multipart/form-data">
+                        <h4>Очистка ссылок для яндекс маркет</h4>
+                        <div class="mb-3">
+                            <label for="excelFile" class="form-label">Выберите файл:</label>
+                            <input type="file" class="form-control form-control-sm" name="file" id="excelFile" aria-description="YandexHelp">
+                            <div id="YandexHelp" class="form-text">
+                                * Столбец A - наименования товаров <br>
+                                * Столбец B - Ссылки для очистки<br>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <button class="btn btn-primary">
+                                    Загрузить
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
+
         </div>
     </div>
 </div>
 </body>
+</html>

@@ -1,7 +1,6 @@
 package by.demon.zoom.service.impl.lenta;
 
 import by.demon.zoom.service.FileProcessingService;
-import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.DataToExcel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
+import static by.demon.zoom.util.FileUtil.*;
 import static java.util.stream.Collectors.joining;
 
 @Service
@@ -31,11 +31,10 @@ public class EdadealService implements FileProcessingService<List<Object>> {
             "Маркетинговое описание 4", "Статус", "Ссылка", "Старая цена", "Продавец", "Дата", "Позиция", "Ссылка на родителя");
 
     private final DataToExcel<Object> dataToExcel;
-    private final DataDownload dataDownload;
 
-    public EdadealService(DataToExcel<Object> dataToExcel, DataDownload dataDownload) {
+
+    public EdadealService(DataToExcel<Object> dataToExcel) {
         this.dataToExcel = dataToExcel;
-        this.dataDownload = dataDownload;
     }
 
     @Override
@@ -62,23 +61,23 @@ public class EdadealService implements FileProcessingService<List<Object>> {
         return allUrlDTOs;
     }
 
-    public void download(ArrayList<List<Object>> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
-        Path path = DataDownload.getPath("data", format.equals("excel") ? ".xlsx" : ".csv");
+    public void download(ArrayList<List<Object>> list, HttpServletResponse response, String format) throws IOException {
+        Path path = getPath("data", format.equals("excel") ? ".xlsx" : ".csv");
         try {
             switch (format) {
                 case "excel":
                     try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-                        dataToExcel.exportObjectToExcel(header, list, out, 1);
+                        dataToExcel.exportToExcel(header, list, out, 1);
                         Files.write(path, out.toByteArray());
                     }
-                    dataDownload.downloadExcel(path, response);
-                    DataDownload.cleanupTempFile(path);
+                    downloadExcel(path, response);
+                    cleanupTempFile(path);
                     break;
                 case "csv":
                     List<String> strings = convert(list);
                     //Пустой заголовок, т.к. лист уже содержит заголовок
                     List<String> fakeHeader = new ArrayList<>();
-                    dataDownload.downloadCsv(path, strings, fakeHeader, response);
+                    downloadCsv(path, strings, fakeHeader, response);
                     break;
                 default:
                     log.error("Incorrect format: {}", format);

@@ -5,7 +5,6 @@ import by.demon.zoom.dto.CsvRow;
 import by.demon.zoom.dto.lenta.LentaTaskDTO;
 import by.demon.zoom.mapper.MappingUtils;
 import by.demon.zoom.service.FileProcessingService;
-import by.demon.zoom.util.DataDownload;
 import by.demon.zoom.util.DataToExcel;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
@@ -28,6 +27,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.ExcelReader.processRow;
+import static by.demon.zoom.util.FileUtil.*;
 
 
 @Service
@@ -37,14 +37,12 @@ public class LentaTaskService implements FileProcessingService<LentaTaskDTO> {
     private HashMap<String, Lenta> data = new HashMap<>();
     private static final Logger log = LoggerFactory.getLogger(LentaTaskService.class);
     private final DataToExcel<LentaTaskDTO> dataToExcel;
-    private final DataDownload dataDownload;
     private final List<String> header = Arrays.asList("Id", "Наименование товара", "Вес", "Цена", "Москва, Нижний новгород", "Ростов-на-Дону",
             "Санкт-Петербург, Петрозаводск", "Новосибирск, Иркутск, Красноярск", "Екатеринбург", "Саратов, Уфа, Ульяновск", "Штрихкод");
     private int countSheet = 0;
 
-    public LentaTaskService(DataToExcel<LentaTaskDTO> dataToExcel, DataDownload dataDownload) {
+    public LentaTaskService(DataToExcel<LentaTaskDTO> dataToExcel) {
         this.dataToExcel = dataToExcel;
-        this.dataDownload = dataDownload;
     }
 
 
@@ -68,8 +66,8 @@ public class LentaTaskService implements FileProcessingService<LentaTaskDTO> {
         return allUrlDTOs;
     }
 
-    public void download(ArrayList<LentaTaskDTO> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
-        Path path = DataDownload.getPath("data", format.equals("excel") ? ".xlsx" : ".csv");
+    public void download(ArrayList<LentaTaskDTO> list, HttpServletResponse response, String format) throws IOException {
+        Path path = getPath("data", format.equals("excel") ? ".xlsx" : ".csv");
         try {
             switch (format) {
                 case "excel":
@@ -77,12 +75,12 @@ public class LentaTaskService implements FileProcessingService<LentaTaskDTO> {
                         dataToExcel.exportToExcel(header, list, out, 0);
                         Files.write(path, out.toByteArray());
                     }
-                    dataDownload.downloadExcel(path, response);
-                    DataDownload.cleanupTempFile(path);
+                    downloadExcel(path, response);
+                    cleanupTempFile(path);
                     break;
                 case "csv":
                     List<String> strings = convert(list);
-                    dataDownload.downloadCsv(path, strings, header, response);
+                    downloadCsv(path, strings, header, response);
                     break;
                 default:
                     log.error("Incorrect format: {}", format);

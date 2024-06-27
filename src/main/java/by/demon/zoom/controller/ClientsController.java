@@ -1,11 +1,13 @@
 package by.demon.zoom.controller;
 
 import by.demon.zoom.domain.Lenta;
+import by.demon.zoom.service.impl.MegatopService;
 import by.demon.zoom.service.impl.av.AvHandbookService;
 import by.demon.zoom.service.impl.av.AvReportService;
-import by.demon.zoom.service.impl.MegatopService;
 import by.demon.zoom.service.impl.av.AvTaskService;
 import by.demon.zoom.util.MethodPerformance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +19,7 @@ import java.time.LocalDate;
 @Controller
 @RequestMapping("/clients")
 public class ClientsController {
+    private static final Logger logger = LoggerFactory.getLogger(ClientsController.class);
     private final MegatopService megatopService;
     private final AvReportService avReportService;
     private final AvTaskService avTaskService;
@@ -32,31 +35,46 @@ public class ClientsController {
 
     @GetMapping("/lenta")
     public String lenta(Model model) {
-        model.addAttribute("date", LocalDate.now());
-        model.addAttribute("lenta", new Lenta());
+        try {
+            model.addAttribute("date", LocalDate.now());
+            model.addAttribute("lenta", new Lenta());
+        } catch (Exception e) {
+            logger.error("Error executing lenta method", e);
+            model.addAttribute("error", "Failed to load lenta data");
+        }
         return "/clients/lenta";
     }
 
     @GetMapping("/megatop")
     public String megatop(Model model) {
-//        model.addAttribute("fileForm", new FileForm());
-        model.addAttribute("latestLabels", megatopService.getLatestLabels());
-        model.addAttribute("generatedLabel", megatopService.generateLabel());
+        logger.info("Executing megatop method");
+        try {
+            model.addAttribute("latestLabels", megatopService.getLatestLabels());
+            model.addAttribute("generatedLabel", megatopService.generateLabel());
+        } catch (Exception e) {
+            logger.error("Error executing megatop method", e);
+            model.addAttribute("error", "Failed to load megatop data");
+        }
         return "/clients/megatop";
     }
 
     @GetMapping("/simple")
     public String simple() {
+        logger.info("Executing simple method");
         return "/clients/simple";
     }
 
     @GetMapping("/av")
     public String av(Model model) {
-        model.addAttribute("reports", avReportService.getLatestReport());
-        Instant start= MethodPerformance.start();
-        model.addAttribute("tasks", avTaskService.getLatestTask());
-        MethodPerformance.finish(start, "task");
-        model.addAttribute("retailNetworkCode", avHandbookService.getRetailNetworkCode());
+        logger.info("Executing av method");
+        try {
+            model.addAttribute("reports", avReportService.getLatestReport());
+            model.addAttribute("tasks", avTaskService.getLatestTask());
+            model.addAttribute("retailNetworkCode", avHandbookService.getRetailNetworkCode());
+        } catch (Exception e) {
+            logger.error("Error executing av method", e);
+            model.addAttribute("error", "Failed to load av data");
+        }
         return "/clients/av";
     }
 }

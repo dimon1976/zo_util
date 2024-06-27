@@ -3,6 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <title>AV.ru</title>
+    <script>
+        function updateTempTableIndex() {
+            fetch('/excel/av/update-temp-table-index', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    alert('Temp table index updated successfully');
+                } else {
+                    alert('Failed to update temp table index');
+                }
+            }).catch(error => {
+                console.error('Error updating temp table index:', error);
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            fetch('/api/reports/csv-av-report')
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.querySelector("#newTabTable tbody");
+                    data.forEach(row => {
+                        const tr = document.createElement("tr");
+                        tr.innerHTML = `
+                            <td>${row.jobNumber}</td>
+                            <td>${row.jobEnd}</td>
+                            <td>${row.wildberries}</td>
+                            <td>${row.ozon}</td>
+                            <td>${row.perekrestok}</td>
+                            <td>${row.svoiDom}</td>
+                            <td>${row.detskiyMir}</td>
+                            <td>${row.lenta}</td>
+                            <td>${row.globus}</td>
+                            <td>${row.spar}</td>
+                            <td>${row.bethoven}</td>
+                            <td>${row.zolotoe}</td>
+                            <td>${row.yandexMarket}</td>
+                            <td>${row.vainStaff}</td>
+                            <td>${row.aromatnyMir}</td>
+                            <td>${row.vainLab}</td>
+                            <td>${row.simpl}</td>
+                            <td>${row.delikat}</td>
+                            <td>${row.ekomark}</td>
+                            <td>${row.galereya}</td>
+                            <td>${row.kariproduct}</td>
+                            <td>${row.rigla}</td>
+                            <td>${row.daniel}</td>
+                            <td>${row.kenguru}</td>
+                            <td>${row.kosta}</td>
+                            <td>${row.laberint}</td>
+                            <td>${row.ryinok}</td>
+                        `;
+                        tableBody.appendChild(tr);
+                    });
+                });
+        });
+
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+    </script>
 </head>
 <body>
 <div th:replace="/include/_header :: content"></div>
@@ -17,112 +90,160 @@
         <div class="col-sm-9">
             <h2 class="display-4 mb-4">Azbukavkusa</h2>
 
-            <!-- Обработка задания -->
-            <div class="row">
-                <div class="col-12 col-sm-6">
-                    <form th:action="@{/excel/av/upload/task}" th:method="post" enctype="multipart/form-data">
-                        <h4>Обработка задания</h4>
-                        <div class="mb-3">
-                            <label for="AvTask" class="form-label">Выберите файл:</label>
-                            <input type="file" class="form-control" name="file" multiple id="AvTask">
-                        </div>
-                        <div class="row">
-                            <div class="col-12">
-                                <button class="btn btn-primary">
-                                    Загрузить
-                                </button>
+            <!-- Вкладки -->
+            <div class="tabs">
+                <button class="tablinks" onclick="openTab(event, 'Tab1')">Обработка заданий</button>
+                <button class="tablinks" onclick="openTab(event, 'Tab2')">Отчет по конкурентам</button>
+            </div>
+
+            <!-- Содержимое вкладок -->
+            <div id="Tab1" class="tabcontent">
+                <!-- Существующее содержимое -->
+                <div class="row">
+                    <div class="col-12 col-sm-6">
+                        <form th:action="@{/excel/av/upload/task}" th:method="post" enctype="multipart/form-data">
+                            <h4>Обработка задания</h4>
+                            <div class="mb-3">
+                                <label for="AvTask" class="form-label">Выберите файл:</label>
+                                <input type="file" class="form-control" name="file" multiple id="AvTask">
                             </div>
-                        </div>
-                    </form>
+                            <div class="row">
+                                <div class="col-12">
+                                    <button class="btn btn-primary">
+                                        Загрузить
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="col-12 col-sm-6">
+                        <form th:action="@{/excel/av/upload/handbook}" th:method="post" enctype="multipart/form-data">
+                            <h4>Загрузка справочника</h4>
+                            <div class="mb-3">
+                                <label for="handbook" class="form-label">Выберите файл:</label>
+                                <input type="file" class="form-control" name="file" id="handbook">
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <button class="btn btn-primary">
+                                        Загрузить
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </div>
 
-                <!-- Загрузка справочника -->
-                <div class="col-12 col-sm-6">
-                    <form th:action="@{/excel/av/upload/handbook}" th:method="post" enctype="multipart/form-data">
-                        <h4>Загрузка справочника</h4>
-                        <div class="mb-3">
-                            <label for="handbook" class="form-label">Выберите файл:</label>
-                            <input type="file" class="form-control" name="file" id="handbook">
-                        </div>
-                        <div class="row">
-                            <div class="col-12">
-                                <button class="btn btn-primary">
-                                    Загрузить
-                                </button>
+                <div class="row mt-3">
+                    <div class="col-12 col-sm-6">
+                        <form th:action="@{/excel/av/upload/report}" th:method="post" enctype="multipart/form-data">
+                            <h4>Обработка отчета</h4>
+                            <div class="mb-3">
+                                <label for="AvReport" class="form-label">Выберите файл:</label>
+                                <input type="file" class="form-control" name="file" multiple id="AvReport">
                             </div>
-                        </div>
-                    </form>
+                            <div class="row">
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary">
+                                        Загрузить
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="col-12 col-sm-6">
+                        <h4>Download Report</h4>
+                        <form th:action="@{/excel/av/download/report}" method="post" class="mb-3">
+                            <div class="mb-3">
+                                <label for="report_no" class="form-label">Download report:</label>
+                                <select id="report_no" name="report_no" class="form-select" required>
+                                    <option value="">Выбери № отчета</option>
+                                    <option th:each="report_no : ${reports}" th:value="${report_no}"
+                                            th:text="${report_no}"></option>
+                                </select>
+                            </div>
+                            <input type="submit" class="btn btn-primary" value="Download">
+                            <input type="submit" class="btn btn-danger" value="Delete report" name="delete">
+                        </form>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12 col-sm-6">
+                        <h4>Download Task</h4>
+                        <form th:action="@{/excel/av/download/task}" method="post" class="mb-3">
+                            <div class="mb-3">
+                                <label for="task_no" class="form-label">Download task:</label>
+                                <select id="task_no" name="task_no" class="form-select" required>
+                                    <option value="">Выбери № задачи</option>
+                                    <option th:each="task_no : ${tasks}" th:value="${task_no}"
+                                            th:text="${task_no}"></option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="retailNetworkCode" class="form-label">Choose retailer code in task:</label>
+                                <select id="retailNetworkCode" name="retailNetworkCode" class="form-select">
+                                    <option value="">Выбери retailer network</option>
+                                    <option th:each="retailNetworkCode : ${retailNetworkCode}" th:value="${retailNetworkCode}"
+                                            th:text="${retailNetworkCode}"></option>
+                                </select>
+                            </div>
+                            <input type="submit" class="btn btn-primary" value="Download">
+                            <input type="submit" class="btn btn-danger" value="Delete task" name="delete">
+                        </form>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12 col-sm-6">
+                        <button class="btn btn-warning" onclick="updateTempTableIndex()">
+                            Обновить индекс временной таблицы
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Обработка отчета -->
-            <div class="row mt-3">
-                <div class="col-12 col-sm-6">
-                    <form th:action="@{/excel/av/upload/report}" th:method="post" enctype="multipart/form-data">
-                        <h4>Обработка отчета</h4>
-                        <div class="mb-3">
-                            <label for="AvReport" class="form-label">Выберите файл:</label>
-                            <input type="file" class="form-control" name="file" multiple id="AvReport">
-                        </div>
-                        <div class="row">
-                            <div class="col-12">
-                                <button type="submit" class="btn btn-primary">
-                                    Загрузить
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Вариант для скачивания -->
-                <div class="col-12 col-sm-6">
-                    <h4>Download Report</h4>
-                    <form th:action="@{/excel/av/download/report}" method="post" class="mb-3">
-                        <div class="mb-3">
-                            <label for="report_no" class="form-label">Download report:</label>
-                            <select id="report_no" name="report_no" class="form-select" required>
-                                <option value="">Выбери № отчета</option>
-                                <option th:each="report_no : ${reports}" th:value="${report_no}"
-                                        th:text="${report_no}"></option>
-                            </select>
-                        </div>
-
-                        <input type="submit" class="btn btn-primary" value="Download">
-                        <input type="submit" class="btn btn-primary" value="Delete report" name="delete">
-                    </form>
-                </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-12 col-sm-6">
-                    <h4>Download Task</h4>
-                    <form th:action="@{/excel/av/download/task}" method="post" class="mb-3">
-                        <div class="mb-3">-->
-                            <label for="task_no" class="form-label">Download task:</label>
-                            <select id="task_no" name="task_no" class="form-select" required>
-                                <option value="">Выбери № задачи</option>
-                                <option th:each="task_no : ${tasks}" th:value="${task_no}"
-                                        th:text="${task_no}"></option>
-                            </select>
-                        </div>
-                        <!-- Добавлен селектор с выбором поля retailerCode retailNetworks -->
-                        <div class="mb-3">
-                            <label for="retailNetworkCode" class="form-label">Choose retailer code in task:</label>
-                            <select id="retailNetworkCode" name="retailNetworkCode" class="form-select">
-                                <option value="">Выбери retailer network</option>
-                                <option th:each="retailNetworkCode : ${retailNetworkCode}" th:value="${retailNetworkCode}"
-                                        th:text="${retailNetworkCode}"></option>
-                            </select>
-                        </div>
-
-                        <input type="submit" class="btn btn-primary" value="Download">
-                        <input type="submit" class="btn btn-primary" value="Delete task" name="delete">
-                    </form>
-                </div>
-
+            <div id="Tab2" class="tabcontent" style="display:none;">
+                <h3>Отчет по конкурентам</h3>
+                <table id="newTabTable">
+                    <thead>
+                    <tr>
+                        <th>Номер задачи</th>
+                        <th>Дата - день недели</th>
+                        <th>ВАЙЛДБЕРИС</th>
+                        <th>ОЗОН</th>
+                        <th>ПЕРЕКРЕСТОК</th>
+                        <th>СВОЙ ДОМ</th>
+                        <th>ДЕТСКИЙ МИР</th>
+                        <th>ЛЕНТА</th>
+                        <th>ГЛОБУС</th>
+                        <th>СПАР</th>
+                        <th>БЕТХОВЕН</th>
+                        <th>ЗОЛОТОЕ</th>
+                        <th>ЯНДЕКС.МАРКЕТ</th>
+                        <th>ВАИНСТАФФ</th>
+                        <th>АРОМАТНЫЙ МИР</th>
+                        <th>ВАИНЛАБ</th>
+                        <th>СИМПЛ</th>
+                        <th>ДЕЛИКАТ</th>
+                        <th>ЭКОМАРК</th>
+                        <th>ГАЛЕРЕЯ</th>
+                        <th>КРИО.ПРОДУКТ</th>
+                        <th>РИГЛА</th>
+                        <th>ДАНИЕЛ</th>
+                        <th>КЕНГУРУ</th>
+                        <th>КОСТА</th>
+                        <th>ЛАБИРИНТ</th>
+                        <th>РЫНОК ДАНИЛОВСКИЙ</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Data will be inserted here -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
-
 </body>
 </html>
