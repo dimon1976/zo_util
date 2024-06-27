@@ -20,6 +20,7 @@ import by.demon.zoom.service.impl.lenta.LentaTaskService;
 import by.demon.zoom.util.FileUploadHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
@@ -47,8 +48,9 @@ public class FileController {
     private final AvReportService avReportService;
     private final AvTaskService avTaskService;
     private final AvHandbookService handbookService;
+    private final YandexUrlService yandexUrlService;
 
-    public FileController(UrlService urlService, StatisticService statisticService, VlookService vlookService, MegatopService megatopService, LentaReportService lentaReportService, LentaTaskService lentaTaskService, SimpleService simpleService, EdadealService edadealService, AvReportService avReportService, AvTaskService avTaskService, AvHandbookService handbookService) {
+    public FileController(UrlService urlService, StatisticService statisticService, VlookService vlookService, MegatopService megatopService, LentaReportService lentaReportService, LentaTaskService lentaTaskService, SimpleService simpleService, EdadealService edadealService, AvReportService avReportService, AvTaskService avTaskService, AvHandbookService handbookService, YandexUrlService yandexUrlService) {
         this.urlService = urlService;
         this.statisticService = statisticService;
         this.vlookService = vlookService;
@@ -60,6 +62,7 @@ public class FileController {
         this.avReportService = avReportService;
         this.avTaskService = avTaskService;
         this.handbookService = handbookService;
+        this.yandexUrlService = yandexUrlService;
     }
 
     @PostMapping("/getUrl/")
@@ -132,9 +135,9 @@ public class FileController {
 
     @PostMapping("/av/download/report")
     public ModelAndView avDownloadReport(@RequestParam(value = "report_no", required = false) String report_no,
-                                              @RequestParam(value = "format", required = false) String format,
-                                              @RequestParam(value = "delete", required = false) String delete,
-                                              HttpServletResponse response) throws IOException {
+                                         @RequestParam(value = "format", required = false) String format,
+                                         @RequestParam(value = "delete", required = false) String delete,
+                                         HttpServletResponse response) throws IOException {
         ModelAndView modelAndView = new ModelAndView("deleteResult");
         if (delete != null) {
             int deleteCount = avReportService.deleteReport(report_no);
@@ -150,10 +153,10 @@ public class FileController {
 
     @PostMapping("av/download/task")
     public @ResponseBody ModelAndView avDownloadTask(@RequestParam(value = "task_no", required = false) String task_no,
-                                               @RequestParam(value = "retailNetworkCode", required = false) String retailNetworkCode,
-                                               @RequestParam(value = "format", required = false) String format,
-                                               @RequestParam(value = "delete", required = false) String delete,
-                                               HttpServletResponse response) throws IOException {
+                                                     @RequestParam(value = "retailNetworkCode", required = false) String retailNetworkCode,
+                                                     @RequestParam(value = "format", required = false) String format,
+                                                     @RequestParam(value = "delete", required = false) String delete,
+                                                     HttpServletResponse response) throws IOException {
         ModelAndView modelAndView = new ModelAndView("deleteResult");
         if (delete != null) {
             int deleteCount = avTaskService.deleteTask(task_no);
@@ -166,6 +169,7 @@ public class FileController {
             return null;
         }
     }
+
     @PostMapping("av/update-temp-table-index")
     public String updateTempTableIndex() {
         avTaskService.updateTempTableIndex();
@@ -196,6 +200,13 @@ public class FileController {
         String[] additionalParam = new String[]{"report", date};
         ArrayList<LentaReportDTO> reportCollection = lentaReportService.readFiles(files, additionalParam);
         lentaReportService.download(reportCollection, response, "excel");
+    }
+
+    @PostMapping("/yandexUrl/upload")
+    public String handleFileUpload(@RequestParam("file") MultipartFile[] file, Model model, HttpServletResponse response) throws IOException {
+        ArrayList<List<Object>> yandexUrls = yandexUrlService.readFiles(FileUploadHandler.getFiles(file));
+        yandexUrlService.download(yandexUrls, response, "excel");
+        return "/util/index";
     }
 
     private ModelAndView processFileUpload(MultipartFile[] multipartFiles, ConsumerWithIOException<List<File>> processFiles) {
