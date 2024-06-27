@@ -176,6 +176,12 @@ public class FileController {
         return "/clients/av";
     }
 
+    @PostMapping("av/truncate-temp-table-data")
+    public String truncateTempTableData() {
+        avTaskService.truncateTempTableData();
+        return "/clients/av";
+    }
+
     @PostMapping("/lenta/upload/edadeal")
     public void uploadEdadeal(@RequestParam("file") MultipartFile[] multipartFile, HttpServletResponse response) throws IOException {
         ArrayList<List<Object>> list = edadealService.readFiles(FileUploadHandler.getFiles(multipartFile));

@@ -1,11 +1,12 @@
 package by.demon.zoom.controller;
 
+import by.demon.zoom.domain.City;
 import by.demon.zoom.domain.Lenta;
+import by.demon.zoom.domain.TypeReport;
 import by.demon.zoom.service.impl.MegatopService;
 import by.demon.zoom.service.impl.av.AvHandbookService;
 import by.demon.zoom.service.impl.av.AvReportService;
 import by.demon.zoom.service.impl.av.AvTaskService;
-import by.demon.zoom.util.MethodPerformance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -13,7 +14,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.time.Instant;
 import java.time.LocalDate;
 
 @Controller
@@ -68,6 +68,8 @@ public class ClientsController {
     public String av(Model model) {
         logger.info("Executing av method");
         try {
+            model.addAttribute("cities", City.values());
+            model.addAttribute("typeReports", TypeReport.values());
             model.addAttribute("reports", avReportService.getLatestReport());
             model.addAttribute("tasks", avTaskService.getLatestTask());
             model.addAttribute("retailNetworkCode", avHandbookService.getRetailNetworkCode());

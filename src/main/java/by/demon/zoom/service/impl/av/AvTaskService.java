@@ -231,6 +231,24 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
             LOGGER.error("Error updating temp table index: {}", e.getMessage(), e);
         }
     }
+    @Transactional
+    public void truncateTempTableData() {
+        try {
+            // Очистка временной таблицы
+            String truncateTableQuery = "TRUNCATE TABLE tmp_av_task_job_number";
+            LOGGER.info("Executing TRUNCATE TABLE query");
+            jdbcTemplate.execute(truncateTableQuery);
+
+            // Создание индекса
+            String createIndexQuery = "CREATE INDEX IF NOT EXISTS idx_tmp_av_task_job_number ON tmp_av_task_job_number (job_number)";
+            LOGGER.info("Executing CREATE INDEX query");
+            jdbcTemplate.execute(createIndexQuery);
+
+            LOGGER.info("Temp table truncated and index updated successfully");
+        } catch (Exception e) {
+            LOGGER.error("Error truncating temp table or updating index: {}", e.getMessage(), e);
+        }
+    }
 
     public void updateTempTableData(ArrayList<AvDataEntity> allTasks) {
         String insertQuery = "INSERT INTO tmp_av_task_job_number (job_number) VALUES (?)";
