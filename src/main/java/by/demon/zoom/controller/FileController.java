@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
@@ -121,8 +122,14 @@ public class FileController {
     }
 
     @PostMapping("/av/upload/report")
-    public ModelAndView uploadAvReport(@RequestParam("file") MultipartFile[] multipartFile) {
-        return processFileUpload(multipartFile, avReportService::readFiles);
+    public ModelAndView uploadAvReport(HttpServletRequest request, @RequestParam("file") MultipartFile[] multipartFile) {
+        String cityId = request.getParameter("city");
+        String typeReport = request.getParameter("typeReport");
+        String[] additionalParam = new String[]{cityId, typeReport};
+//        return processFileUpload(multipartFile, avReportService::readFiles);
+        return processFileUpload(multipartFile, file -> {
+            avReportService.readFiles(file, additionalParam);
+        });
     }
 
     @PostMapping("/av/upload/handbook")

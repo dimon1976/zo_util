@@ -12,18 +12,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.time.LocalDate;
 
 @Controller
-@RequestMapping("/clients")
 public class ClientsController {
     private static final Logger logger = LoggerFactory.getLogger(ClientsController.class);
     private final MegatopService megatopService;
     private final AvReportService avReportService;
     private final AvTaskService avTaskService;
     private final AvHandbookService avHandbookService;
+
 
     public ClientsController(MegatopService megatopService, AvReportService avReportService, AvTaskService avTaskService, AvHandbookService avHandbookService) {
         this.megatopService = megatopService;
@@ -33,7 +32,7 @@ public class ClientsController {
     }
 
 
-    @GetMapping("/lenta")
+    @GetMapping("/clients/lenta")
     public String lenta(Model model) {
         try {
             model.addAttribute("date", LocalDate.now());
@@ -45,7 +44,7 @@ public class ClientsController {
         return "/clients/lenta";
     }
 
-    @GetMapping("/megatop")
+    @GetMapping("/clients/megatop")
     public String megatop(Model model) {
         logger.info("Executing megatop method");
         try {
@@ -58,13 +57,13 @@ public class ClientsController {
         return "/clients/megatop";
     }
 
-    @GetMapping("/simple")
+    @GetMapping("/clients/simple")
     public String simple() {
         logger.info("Executing simple method");
         return "/clients/simple";
     }
 
-    @GetMapping("/av")
+    @GetMapping("/clients/av")
     public String av(Model model) {
         logger.info("Executing av method");
         try {
@@ -77,6 +76,6 @@ public class ClientsController {
             logger.error("Error executing av method", e);
             model.addAttribute("error", "Failed to load av data");
         }
-        return "/clients/av";
+        return "clients/av";
     }
 }

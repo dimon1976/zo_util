@@ -3,6 +3,7 @@ package by.demon.zoom.service.impl.av;
 import by.demon.zoom.dao.AvReportRepository;
 import by.demon.zoom.dao.AvTaskRepository;
 import by.demon.zoom.domain.imp.av.CsvAvReportEntity;
+import by.demon.zoom.domain.imp.av.ReportSummary;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DataToExcel;
 import org.hibernate.exception.ConstraintViolationException;
@@ -37,14 +38,16 @@ public class AvReportService implements FileProcessingService<CsvAvReportEntity>
     private final List<String> header = Arrays.asList("Номер задания", "Старт задания", "Окончание задания", "Товар НО", "Категория", "Код товарной категории", "Описание товара", "Комментарий по товару", "Бренд", "Код ценовой зоны", "Код розничной сети", "Розничная сеть", "Регион", "Физический адрес", "Штрихкод",
             "Количество штук", "Цена конкурента", "Цена акционная/по карте", "Аналог", "Нет товара", "Дата мониторинга", "Фото", "Примечание", "Ссылка на страницу товара");
     private final AvReportRepository avReportRepository;
-
+    private String[] params;
     private final DataToExcel<CsvAvReportEntity> dataToExcel;
     private final AvTaskRepository avTaskRepository;
+    private final ReportSummaryService reportSummary;
 
-    public AvReportService(AvReportRepository avReportRepository, DataToExcel<CsvAvReportEntity> dataToExcel, AvTaskRepository avTaskRepository) {
+    public AvReportService(AvReportRepository avReportRepository, DataToExcel<CsvAvReportEntity> dataToExcel, AvTaskRepository avTaskRepository, ReportSummaryService reportSummary) {
         this.avReportRepository = avReportRepository;
         this.dataToExcel = dataToExcel;
         this.avTaskRepository = avTaskRepository;
+        this.reportSummary = reportSummary;
     }
 
     public void download(ArrayList<CsvAvReportEntity> list, HttpServletResponse response, String format) throws IOException {
@@ -56,6 +59,7 @@ public class AvReportService implements FileProcessingService<CsvAvReportEntity>
 
     @Override
     public ArrayList<CsvAvReportEntity> readFiles(List<File> files, String... additionalParams) throws IOException {
+        params = additionalParams;
         ArrayList<CsvAvReportEntity> allReports = new ArrayList<>();
         int threadCount = Runtime.getRuntime().availableProcessors();
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
@@ -116,6 +120,8 @@ public class AvReportService implements FileProcessingService<CsvAvReportEntity>
                 result.add(entity);
             }
         }
+        ArrayList<ReportSummary> summary = reportSummary.getReportSummary(result);
+        reportSummary.save(summary);
         return result;
     }
 
@@ -191,6 +197,10 @@ public class AvReportService implements FileProcessingService<CsvAvReportEntity>
         csvReportEntity.setPhoto(getStringValue(str, 21));
         csvReportEntity.setNote(getStringValue(str, 22));
         csvReportEntity.setLinkToProductPage(getStringValue(str, 23));
+        if(params!=null){
+            csvReportEntity.setCity(params[0]);
+            csvReportEntity.setTypeReport(params[1]);
+        }
         return csvReportEntity;
     }
 
