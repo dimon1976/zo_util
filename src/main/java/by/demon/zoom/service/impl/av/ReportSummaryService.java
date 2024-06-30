@@ -53,9 +53,6 @@ public class ReportSummaryService implements FileProcessingService<ReportSummary
         return byCityAndTypeReport;
     }
 
-    public List<String> findDistinctRetailChains() {
-        return reportSummaryRepository.findDistinctRetailChains();
-    }
 
     public ArrayList<ReportSummary> getReportSummary(ArrayList<CsvAvReportEntity> reportEntities) {
         Map<String, ReportSummary> summaryMap = new HashMap<>();
