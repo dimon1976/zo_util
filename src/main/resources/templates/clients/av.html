@@ -51,15 +51,15 @@
             }
         }
 
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             loadSelectedValue("city");
             loadSelectedValue("typeReport");
 
-            document.getElementById("city").addEventListener("change", function() {
+            document.getElementById("city").addEventListener("change", function () {
                 saveSelectedValue("city");
             });
 
-            document.getElementById("typeReport").addEventListener("change", function() {
+            document.getElementById("typeReport").addEventListener("change", function () {
                 saveSelectedValue("typeReport");
             });
         });
@@ -69,11 +69,13 @@
             border-collapse: collapse;
             width: 100%;
         }
+
         th, td {
             border: 1px solid #000;
             text-align: center;
             padding: 8px;
         }
+
         .highlight {
             background-color: red; /* Замените на нужный цвет */
             font-weight: bold;
@@ -97,16 +99,20 @@
             <!-- Вкладки -->
             <ul class="nav nav-tabs" id="myTab" role="tablist">
                 <li class="nav-item">
-                    <a class="nav-link active" id="task-tab" data-toggle="tab" href="#task" role="tab" aria-controls="task" aria-selected="true">Задачи</a>
+                    <a class="nav-link active" id="task-tab" data-toggle="tab" href="#task" role="tab"
+                       aria-controls="task" aria-selected="true">Задачи</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" id="report-tab" data-toggle="tab" href="#report" role="tab" aria-controls="report" aria-selected="false">Отчеты</a>
+                    <a class="nav-link" id="report-tab" data-toggle="tab" href="#report" role="tab"
+                       aria-controls="report" aria-selected="false">Отчеты</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" id="handbook-tab" data-toggle="tab" href="#handbook" role="tab" aria-controls="handbook" aria-selected="false">Справочник</a>
+                    <a class="nav-link" id="handbook-tab" data-toggle="tab" href="#handbook" role="tab"
+                       aria-controls="handbook" aria-selected="false">Справочник</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" id="comparison-tab" data-toggle="tab" href="#comparison" role="tab" aria-controls="comparison" aria-selected="false">Контроль полноты отчетов</a>
+                    <a class="nav-link" id="comparison-tab" data-toggle="tab" href="#comparison" role="tab"
+                       aria-controls="comparison" aria-selected="false">Контроль полноты отчетов</a>
                 </li>
             </ul>
             <div class="tab-content" id="myTabContent">
@@ -138,14 +144,17 @@
                                     <label for="task_no" class="form-label">Download task:</label>
                                     <select id="task_no" name="task_no" class="form-select" required>
                                         <option value="">Выбери № задачи</option>
-                                        <option th:each="task_no : ${tasks}" th:value="${task_no}" th:text="${task_no}"></option>
+                                        <option th:each="task_no : ${tasks}" th:value="${task_no}"
+                                                th:text="${task_no}"></option>
                                     </select>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="retailNetworkCode" class="form-label">Choose retailer code in task:</label>
+                                    <label for="retailNetworkCode" class="form-label">Choose retailer code in
+                                        task:</label>
                                     <select id="retailNetworkCode" name="retailNetworkCode" class="form-select">
                                         <option value="">Выбери retailer network</option>
-                                        <option th:each="retailNetworkCode : ${retailNetworkCode}" th:value="${retailNetworkCode}" th:text="${retailNetworkCode}"></option>
+                                        <option th:each="retailNetworkCode : ${retailNetworkCode}"
+                                                th:value="${retailNetworkCode}" th:text="${retailNetworkCode}"></option>
                                     </select>
                                 </div>
                                 <input type="submit" class="btn btn-primary" value="Download">
@@ -185,14 +194,17 @@
                                         <label for="city" class="form-label">Выберите город:</label>
                                         <select id="city" name="city" class="form-select" required>
                                             <option value="">Выберите город</option>
-                                            <option th:each="city : ${cities}" th:value="${city.id}" th:text="${city.id + ' ' + city.russianName}"></option>
+                                            <option th:each="city : ${cities}" th:value="${city.id}"
+                                                    th:text="${city.id + ' ' + city.russianName}"></option>
                                         </select>
                                     </div>
                                     <div class="col-sm-4">
                                         <label for="typeReport" class="form-label">Выберите тип отчета:</label>
                                         <select id="typeReport" name="typeReport" class="form-select" required>
                                             <option value="">Выберите тип отчета</option>
-                                            <option th:each="typeReport : ${typeReports}" th:value="${typeReport.name()}" th:text="${typeReport.russianName}"></option>
+                                            <option th:each="typeReport : ${typeReports}"
+                                                    th:value="${typeReport.name()}"
+                                                    th:text="${typeReport.russianName}"></option>
                                         </select>
                                     </div>
                                 </div>
@@ -214,7 +226,8 @@
                                     <label for="report_no" class="form-label">Download report:</label>
                                     <select id="report_no" name="report_no" class="form-select" required>
                                         <option value="">Выбери № отчета</option>
-                                        <option th:each="report_no : ${reports}" th:value="${report_no}" th:text="${report_no}"></option>
+                                        <option th:each="report_no : ${reports}" th:value="${report_no}"
+                                                th:text="${report_no}"></option>
                                     </select>
                                 </div>
                                 <input type="submit" class="btn btn-primary" value="Download">
@@ -228,7 +241,8 @@
                 <div class="tab-pane fade" id="handbook" role="tabpanel" aria-labelledby="handbook-tab">
                     <div class="row mt-3">
                         <div class="col-12 col-sm-6">
-                            <form th:action="@{/excel/av/upload/handbook}" th:method="post" enctype="multipart/form-data">
+                            <form th:action="@{/excel/av/upload/handbook}" th:method="post"
+                                  enctype="multipart/form-data">
                                 <h4>Загрузка справочника</h4>
                                 <div class="mb-3">
                                     <label for="HandbookFile" class="form-label">Выберите файл:</label>
@@ -248,21 +262,34 @@
                 <!-- Вкладка сравнения отчетов -->
                 <div class="tab-pane fade" id="comparison" role="tabpanel" aria-labelledby="comparison-tab">
                     <div class="row mt-3">
-                        <div class="col-12 col-sm-6">
+                        <div class="col-12">
                             <form th:action="@{/excel/av/comparison}" th:method="post">
-                                <div class="mb-3 row">
-                                    <div class="col-sm-6">
+                                <div class="mb-3 row g-3">
+                                    <div class="col-sm-4">
                                         <label for="comparisonCity" class="form-label">Выберите город:</label>
                                         <select id="comparisonCity" name="city" class="form-select" required>
                                             <option value="">Выберите город</option>
-                                            <option th:each="city : ${cities}" th:value="${city.id}" th:text="${city.id + ' ' + city.russianName}"></option>
+                                            <option th:each="city : ${cities}" th:value="${city.id}"
+                                                    th:text="${city.id + ' ' + city.russianName}"></option>
                                         </select>
                                     </div>
-                                    <div class="col-sm-6">
+                                    <div class="col-sm-4">
                                         <label for="comparisonTypeReport" class="form-label">Выберите тип отчета:</label>
                                         <select id="comparisonTypeReport" name="typeReport" class="form-select" required>
                                             <option value="">Выберите тип отчета</option>
-                                            <option th:each="typeReport : ${typeReports}" th:value="${typeReport.name()}" th:text="${typeReport.russianName}"></option>
+                                            <option th:each="typeReport : ${typeReports}"
+                                                    th:value="${typeReport.name()}"
+                                                    th:text="${typeReport.russianName}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label for="threshold" class="form-label">Выберите % отклонения:</label>
+                                        <select id="threshold" name="threshold" class="form-select" required>
+                                            <option value="">% отклонения</option>
+                                            <option th:each="i : ${#numbers.sequence(5, 100, 5)}"
+                                                    th:value="${i}"
+                                                    th:text="${i}"
+                                                    th:attr="selected=${i == 10}"></option>
                                         </select>
                                     </div>
                                 </div>
@@ -274,43 +301,7 @@
                             </form>
                         </div>
                     </div>
-
-
-
-<!--                    <div class="row mt-3">-->
-<!--                        <div class="col-12">-->
-<!--                            <table class="table table-striped" id="reportTable">-->
-<!--                                <thead>-->
-<!--                                <tr>-->
-<!--                                    <th>Сеть</th>-->
-<!--                                    <th th:each="taskNo : ${taskNos}" th:text="${taskNo}">Task No</th>-->
-<!--                                </tr>-->
-<!--                                </thead>-->
-<!--                                <tbody>-->
-<!--                                <tr th:each="entry : ${reportSummaryMap}">-->
-<!--                                    <td th:text="${entry.key}">Retail Chain</td>-->
-<!--                                    <td th:each="taskNo : ${taskNos}">-->
-<!--                                        <div th:each="report : ${entry.value}" th:if="${report.task_no == taskNo}">-->
-<!--                                <span th:classappend="${report.highlightCountRows} ? 'highlight' : ''">-->
-<!--                                    <span th:text="${report.countRows}">0</span>-->
-<!--                                </span>,-->
-<!--                                            <span th:classappend="${report.highlightCountCompetitorsPrice} ? 'highlight' : ''">-->
-<!--                                    <span th:text="${report.countCompetitorsPrice}">0</span>-->
-<!--                                </span>,-->
-<!--                                            <span th:classappend="${report.highlightCountPromotionalPrice} ? 'highlight' : ''">-->
-<!--                                    <span th:text="${report.countPromotionalPrice}">0</span>-->
-<!--                                </span>-->
-<!--                                        </div>-->
-<!--                                    </td>-->
-<!--                                </tr>-->
-<!--                                </tbody>-->
-<!--                            </table>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                </div>-->
-
-
-
+                </div>
 
             </div>
 

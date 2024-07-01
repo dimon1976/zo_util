@@ -28,12 +28,27 @@
         }
         .cell-content {
             display: flex;
-            justify-content: space-around;
+            justify-content: space-between;
             align-items: center;
             height: 100%;
+            padding: 0 2px;
+        }
+        .cell-content > span {
+            flex: 1;
+            text-align: center;
+            padding: 2px;
+            font-size: 12px; /* Уменьшенный шрифт */
+        }
+        .cell-content > span:last-child {
+            border-right: none;
         }
         .task-no {
             white-space: nowrap;
+            padding: 2px;
+            font-size: 12px; /* Уменьшенный шрифт */
+        }
+        .container {
+            padding: 0 5px; /* Уменьшенный padding */
         }
     </style>
 </head>
@@ -51,28 +66,43 @@
         <tr th:each="taskGroup : ${taskGroups}">
             <td class="task-no" th:text="${taskGroup.key}"></td>
             <td th:each="retailChain : ${retailChains}">
-                <div class="cell-content" th:each="report : ${taskGroup.value}" th:if="${report.retailChain == retailChain}">
-                            <span th:data-count-rows="${report.countRows}"
-                                  th:data-count-competitors-price="${report.countCompetitorsPrice}"
-                                  th:data-count-promotional-price="${report.countPromotionalPrice}"
-                                  th:text="${report.countRows}"></span>
-                    <span th:data-count-rows="${report.countRows}"
+                <div class="cell-content">
+                    <span th:each="report : ${taskGroup.value}" th:if="${report.retailChain == retailChain}"
+                          th:data-count-rows="${report.countRows}"
+                          th:data-count-competitors-price="${report.countCompetitorsPrice}"
+                          th:data-count-promotional-price="${report.countPromotionalPrice}"
+                          th:text="${report.countRows}"></span>
+                    <span th:each="report : ${taskGroup.value}" th:if="${report.retailChain == retailChain}"
+                          th:data-count-rows="${report.countRows}"
                           th:data-count-competitors-price="${report.countCompetitorsPrice}"
                           th:data-count-promotional-price="${report.countPromotionalPrice}"
                           th:text="${report.countCompetitorsPrice}"></span>
-                    <span th:data-count-rows="${report.countRows}"
+                    <span th:each="report : ${taskGroup.value}" th:if="${report.retailChain == retailChain}"
+                          th:data-count-rows="${report.countRows}"
                           th:data-count-competitors-price="${report.countCompetitorsPrice}"
                           th:data-count-promotional-price="${report.countPromotionalPrice}"
                           th:text="${report.countPromotionalPrice}"></span>
                 </div>
             </td>
         </tr>
+        <!-- Новая строка -->
+        <tr>
+            <td class="task-no"></td>
+            <td th:each="retailChain : ${retailChains}">
+                <div class="cell-content">
+                    <span>Строк</span>
+                    <span>Цен</span>
+                    <span>акций</span>
+                </div>
+            </td>
+        </tr>
         </tbody>
     </table>
 </div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const threshold = /*[[${threshold}]]*/ 10; // процентный порог для сравнения, значение передается из контроллера
+        const threshold = [[${threshold}]]; // процентный порог для сравнения, значение передается из контроллера
 
         function getComparisonClass(currentValue, previousValue, threshold) {
             const change = ((currentValue - previousValue) / previousValue) * 100;

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -18,7 +19,6 @@ import java.util.stream.Collectors;
 public class ComparisonController {
     private final ReportSummaryService reportSummaryService;
     private static final Logger logger = LoggerFactory.getLogger(ComparisonController.class);
-    private static final double THRESHOLD_PERCENT = 10.0; // Пороговое значение в процентах
 
     public ComparisonController(ReportSummaryService reportSummaryService) {
         this.reportSummaryService = reportSummaryService;
@@ -28,22 +28,28 @@ public class ComparisonController {
     public String showComparisonPage(Model model, HttpServletRequest request) {
         String cityId = request.getParameter("city");
         String typeReport = request.getParameter("typeReport");
-        String threshold = request.getParameter("threshold");
+        Double threshold = Double.parseDouble(request.getParameter("threshold"));
 
         // Получение данных из сервиса, упорядоченных по времени загрузки
         List<ReportSummary> reports = reportSummaryService.findAllByCityAndTypeReport(cityId, typeReport);
-        reports.sort(Comparator.comparing(ReportSummary::getUploadTime).reversed());
+        logger.info("Reports: {}", reports);
 
         // Получение уникальных retailChain
         List<String> retailChains = reports.stream()
                 .map(ReportSummary::getRetailChain)
                 .distinct()
                 .collect(Collectors.toList());
+        logger.info("Retail Chains: {}", retailChains);
 
-        // Группировка отчетов по taskNo
+        // Группировка отчетов по task_no и сортировка внутри каждой группы по uploadTime
         Map<String, List<ReportSummary>> taskGroups = reports.stream()
-                .collect(Collectors.groupingBy(ReportSummary::getTask_no));
-
+                .collect(Collectors.groupingBy(ReportSummary::getTask_no,
+                        LinkedHashMap::new, // Сохраняет порядок вставки групп
+                        Collectors.collectingAndThen(Collectors.toList(), list -> {
+                            list.sort(Comparator.comparing(ReportSummary::getUploadTime)); // Сортировка по возрастанию
+                            return list;
+                        })));
+        logger.info("Task Groups: {}", taskGroups);
 
         model.addAttribute("retailChains", retailChains);
         model.addAttribute("taskGroups", taskGroups);

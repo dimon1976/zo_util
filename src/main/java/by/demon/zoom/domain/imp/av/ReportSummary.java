@@ -22,16 +22,6 @@ public class ReportSummary {
     private String retailChain;
     private String city;
     private String typeReport;
-    @Column(name = "highlight_count_rows", nullable = false)
-    private boolean highlightCountRows = false;
-
-    @Column(name = "highlight_count_competitors_price", nullable = false)
-    private boolean highlightCountCompetitorsPrice = false;
-
-    @Column(name = "highlight_count_promotional_price", nullable = false)
-    private boolean highlightCountPromotionalPrice = false;
-
-
     private long countRows;
     private long countCompetitorsPrice;
     private long countPromotionalPrice;
