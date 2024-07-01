@@ -26,48 +26,30 @@ public class ComparisonController {
 
     @PostMapping("/excel/av/comparison")
     public String showComparisonPage(Model model, HttpServletRequest request) {
-        // Получение данных из сервиса, упорядоченных по времени загрузки
         String cityId = request.getParameter("city");
         String typeReport = request.getParameter("typeReport");
+        String threshold = request.getParameter("threshold");
 
-        List<ReportSummary> reportSummaries = reportSummaryService.findAllByCityAndTypeReport(cityId, typeReport);
-        reportSummaries.sort(Comparator.comparing(ReportSummary::getUploadTime).reversed());
+        // Получение данных из сервиса, упорядоченных по времени загрузки
+        List<ReportSummary> reports = reportSummaryService.findAllByCityAndTypeReport(cityId, typeReport);
+        reports.sort(Comparator.comparing(ReportSummary::getUploadTime).reversed());
 
-        Map<String, List<ReportSummary>> reportSummaryMap = reportSummaries.stream()
-                .collect(Collectors.groupingBy(ReportSummary::getRetailChain));
-
-        List<String> taskNos = reportSummaries.stream()
-                .map(ReportSummary::getTask_no)
+        // Получение уникальных retailChain
+        List<String> retailChains = reports.stream()
+                .map(ReportSummary::getRetailChain)
                 .distinct()
                 .collect(Collectors.toList());
 
+        // Группировка отчетов по taskNo
+        Map<String, List<ReportSummary>> taskGroups = reports.stream()
+                .collect(Collectors.groupingBy(ReportSummary::getTask_no));
 
-        for (String retailChain : reportSummaryMap.keySet()) {
-            List<ReportSummary> summaries = reportSummaryMap.get(retailChain);
-            for (int i = 0; i < summaries.size(); i++) {
-                if (i > 0) {
-                    ReportSummary current = summaries.get(i);
-                    ReportSummary previous = summaries.get(i - 1);
 
-                    current.setHighlightCountRows(isSignificantDecrease(previous.getCountRows(), current.getCountRows()));
-                    current.setHighlightCountCompetitorsPrice(isSignificantDecrease(previous.getCountCompetitorsPrice(), current.getCountCompetitorsPrice()));
-                    current.setHighlightCountPromotionalPrice(isSignificantDecrease(previous.getCountPromotionalPrice(), current.getCountPromotionalPrice()));
-                }
-            }
-        }
+        model.addAttribute("retailChains", retailChains);
+        model.addAttribute("taskGroups", taskGroups);
+        model.addAttribute("threshold", threshold);
 
-        model.addAttribute("reportSummaries", reportSummaries);
-        model.addAttribute("taskNos", taskNos);
-        model.addAttribute("reportSummaryMap", reportSummaryMap);
-
-        return "/clients/av"; // Название HTML-шаблона Thymeleaf
-    }
-    private boolean isSignificantDecrease(long previousValue, long currentValue) {
-        if (previousValue == 0) {
-            return false;
-        }
-        double decreasePercent = ((double) (previousValue - currentValue) / previousValue) * 100;
-        return decreasePercent > THRESHOLD_PERCENT;
+        return "/clients/av/comparisonTable";
     }
 
 }

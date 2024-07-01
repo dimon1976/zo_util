@@ -274,37 +274,40 @@
                             </form>
                         </div>
                     </div>
-                    <div class="row mt-3">
-                        <div class="col-12">
-                            <table class="table table-striped" id="reportTable">
-                                <thead>
-                                <tr>
-                                    <th>Сеть</th>
-                                    <th th:each="taskNo : ${taskNos}" th:text="${taskNo}">Task No</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <tr th:each="entry : ${reportSummaryMap}">
-                                    <td th:text="${entry.key}">Retail Chain</td>
-                                    <td th:each="taskNo : ${taskNos}">
-                                        <div th:each="report : ${entry.value}" th:if="${report.task_no == taskNo}">
-                                <span th:classappend="${report.highlightCountRows} ? 'highlight' : ''">
-                                    <span th:text="${report.countRows}">0</span>
-                                </span>,
-                                            <span th:classappend="${report.highlightCountCompetitorsPrice} ? 'highlight' : ''">
-                                    <span th:text="${report.countCompetitorsPrice}">0</span>
-                                </span>,
-                                            <span th:classappend="${report.highlightCountPromotionalPrice} ? 'highlight' : ''">
-                                    <span th:text="${report.countPromotionalPrice}">0</span>
-                                </span>
-                                        </div>
-                                    </td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+
+
+
+<!--                    <div class="row mt-3">-->
+<!--                        <div class="col-12">-->
+<!--                            <table class="table table-striped" id="reportTable">-->
+<!--                                <thead>-->
+<!--                                <tr>-->
+<!--                                    <th>Сеть</th>-->
+<!--                                    <th th:each="taskNo : ${taskNos}" th:text="${taskNo}">Task No</th>-->
+<!--                                </tr>-->
+<!--                                </thead>-->
+<!--                                <tbody>-->
+<!--                                <tr th:each="entry : ${reportSummaryMap}">-->
+<!--                                    <td th:text="${entry.key}">Retail Chain</td>-->
+<!--                                    <td th:each="taskNo : ${taskNos}">-->
+<!--                                        <div th:each="report : ${entry.value}" th:if="${report.task_no == taskNo}">-->
+<!--                                <span th:classappend="${report.highlightCountRows} ? 'highlight' : ''">-->
+<!--                                    <span th:text="${report.countRows}">0</span>-->
+<!--                                </span>,-->
+<!--                                            <span th:classappend="${report.highlightCountCompetitorsPrice} ? 'highlight' : ''">-->
+<!--                                    <span th:text="${report.countCompetitorsPrice}">0</span>-->
+<!--                                </span>,-->
+<!--                                            <span th:classappend="${report.highlightCountPromotionalPrice} ? 'highlight' : ''">-->
+<!--                                    <span th:text="${report.countPromotionalPrice}">0</span>-->
+<!--                                </span>-->
+<!--                                        </div>-->
+<!--                                    </td>-->
+<!--                                </tr>-->
+<!--                                </tbody>-->
+<!--                            </table>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
 
 
 
