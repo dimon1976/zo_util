@@ -64,6 +64,7 @@ public class SimpleService implements FileProcessingService<SimpleDTO> {
                         log.error("Error processing file: {}", file.getAbsolutePath(), e);
                         errorMessages.add("Failed to process file: " + file.getName() + " - " + e.getMessage());
                         return new ArrayList<SimpleDTO>();
+
                     }
                 }))
                 .collect(Collectors.toList());
