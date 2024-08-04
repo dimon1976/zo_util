@@ -96,9 +96,7 @@ public class FileController {
         String typeReport = request.getParameter("typeReport");
         String[] additionalParam = new String[]{cityId, typeReport};
 //        return processFileUpload(multipartFile, avReportService::readFiles);
-        return processFileUpload(multipartFile, file -> {
-            avReportService.readFiles(file, additionalParam);
-        });
+        return processFileUpload(multipartFile, file -> avReportService.readFiles(file, additionalParam));
     }
 
     @PostMapping("/av/upload/handbook")
