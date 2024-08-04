@@ -19,6 +19,7 @@ import static by.demon.zoom.util.Globals.TEMP_PATH;
 public class FileUploadHandler {
     private static final Logger log = LoggerFactory.getLogger(FileUploadHandler.class);
 
+
     public static List<File> getFiles(MultipartFile[] multipartFiles) {
         return Arrays.stream(multipartFiles)
                 .filter(FileUploadHandler::ifExist)
