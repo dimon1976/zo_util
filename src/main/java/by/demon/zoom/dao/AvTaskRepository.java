@@ -4,11 +4,9 @@ import by.demon.zoom.domain.imp.av.AvDataEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import javax.transaction.Transactional;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.LinkedHashSet;
 
 public interface AvTaskRepository extends JpaRepository<AvDataEntity, Long> {

@@ -39,9 +39,7 @@ public class ClientsController {
     }
     /**
      * Handles HTTP GET requests to the /clients/av endpoint.
-     *
      * This method is responsible for retrieving and returning data for the AV clients page.
-     *
      * @param model the Spring Model object used to pass data to the view
      * @return the name of the view to render
      */
