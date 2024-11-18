@@ -3,6 +3,7 @@ package by.demon.zoom.controller;
 import by.demon.zoom.domain.av.AvHandbook;
 import by.demon.zoom.domain.imp.av.AvDataEntity;
 import by.demon.zoom.domain.imp.av.CsvAvReportEntity;
+import by.demon.zoom.dto.imp.BarcodeMergeDTO;
 import by.demon.zoom.dto.imp.SimpleDTO;
 import by.demon.zoom.dto.imp.UrlDTO;
 import by.demon.zoom.dto.imp.VlookBarDTO;
@@ -41,8 +42,9 @@ public class FileController {
     private final AvTaskService avTaskService;
     private final AvHandbookService handbookService;
     private final YandexUrlService yandexUrlService;
+    private final BarcodeMerge barcodeMerge;
 
-    public FileController(UrlService urlService, StatisticService statisticService, VlookService vlookService, SimpleService simpleService, AvReportService avReportService, AvTaskService avTaskService, AvHandbookService handbookService, YandexUrlService yandexUrlService) {
+    public FileController(UrlService urlService, StatisticService statisticService, VlookService vlookService, SimpleService simpleService, AvReportService avReportService, AvTaskService avTaskService, AvHandbookService handbookService, YandexUrlService yandexUrlService, BarcodeMerge barcodeMerge) {
         this.urlService = urlService;
         this.statisticService = statisticService;
         this.vlookService = vlookService;
@@ -51,6 +53,7 @@ public class FileController {
         this.avTaskService = avTaskService;
         this.handbookService = handbookService;
         this.yandexUrlService = yandexUrlService;
+        this.barcodeMerge = barcodeMerge;
     }
 
     @PostMapping("/getUrl/")
@@ -75,6 +78,12 @@ public class FileController {
     public void uploadVlook(@RequestParam("file") MultipartFile[] multipartFile, HttpServletResponse response) throws IOException {
         ArrayList<VlookBarDTO> vlookBarDTOS = vlookService.readFiles(FileUploadHandler.getFiles(multipartFile));
         vlookService.download(vlookBarDTOS, response, "csv");
+    }
+
+    @PostMapping("/barcodeMerge")
+    public void uploadBarcode(@RequestParam("file") MultipartFile[] multipartFile, HttpServletResponse response) throws IOException {
+        ArrayList<BarcodeMergeDTO> barcodeMergeDTOS = barcodeMerge.readFiles(FileUploadHandler.getFiles(multipartFile));
+        barcodeMerge.download(barcodeMergeDTOS, response, "csv");
     }
 
     @PostMapping("/simple/upload/report")

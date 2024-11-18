@@ -25,13 +25,26 @@ public class ClientsController {
         this.avTaskService = avTaskService;
         this.avHandbookService = avHandbookService;
     }
-
+    /**
+     * Handles HTTP GET requests to the /clients/simple endpoint.
+     *
+     * This method is responsible for executing the simple method and returning the view for the clients/simple page.
+     *
+     * @return the view name for the clients/simple page
+     */
     @GetMapping("/clients/simple")
     public String simple() {
         logger.info("Executing simple method");
         return "/clients/simple";
     }
-
+    /**
+     * Handles HTTP GET requests to the /clients/av endpoint.
+     *
+     * This method is responsible for retrieving and returning data for the AV clients page.
+     *
+     * @param model the Spring Model object used to pass data to the view
+     * @return the name of the view to render
+     */
     @GetMapping("/clients/av")
     public String av(Model model) {
         logger.info("Executing av method");

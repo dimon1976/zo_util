@@ -15,10 +15,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
@@ -36,23 +33,36 @@ public class UrlService implements FileProcessingService<UrlDTO> {
         this.dataToExcel = dataToExcel;
     }
 
+    /**
+     * Reads a list of files asynchronously and returns a list of UrlDTO objects.
+     *
+     * @param  files            a list of files to be read
+     * @param  additionalParams additional parameters (not used in this method)
+     * @return                  an ArrayList of UrlDTO objects
+     * @throws IOException      if there is an error reading or processing the files
+     */
+
     @Override
     public ArrayList<UrlDTO> readFiles(List<File> files, String... additionalParams) throws IOException {
         ArrayList<UrlDTO> allUrlDTOs = new ArrayList<>();
         List<String> errorMessages = new ArrayList<>();
 
-        int threadCount = Runtime.getRuntime().availableProcessors();
-        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
-
-        List<Future<ArrayList<UrlDTO>>> futures = files.stream()
-                .map(file -> executorService.<ArrayList<UrlDTO>>submit(() -> {
+        ExecutorService executorService = Executors.newWorkStealingPool();
+        List<CompletableFuture<ArrayList<UrlDTO>>> futures = files.stream()
+                .map(file -> CompletableFuture.<ArrayList<UrlDTO>>supplyAsync(() -> {
                     try {
                         List<List<Object>> excelData = readDataFromFile(file);
+                        if (excelData == null) {
+                            throw new IOException("Failed to read file: " + file.getName());
+                        }
                         Collection<UrlDTO> urlDTOList = getUrlDTOList(excelData);
-                        log.info("File {} successfully read", file.getName());
+                        if (urlDTOList == null) {
+                            throw new IOException("Failed to process file: " + file.getName());
+                        }
+//                        log.info("File {} successfully read", file.getName());
                         Files.delete(file.toPath());
                         return new ArrayList<>(urlDTOList);
-                    } catch (Exception e) {
+                    } catch (IOException e) {
                         log.error("Failed to process file: {}", file.getName(), e);
                         errorMessages.add("Failed to process file: " + file.getName() + " - " + e.getMessage());
                         return new ArrayList<>();
@@ -60,13 +70,16 @@ public class UrlService implements FileProcessingService<UrlDTO> {
                 }))
                 .collect(Collectors.toList());
 
-        for (Future<ArrayList<UrlDTO>> future : futures) {
-            try {
-                allUrlDTOs.addAll(future.get());
-            } catch (InterruptedException | ExecutionException e) {
-                log.error("Error processing file", e);
-                errorMessages.add("Error processing file: " + e.getMessage());
-            }
+//        for (Future<ArrayList<UrlDTO>> future : futures) {
+//            try {
+//                allUrlDTOs.addAll(future.get());
+//            } catch (InterruptedException | ExecutionException e) {
+//                log.error("Error processing file", e);
+//                errorMessages.add("Error processing file: " + e.getMessage());
+//            }
+            CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
+            for (CompletableFuture<ArrayList<UrlDTO>> future : futures) {
+                allUrlDTOs.addAll(future.join());
         }
 
         executorService.shutdown();

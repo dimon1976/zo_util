@@ -29,7 +29,13 @@ public class AvHandbook {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AvHandbook handbook = (AvHandbook) o;
-        return Objects.equals(retailNetworkCode, handbook.retailNetworkCode) && Objects.equals(retailNetwork, handbook.retailNetwork) && Objects.equals(physicalAddress, handbook.physicalAddress) && Objects.equals(priceZoneCode, handbook.priceZoneCode) && Objects.equals(webSite, handbook.webSite) && Objects.equals(regionCode, handbook.regionCode) && Objects.equals(regionName, handbook.regionName);
+        return Objects.equals(retailNetworkCode, handbook.retailNetworkCode)
+                && Objects.equals(retailNetwork, handbook.retailNetwork)
+                && Objects.equals(physicalAddress, handbook.physicalAddress)
+                && Objects.equals(priceZoneCode, handbook.priceZoneCode)
+                && Objects.equals(webSite, handbook.webSite)
+                && Objects.equals(regionCode, handbook.regionCode)
+                && Objects.equals(regionName, handbook.regionName);
     }
 
     @Override
