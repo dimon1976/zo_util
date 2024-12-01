@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -43,6 +44,15 @@ public class CsvAvReportEntity implements CsvRow {
     //*https://stackoverflow.com/questions/36446201/org-postgresql-util-psqlexception-error-value-too-long-for-type-character-vary
     @Column(length = 1024)
     private String linkToProductPage;
+    private String city;
+    private String typeReport;
+    @Column(name = "upload_time")
+    private LocalDateTime uploadTime;
+
+    @PrePersist
+    protected void onCreate() {
+        uploadTime = LocalDateTime.now();
+    }
 
     @Override
     public List<Object> values() {

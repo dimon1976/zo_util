@@ -1,34 +1,31 @@
 package by.demon.zoom.controller;
 
-import by.demon.zoom.domain.Lenta;
 import by.demon.zoom.domain.av.AvHandbook;
 import by.demon.zoom.domain.imp.av.AvDataEntity;
 import by.demon.zoom.domain.imp.av.CsvAvReportEntity;
-import by.demon.zoom.dto.imp.MegatopDTO;
+import by.demon.zoom.dto.imp.BarcodeMergeDTO;
 import by.demon.zoom.dto.imp.SimpleDTO;
 import by.demon.zoom.dto.imp.UrlDTO;
 import by.demon.zoom.dto.imp.VlookBarDTO;
-import by.demon.zoom.dto.lenta.LentaReportDTO;
-import by.demon.zoom.dto.lenta.LentaTaskDTO;
 import by.demon.zoom.service.impl.*;
 import by.demon.zoom.service.impl.av.AvHandbookService;
 import by.demon.zoom.service.impl.av.AvReportService;
 import by.demon.zoom.service.impl.av.AvTaskService;
-import by.demon.zoom.service.impl.lenta.EdadealService;
-import by.demon.zoom.service.impl.lenta.LentaReportService;
-import by.demon.zoom.service.impl.lenta.LentaTaskService;
 import by.demon.zoom.util.FileUploadHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,29 +37,23 @@ public class FileController {
     private final UrlService urlService;
     private final StatisticService statisticService;
     private final VlookService vlookService;
-    private final MegatopService megatopService;
-    private final LentaReportService lentaReportService;
-    private final LentaTaskService lentaTaskService;
     private final SimpleService simpleService;
-    private final EdadealService edadealService;
     private final AvReportService avReportService;
     private final AvTaskService avTaskService;
     private final AvHandbookService handbookService;
     private final YandexUrlService yandexUrlService;
+    private final BarcodeMerge barcodeMerge;
 
-    public FileController(UrlService urlService, StatisticService statisticService, VlookService vlookService, MegatopService megatopService, LentaReportService lentaReportService, LentaTaskService lentaTaskService, SimpleService simpleService, EdadealService edadealService, AvReportService avReportService, AvTaskService avTaskService, AvHandbookService handbookService, YandexUrlService yandexUrlService) {
+    public FileController(UrlService urlService, StatisticService statisticService, VlookService vlookService, SimpleService simpleService, AvReportService avReportService, AvTaskService avTaskService, AvHandbookService handbookService, YandexUrlService yandexUrlService, BarcodeMerge barcodeMerge) {
         this.urlService = urlService;
         this.statisticService = statisticService;
         this.vlookService = vlookService;
-        this.megatopService = megatopService;
-        this.lentaReportService = lentaReportService;
-        this.lentaTaskService = lentaTaskService;
         this.simpleService = simpleService;
-        this.edadealService = edadealService;
         this.avReportService = avReportService;
         this.avTaskService = avTaskService;
         this.handbookService = handbookService;
         this.yandexUrlService = yandexUrlService;
+        this.barcodeMerge = barcodeMerge;
     }
 
     @PostMapping("/getUrl/")
@@ -89,22 +80,10 @@ public class FileController {
         vlookService.download(vlookBarDTOS, response, "csv");
     }
 
-    @PostMapping("/megatop/upload")
-    public ModelAndView megatopFileUpload(@RequestParam("file") MultipartFile[] multipartFile,
-                                          @RequestParam(value = "label", required = false) String label) {
-        return processFileUpload(multipartFile, files -> {
-            String[] additionalParam = new String[]{label};
-            megatopService.readFiles(files, additionalParam);
-        });
-    }
-
-    @PostMapping("/megatop/download")
-    public void megatopDownload(@RequestParam(value = "downloadLabel", required = false) String label,
-                                @RequestParam(value = "format", required = false) String format,
-                                HttpServletResponse response) throws IOException {
-        String[] additionalParam = new String[]{label};
-        ArrayList<MegatopDTO> megatopDTOS = megatopService.getDto(additionalParam);
-        megatopService.download(megatopDTOS, response, format);
+    @PostMapping("/barcodeMerge")
+    public void uploadBarcode(@RequestParam("file") MultipartFile[] multipartFile, HttpServletResponse response) throws IOException {
+        ArrayList<BarcodeMergeDTO> barcodeMergeDTOS = barcodeMerge.readFiles(FileUploadHandler.getFiles(multipartFile));
+        barcodeMerge.download(barcodeMergeDTOS, response, "csv");
     }
 
     @PostMapping("/simple/upload/report")
@@ -121,8 +100,12 @@ public class FileController {
     }
 
     @PostMapping("/av/upload/report")
-    public ModelAndView uploadAvReport(@RequestParam("file") MultipartFile[] multipartFile) {
-        return processFileUpload(multipartFile, avReportService::readFiles);
+    public ModelAndView uploadAvReport(HttpServletRequest request, @RequestParam("file") MultipartFile[] multipartFile) {
+        String cityId = request.getParameter("city");
+        String typeReport = request.getParameter("typeReport");
+        String[] additionalParam = new String[]{cityId, typeReport};
+//        return processFileUpload(multipartFile, avReportService::readFiles);
+        return processFileUpload(multipartFile, file -> avReportService.readFiles(file, additionalParam));
     }
 
     @PostMapping("/av/upload/handbook")
@@ -176,30 +159,10 @@ public class FileController {
         return "/clients/av";
     }
 
-    @PostMapping("/lenta/upload/edadeal")
-    public void uploadEdadeal(@RequestParam("file") MultipartFile[] multipartFile, HttpServletResponse response) throws IOException {
-        ArrayList<List<Object>> list = edadealService.readFiles(FileUploadHandler.getFiles(multipartFile));
-        edadealService.download(list, response, "excel");
-    }
-
-    @PostMapping("/lenta/upload/task")
-    public void uploadLentaTask(@RequestParam("file") MultipartFile[] multipartFile,
-                                @RequestParam(value = "lenta", required = false) String lenta,
-                                HttpServletResponse response) throws IOException {
-        ArrayList<LentaTaskDTO> collection = lentaTaskService.readFiles(FileUploadHandler.getFiles(multipartFile));
-        lentaTaskService.download(collection, response, "excel");
-    }
-
-    @PostMapping("/lenta/upload/report")
-    public void uploadLentaReport(@ModelAttribute("lenta") Lenta lenta,
-                                  @RequestParam("file") MultipartFile[] multipartFile,
-                                  HttpServletResponse response) throws IOException {
-        List<File> files = FileUploadHandler.getFiles(multipartFile);
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-        String date = formatter.format(lenta.getAfterDate());
-        String[] additionalParam = new String[]{"report", date};
-        ArrayList<LentaReportDTO> reportCollection = lentaReportService.readFiles(files, additionalParam);
-        lentaReportService.download(reportCollection, response, "excel");
+    @PostMapping("av/truncate-temp-table-data")
+    public String truncateTempTableData() {
+        avTaskService.truncateTempTableData();
+        return "/clients/av";
     }
 
     @PostMapping("/yandexUrl/upload")

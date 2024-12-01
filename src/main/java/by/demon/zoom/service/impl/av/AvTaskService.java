@@ -19,6 +19,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -53,6 +55,7 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
         this.avTaskRepository = avTaskRepository;
         this.dataToExcel = dataToExcel;
     }
+
     @EventListener
     public void onApplicationEvent(ContextRefreshedEvent event) {
         AvTaskService proxy = applicationContext.getBean(AvTaskService.class);
@@ -199,6 +202,21 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
         LOGGER.info("Scheduled task updateTempTable finished");
     }
 
+//    @Scheduled(cron = "0 0 0 * * ?") // каждый день в полночь
+    public void deleteTasksOlderThanOneMonth() {
+        // Рассчитаем дату одного месяца назад
+        LocalDate currentDate = LocalDate.now();
+        LocalDate cutoffDate = currentDate.minusMonths(1);
+
+        // Преобразуем дату в формат строки "YYYY-MM-DD", как в базе данных
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String formattedCutoffDate = cutoffDate.format(formatter);
+
+        // Вызов метода удаления в репозитории
+        int deleteTasksOlderThan = avTaskRepository.deleteTasksOlderThan(formattedCutoffDate);
+        System.out.println("deleted count: " + deleteTasksOlderThan);
+    }
+
     @Transactional
     public void updateTempTableData() {
         try {
@@ -212,6 +230,7 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
             jdbcTemplate.execute(insertQuery);
 
             LOGGER.info("Temp table data updated successfully");
+//            deleteTasksOlderThanOneMonth();
         } catch (Exception e) {
             LOGGER.error("Error updating temp table data: {}", e.getMessage(), e);
         }
@@ -229,6 +248,26 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
             LOGGER.info("Temp table index updated successfully");
         } catch (Exception e) {
             LOGGER.error("Error updating temp table index: {}", e.getMessage(), e);
+        }
+    }
+
+    @Transactional
+    public void truncateTempTableData() {
+        try {
+            // Очистка временной таблицы
+            String truncateTableQuery = "TRUNCATE TABLE tmp_av_task_job_number";
+            LOGGER.info("Executing TRUNCATE TABLE query");
+            jdbcTemplate.execute(truncateTableQuery);
+
+            // Создание индекса
+            String createIndexQuery = "CREATE INDEX IF NOT EXISTS idx_tmp_av_task_job_number ON tmp_av_task_job_number (job_number)";
+            LOGGER.info("Executing CREATE INDEX query");
+            jdbcTemplate.execute(createIndexQuery);
+
+            LOGGER.info("Temp table truncated and index updated successfully");
+            deleteTasksOlderThanOneMonth();
+        } catch (Exception e) {
+            LOGGER.error("Error truncating temp table or updating index: {}", e.getMessage(), e);
         }
     }
 
@@ -252,6 +291,7 @@ public class AvTaskService implements FileProcessingService<AvDataEntity> {
             LOGGER.error("Error updating tmp_av_task_job_number: ", e);
         }
     }
+
     @Transactional
     public void createTempTableIfNotExists() {
         String createTableQuery = "CREATE TABLE IF NOT EXISTS tmp_av_task_job_number (" +

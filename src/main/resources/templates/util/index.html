@@ -125,6 +125,27 @@
                         </div>
                     </form>
                 </div>
+                <div class="col-12 col-sm-6">
+                    <form th:action="@{/excel/barcodeMerge}" th:method="post" enctype="multipart/form-data">
+                        <h4>Сбор ШК для товаров</h4>
+                        <div class="mb-3">
+                            <label for="barcode" class="form-label">Выберите файл:</label>
+                            <input type="file" class="form-control form-control-sm" name="file" id="barcode"
+                                   aria-description="barcodeHelp">
+                            <div id="barcodeHelp" class="form-text">
+                                * Столбец A - модель <br>
+                                * Столбец B - BAR. К наименованию добавляем все найденные ШК через запятую<br>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <button class="btn btn-primary">
+                                    Загрузить
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
 
         </div>

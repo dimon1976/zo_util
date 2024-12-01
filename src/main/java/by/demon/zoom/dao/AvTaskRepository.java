@@ -25,6 +25,8 @@ public interface AvTaskRepository extends JpaRepository<AvDataEntity, Long> {
     @Query("delete from AvDataEntity where jobNumber = :task")
     int deleteAllByField(String task);
 
-
-
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM AvDataEntity a WHERE a.jobEnd < :cutoffDate")
+    int deleteTasksOlderThan(String cutoffDate);
 }

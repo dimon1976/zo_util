@@ -15,14 +15,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 import static by.demon.zoom.util.FileDataReader.readDataFromFile;
@@ -44,18 +38,39 @@ public class SimpleService implements FileProcessingService<SimpleDTO> {
         this.dataToExcel = dataToExcel;
     }
 
+
+    /**
+     * Reads all files in the given list and returns a list of {@link SimpleDTO}
+     * objects.
+     * <p>
+     * The method is thread-safe and uses a thread pool to process the files in
+     * parallel. If any errors occur during the processing, the method will throw
+     * an {@link IOException} with a message that contains all the errors.
+     * <p>
+     * The method will also delete the files after they have been processed,
+     * unless an error occurs during the deletion, in which case the error will
+     * be logged and the file will not be deleted.
+     *
+     * @param files the list of files to read
+     * @param additionalParams additional parameters, currently not used
+     * @return the list of {@link SimpleDTO} objects
+     * @throws IOException if any errors occur during the processing
+     */
+
     @Override
     public ArrayList<SimpleDTO> readFiles(List<File> files, String... additionalParams) throws IOException {
         ArrayList<SimpleDTO> allUrlDTOs = new ArrayList<>();
-        List<String> errorMessages = new ArrayList<>();
+        Queue<String> errorMessages = new ConcurrentLinkedQueue<>();
 
         int threadCount = Runtime.getRuntime().availableProcessors();
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+
+        // Асинхронная обработка файлов
         List<Future<ArrayList<SimpleDTO>>> futures = files.stream()
                 .map(file -> executorService.submit(() -> {
                     try {
                         List<List<Object>> lists = readDataFromFile(file);
-                        Files.delete(file.toPath());
+//                        Files.delete(file.toPath());
                         Collection<Product> productList = getProductList(lists);
                         Collection<SimpleDTO> collect = getSimpleDTOList(productList);
                         log.info("File {} successfully read", file.getName());
@@ -64,10 +79,18 @@ public class SimpleService implements FileProcessingService<SimpleDTO> {
                         log.error("Error processing file: {}", file.getAbsolutePath(), e);
                         errorMessages.add("Failed to process file: " + file.getName() + " - " + e.getMessage());
                         return new ArrayList<SimpleDTO>();
+                    } finally {
+                        // Удаляем файл после завершения всех операций
+                        try {
+                            Files.delete(file.toPath());
+                        } catch (IOException e) {
+                            log.error("Failed to delete file: {}", file.getAbsolutePath(), e);
+                            errorMessages.add("Failed to delete file: " + file.getName() + " - " + e.getMessage());
+                        }
                     }
                 }))
                 .collect(Collectors.toList());
-
+        // Обработка результатов
         for (Future<ArrayList<SimpleDTO>> future : futures) {
             try {
                 allUrlDTOs.addAll(future.get());
@@ -76,14 +99,24 @@ public class SimpleService implements FileProcessingService<SimpleDTO> {
                 errorMessages.add("Error processing file: " + e.getMessage());
             }
         }
+        // Завершение работы потоков
         executorService.shutdown();
-
+        try {
+            if (!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
+                executorService.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executorService.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+        // Выбросить исключение, если были ошибки
         if (!errorMessages.isEmpty()) {
             throw new IOException("Some files failed to process: " + String.join(", ", errorMessages));
         }
 
         return allUrlDTOs;
     }
+
 
     public void download(ArrayList<SimpleDTO> list, HttpServletResponse response, String format, String... additionalParameters) throws IOException {
         String orgName = additionalParameters[0];
