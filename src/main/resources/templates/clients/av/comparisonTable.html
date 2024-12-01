@@ -6,159 +6,138 @@
     <title>Comparison Table</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <style>
-        .increase {
-            background-color: #d4edda; /* Light green */
-            color: #155724; /* Dark green */
-            transition: background-color 0.5s ease;
-        }
-        .decrease {
-            background-color: #f8d7da; /* Light red */
-            color: #721c24; /* Dark red */
-            transition: background-color 0.5s ease;
-        }
-        table th, table td {
-            text-align: center;
-            vertical-align: middle;
-        }
-        table th {
-            background-color: #f8f9fa; /* Light grey */
-        }
-        table tr:nth-child(even) {
-            background-color: #f2f2f2; /* Light grey for even rows */
-        }
-        .cell-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 100%;
-            padding: 0 2px;
-        }
-        .cell-content > span {
-            flex: 1;
-            text-align: center;
-            padding: 2px;
-            font-size: 12px; /* Уменьшенный шрифт */
-        }
-        .cell-content > span:last-child {
-            border-right: none;
-        }
-        .task-no {
-            white-space: nowrap;
-            padding: 2px;
-            font-size: 12px; /* Уменьшенный шрифт */
+        body {
+            font-family: Arial, sans-serif;
         }
         .container {
-            padding: 0 5px; /* Уменьшенный padding */
+            padding: 0 15px;
+            margin: auto;
+            max-width: 100%;
+        }
+        table {
+            width: 100%;
+            table-layout: fixed; /* Фиксированная ширина столбцов */
+        }
+        table th, table td {
+            padding: 8px; /* Уменьшаем отступы для более компактного вида */
+            font-size: 12px; /* Уменьшаем шрифт для компактности */
+            text-align: center;
+            vertical-align: middle;
+            white-space: nowrap; /* Запрещаем перенос текста */
+            overflow: hidden; /* Скрываем переполнение */
+            text-overflow: ellipsis; /* Добавляем многоточие для длинных слов */
+        }
+        table th {
+            background-color: #f8f9fa;
+        }
+        table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .increase {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .decrease {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .buttons-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .btn-back, .btn-home {
+            padding: 10px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none; /* Для ссылки на главную */
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-back:hover, .btn-home:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-home {
+            background-color: #28a745;
+        }
+
+        .btn-home:hover {
+            background-color: #218838;
         }
     </style>
+
 </head>
 <body>
-<div class="container mt-5">
+<div class="container">
     <h2 class="text-center mb-4">Comparison Table</h2>
-    <table id="reportsTable" class="table table-bordered table-hover">
-        <thead class="thead-light">
-        <tr>
-            <th class="task-no">Task No</th>
-            <th th:each="retailChain : ${retailChains}" th:text="${retailChain}"></th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="taskGroup : ${taskGroups}">
-            <td class="task-no" th:text="${taskGroup.key}"></td>
-            <td th:each="retailChain : ${retailChains}">
-                <div class="cell-content">
-                    <span th:each="report : ${taskGroup.value}" th:if="${report.retailChain == retailChain}"
+    <div class="table-wrapper">
+        <table id="reportsTable" class="table table-bordered table-hover">
+            <thead>
+            <tr>
+                <th>Task No</th>
+                <th th:each="retailChain : ${retailChains}" th:text="${retailChain}"></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="taskGroup : ${taskGroups}">
+                <td th:text="${taskGroup.key}"></td>
+                <td th:each="retailChain : ${retailChains}">
+                    <span th:each="report : ${taskGroup.value}"
+                          th:if="${report.retailChain == retailChain}"
                           th:data-count-rows="${report.countRows}"
                           th:data-count-competitors-price="${report.countCompetitorsPrice}"
                           th:data-count-promotional-price="${report.countPromotionalPrice}"
                           th:text="${report.countRows}"></span>
-                    <span th:each="report : ${taskGroup.value}" th:if="${report.retailChain == retailChain}"
-                          th:data-count-rows="${report.countRows}"
-                          th:data-count-competitors-price="${report.countCompetitorsPrice}"
-                          th:data-count-promotional-price="${report.countPromotionalPrice}"
-                          th:text="${report.countCompetitorsPrice}"></span>
-                    <span th:each="report : ${taskGroup.value}" th:if="${report.retailChain == retailChain}"
-                          th:data-count-rows="${report.countRows}"
-                          th:data-count-competitors-price="${report.countCompetitorsPrice}"
-                          th:data-count-promotional-price="${report.countPromotionalPrice}"
-                          th:text="${report.countPromotionalPrice}"></span>
-                </div>
-            </td>
-        </tr>
-        <!-- Новая строка -->
-        <tr>
-            <td class="task-no"></td>
-            <td th:each="retailChain : ${retailChains}">
-                <div class="cell-content">
-                    <span>Строк</span>
-                    <span>Цен</span>
-                    <span>акций</span>
-                </div>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="buttons-container">
+            <!-- Кнопка возврата на предыдущую страницу -->
+            <button onclick="window.history.back()" class="btn-back">Назад</button>
+
+            <!-- Кнопка возврата на главную страницу -->
+            <a href="/" class="btn-home">На главную</a>
+        </div>
+    </div>
 </div>
-
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const threshold = [[${threshold}]]; // процентный порог для сравнения, значение передается из контроллера
+    document.addEventListener('DOMContentLoaded', () => {
+        const threshold = parseFloat([[${threshold}]]); // Пороговое значение для изменения
+        const table = document.getElementById('reportsTable');
 
-        function getComparisonClass(currentValue, previousValue, threshold) {
-            const change = ((currentValue - previousValue) / previousValue) * 100;
-            if (change > threshold) {
-                return 'increase';
-            } else if (change < -threshold) {
-                return 'decrease';
-            } else {
-                return '';
-            }
-        }
+        // Функция для определения цвета ячейки на основе изменений
+        const getComparisonClass = (current, previous) => {
+            if (previous === 0) return ''; // Предотвращаем деление на ноль
+            const change = ((current - previous) / previous) * 100;
+            return change > threshold ? 'increase' : change < -threshold ? 'decrease' : '';
+        };
 
-        function compareAndHighlight() {
-            const table = document.getElementById('reportsTable');
-            const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-
+        // Функция для сравнения значений в таблице и выделения изменений
+        const compareAndHighlight = () => {
+            const rows = Array.from(table.querySelectorAll('tbody tr')).filter(row => row.querySelector('span'));
             for (let i = 1; i < rows.length; i++) {
-                const currentRow = rows[i];
-                const previousRow = rows[i - 1];
+                const currentCells = rows[i].querySelectorAll('span');
+                const previousCells = rows[i - 1].querySelectorAll('span');
 
-                const currentCells = currentRow.getElementsByTagName('span');
-                const previousCells = previousRow.getElementsByTagName('span');
+                currentCells.forEach((cell, index) => {
+                    const currentValue = parseFloat(cell.getAttribute('data-count-rows'));
+                    const previousValue = parseFloat(previousCells[index]?.getAttribute('data-count-rows'));
 
-                for (let j = 0; j < currentCells.length; j += 3) {
-                    const currentCountRows = parseFloat(currentCells[j].getAttribute('data-count-rows'));
-                    const previousCountRows = parseFloat(previousCells[j].getAttribute('data-count-rows'));
-
-                    const currentCountCompetitorsPrice = parseFloat(currentCells[j + 1].getAttribute('data-count-competitors-price'));
-                    const previousCountCompetitorsPrice = parseFloat(previousCells[j + 1].getAttribute('data-count-competitors-price'));
-
-                    const currentCountPromotionalPrice = parseFloat(currentCells[j + 2].getAttribute('data-count-promotional-price'));
-                    const previousCountPromotionalPrice = parseFloat(previousCells[j + 2].getAttribute('data-count-promotional-price'));
-
-                    if (!isNaN(currentCountRows) && !isNaN(previousCountRows)) {
-                        const comparisonClassRows = getComparisonClass(currentCountRows, previousCountRows, threshold);
-                        if (comparisonClassRows) {
-                            currentCells[j].classList.add(comparisonClassRows);
-                        }
+                    if (!isNaN(currentValue) && !isNaN(previousValue)) {
+                        const comparisonClass = getComparisonClass(currentValue, previousValue);
+                        if (comparisonClass) cell.classList.add(comparisonClass);
                     }
-
-                    if (!isNaN(currentCountCompetitorsPrice) && !isNaN(previousCountCompetitorsPrice)) {
-                        const comparisonClassCompetitorsPrice = getComparisonClass(currentCountCompetitorsPrice, previousCountCompetitorsPrice, threshold);
-                        if (comparisonClassCompetitorsPrice) {
-                            currentCells[j + 1].classList.add(comparisonClassCompetitorsPrice);
-                        }
-                    }
-
-                    if (!isNaN(currentCountPromotionalPrice) && !isNaN(previousCountPromotionalPrice)) {
-                        const comparisonClassPromotionalPrice = getComparisonClass(currentCountPromotionalPrice, previousCountPromotionalPrice, threshold);
-                        if (comparisonClassPromotionalPrice) {
-                            currentCells[j + 2].classList.add(comparisonClassPromotionalPrice);
-                        }
-                    }
-                }
+                });
             }
-        }
+        };
 
         compareAndHighlight();
     });

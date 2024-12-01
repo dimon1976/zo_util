@@ -74,7 +74,7 @@ public class AvReportService implements FileProcessingService<CsvAvReportEntity>
                     log.info("File {} removed successfully.", file.getAbsolutePath());
                     ArrayList<CsvAvReportEntity> reportList = getReportList(lists);
                     save(reportList);
-                    log.info("File {} processed and saved successfully.", file.getName());
+                    log.info("File {} {} processed and saved successfully {} lines.", file.getName(), reportList.get(1).getJobNumber(), reportList.size());
                     return reportList;
                 } catch (Exception e) {
                     log.error("Failed to process file: {}", file.getAbsolutePath(), e);
@@ -113,6 +113,7 @@ public class AvReportService implements FileProcessingService<CsvAvReportEntity>
     }
 
     private ArrayList<CsvAvReportEntity> getAvDataEntityDTOList(List<CsvAvReportEntity> avDataEntityList, String jobNumber) {
+        reportSummary.deleteReportSummary(jobNumber);
         ArrayList<CsvAvReportEntity> result = new ArrayList<>();
         List<String> retailerCodeFromTask = getRetailerCodeFromTask(jobNumber);
         for (CsvAvReportEntity entity : avDataEntityList) {
@@ -197,7 +198,7 @@ public class AvReportService implements FileProcessingService<CsvAvReportEntity>
         csvReportEntity.setPhoto(getStringValue(str, 21));
         csvReportEntity.setNote(getStringValue(str, 22));
         csvReportEntity.setLinkToProductPage(getStringValue(str, 23));
-        if(params!=null){
+        if (params != null) {
             csvReportEntity.setCity(params[0]);
             csvReportEntity.setTypeReport(params[1]);
         }
