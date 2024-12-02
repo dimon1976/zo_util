@@ -15,20 +15,33 @@
             max-width: 100%;
         }
         table {
-            width: 100%;
-            table-layout: fixed; /* Фиксированная ширина столбцов */
+            width: auto;
+            table-layout: auto; /* Фиксированная ширина столбцов */
         }
-        table th, table td {
-            padding: 8px; /* Уменьшаем отступы для более компактного вида */
+        table td {
+            padding: 4px !important; /* Уменьшаем отступы для более компактного вида */
             font-size: 12px; /* Уменьшаем шрифт для компактности */
             text-align: center;
             vertical-align: middle;
             white-space: nowrap; /* Запрещаем перенос текста */
             overflow: hidden; /* Скрываем переполнение */
             text-overflow: ellipsis; /* Добавляем многоточие для длинных слов */
+            width: auto;
         }
         table th {
             background-color: #f8f9fa;
+            writing-mode: vertical-lr; /* Поворачиваем текст вертикально */
+            transform: rotate(180deg); /* Зеркально поворачиваем текст */
+            height: auto; /* Устанавливаем фиксированную высоту */
+            vertical-align: middle; /* Выравниваем текст по центру */
+            white-space: nowrap; /* Отключаем перенос */
+            padding: 8px; /* Уменьшаем отступы для более компактного вида */
+            font-size: 24px; /* Уменьшаем шрифт для компактности */
+            text-align: center;
+            overflow: hidden; /* Скрываем переполнение */
+            text-overflow: ellipsis; /* Добавляем многоточие для длинных слов */
+            font-weight: 400;
+            text-transform: lowercase;
         }
         table tr:nth-child(even) {
             background-color: #f2f2f2;

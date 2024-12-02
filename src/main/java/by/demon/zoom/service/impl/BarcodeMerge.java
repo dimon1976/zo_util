@@ -1,7 +1,6 @@
 package by.demon.zoom.service.impl;
 
 import by.demon.zoom.dto.imp.BarcodeMergeDTO;
-import by.demon.zoom.dto.imp.VlookBarDTO;
 import by.demon.zoom.service.FileProcessingService;
 import by.demon.zoom.util.DataToExcel;
 import org.slf4j.Logger;

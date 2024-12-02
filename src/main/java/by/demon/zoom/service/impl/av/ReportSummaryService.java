@@ -49,8 +49,7 @@ public class ReportSummaryService implements FileProcessingService<ReportSummary
     }
 
     public List<ReportSummary> findAllByCityAndTypeReport(String city, String typeReport) {
-        List<ReportSummary> byCityAndTypeReport = reportSummaryRepository.findByCityAndTypeReport(city, typeReport);
-        return byCityAndTypeReport;
+        return reportSummaryRepository.findByCityAndTypeReport(city, typeReport);
     }
 
 
