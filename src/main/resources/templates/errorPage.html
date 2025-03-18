@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Page</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f8f9fa;
+        }
+        .error-container {
+            text-align: center;
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .error-title {
+            font-size: 3rem;
+            color: #dc3545;
+            margin-bottom: 20px;
+        }
+        .error-message {
+            font-size: 1.2rem;
+            color: #6c757d;
+            margin-bottom: 20px;
+        }
+        .suggestions {
+            margin-top: 20px;
+            font-size: 1rem;
+            color: #495057;
+        }
+        .btn-home {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="error-container">
+    <h1 class="error-title">Oops!</h1>
+    <p class="error-message">
+        <span th:if="${error != null}" th:text="${error}">An unexpected error occurred.</span>
+        <span th:if="${error == null}">Something went wrong. Please try again later.</span>
+    </p>
+    <div class="suggestions">
+        <p>Here are some things you can try:</p>
+        <ul class="list-unstyled">
+            <li><i class="fas fa-arrow-right text-muted"></i> Check the URL for typos.</li>
+            <li><i class="fas fa-arrow-right text-muted"></i> Go back to the previous page.</li>
+            <li><i class="fas fa-arrow-right text-muted"></i> Contact support if the issue persists.</li>
+        </ul>
+    </div>
+    <a href="/" class="btn btn-primary btn-home">Go to Homepage</a>
+</div>
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</body>
+</html>

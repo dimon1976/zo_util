@@ -104,7 +104,6 @@ public class FileController {
         String cityId = request.getParameter("city");
         String typeReport = request.getParameter("typeReport");
         String[] additionalParam = new String[]{cityId, typeReport};
-//        return processFileUpload(multipartFile, avReportService::readFiles);
         return processFileUpload(multipartFile, file -> avReportService.readFiles(file, additionalParam));
     }
 

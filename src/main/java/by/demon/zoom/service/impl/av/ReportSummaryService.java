@@ -49,8 +49,7 @@ public class ReportSummaryService implements FileProcessingService<ReportSummary
     }
 
     public List<ReportSummary> findAllByCityAndTypeReport(String city, String typeReport) {
-        List<ReportSummary> byCityAndTypeReport = reportSummaryRepository.findByCityAndTypeReport(city, typeReport);
-        return byCityAndTypeReport;
+        return reportSummaryRepository.findByCityAndTypeReport(city, typeReport);
     }
 
 
@@ -77,5 +76,14 @@ public class ReportSummaryService implements FileProcessingService<ReportSummary
         }
 
         return new ArrayList<>(summaryMap.values());
+    }
+
+    public boolean deleteReportSummary(String task_no){
+        int count = reportSummaryRepository.deleteAllByTask_no(task_no);
+        if(count!=0){
+            log.info("Deleted {} reportSummary entities", count);
+            return true;
+        }
+        return false;
     }
 }
