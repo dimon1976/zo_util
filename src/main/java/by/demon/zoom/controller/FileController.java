@@ -43,8 +43,9 @@ public class FileController {
     private final AvHandbookService handbookService;
     private final YandexUrlService yandexUrlService;
     private final BarcodeMerge barcodeMerge;
+    private final FileUploadHandler fileUploadHandler;
 
-    public FileController(UrlService urlService, StatisticService statisticService, VlookService vlookService, SimpleService simpleService, AvReportService avReportService, AvTaskService avTaskService, AvHandbookService handbookService, YandexUrlService yandexUrlService, BarcodeMerge barcodeMerge) {
+    public FileController(UrlService urlService, StatisticService statisticService, VlookService vlookService, SimpleService simpleService, AvReportService avReportService, AvTaskService avTaskService, AvHandbookService handbookService, YandexUrlService yandexUrlService, BarcodeMerge barcodeMerge, FileUploadHandler fileUploadHandler) {
         this.urlService = urlService;
         this.statisticService = statisticService;
         this.vlookService = vlookService;
@@ -54,11 +55,12 @@ public class FileController {
         this.handbookService = handbookService;
         this.yandexUrlService = yandexUrlService;
         this.barcodeMerge = barcodeMerge;
+        this.fileUploadHandler = fileUploadHandler;
     }
 
     @PostMapping("/getUrl/")
     public void getUrl(@RequestParam("file") MultipartFile[] multipartFile, HttpServletResponse response) throws IOException {
-        ArrayList<UrlDTO> urlDTOS = urlService.readFiles(FileUploadHandler.getFiles(multipartFile));
+        ArrayList<UrlDTO> urlDTOS = urlService.readFiles(fileUploadHandler.getFiles(multipartFile));
         urlService.download(urlDTOS, response, "excel");
     }
 
@@ -70,25 +72,25 @@ public class FileController {
                                     @RequestParam(value = "showDateAdd", required = false) String showDateAdd,
                                     HttpServletResponse response) throws IOException {
         String[] additionalParam = new String[]{showSource, sourceReplace, showCompetitorUrl, showDateAdd};
-        ArrayList<List<Object>> lists = statisticService.readFiles(FileUploadHandler.getFiles(multipartFile), additionalParam);
+        ArrayList<List<Object>> lists = statisticService.readFiles(fileUploadHandler.getFiles(multipartFile), additionalParam);
         statisticService.download(lists, response, "excel", additionalParam);
     }
 
     @PostMapping("/vlook")
     public void uploadVlook(@RequestParam("file") MultipartFile[] multipartFile, HttpServletResponse response) throws IOException {
-        ArrayList<VlookBarDTO> vlookBarDTOS = vlookService.readFiles(FileUploadHandler.getFiles(multipartFile));
+        ArrayList<VlookBarDTO> vlookBarDTOS = vlookService.readFiles(fileUploadHandler.getFiles(multipartFile));
         vlookService.download(vlookBarDTOS, response, "csv");
     }
 
     @PostMapping("/barcodeMerge")
     public void uploadBarcode(@RequestParam("file") MultipartFile[] multipartFile, HttpServletResponse response) throws IOException {
-        ArrayList<BarcodeMergeDTO> barcodeMergeDTOS = barcodeMerge.readFiles(FileUploadHandler.getFiles(multipartFile));
+        ArrayList<BarcodeMergeDTO> barcodeMergeDTOS = barcodeMerge.readFiles(fileUploadHandler.getFiles(multipartFile));
         barcodeMerge.download(barcodeMergeDTOS, response, "csv");
     }
 
     @PostMapping("/simple/upload/report")
     public void uploadSimpleReport(@RequestParam("file") MultipartFile[] multipartFile, HttpServletResponse response) throws IOException {
-        List<File> files = FileUploadHandler.getFiles(multipartFile);
+        List<File> files = fileUploadHandler.getFiles(multipartFile);
         ArrayList<SimpleDTO> simpleDTOS = simpleService.readFiles(files);
         String[] additionalParam = new String[]{files.get(0).getName()};
         simpleService.download(simpleDTOS, response, "excel", additionalParam);
@@ -166,7 +168,7 @@ public class FileController {
 
     @PostMapping("/yandexUrl/upload")
     public String handleFileUpload(@RequestParam("file") MultipartFile[] file, Model model, HttpServletResponse response) throws IOException {
-        ArrayList<List<Object>> yandexUrls = yandexUrlService.readFiles(FileUploadHandler.getFiles(file));
+        ArrayList<List<Object>> yandexUrls = yandexUrlService.readFiles(fileUploadHandler.getFiles(file));
         yandexUrlService.download(yandexUrls, response, "excel");
         return "/util/index";
     }
@@ -174,7 +176,7 @@ public class FileController {
     private ModelAndView processFileUpload(MultipartFile[] multipartFiles, ConsumerWithIOException<List<File>> processFiles) {
         ModelAndView modelAndView = new ModelAndView("uploadStatus");
         try {
-            List<File> files = FileUploadHandler.getFiles(multipartFiles);
+            List<File> files = fileUploadHandler.getFiles(multipartFiles);
             processFiles.accept(files);
             modelAndView.addObject("status", "success");
             modelAndView.addObject("message", "Files processed successfully");
